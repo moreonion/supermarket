@@ -1,13 +1,1 @@
-click==6.7
-Flask==0.12.2
-Flask-Cors==3.0.2
-Flask-Script==2.0.5
-Flask-SQLAlchemy==2.2
-itsdangerous==0.24
-Jinja2==2.9.6
-MarkupSafe==1.0
--e git+https://github.com/moreonion/moflask.git@6512f54fedf9bd24573a6081a2371d4e9d3d1f74#egg=moflask
-psycopg2==2.7.1
-six==1.10.0
-SQLAlchemy==1.1.10
-Werkzeug==0.12.2
+-r requirements/prod.txt

@@ -1,0 +1,3 @@
+-r common.txt
+py==1.4.33
+pytest==3.1.0
