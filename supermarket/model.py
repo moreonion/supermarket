@@ -1,5 +1,4 @@
 import json
-import sqlalchemy
 
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.types import TypeDecorator
@@ -11,7 +10,7 @@ db = SQLAlchemy()
 # custom data types
 
 class Serialized(TypeDecorator):
-    impl = sqlalchemy.Text
+    impl = db.Text
 
     def process_bind_param(self, value, dialect):
         if value is not None:
