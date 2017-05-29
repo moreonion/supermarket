@@ -141,6 +141,8 @@ class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
+    details = db.Column(Serialized()) # holds image url, weight, price, currency
+    gtin = db.Column(db.String(14))   # Global Trade Item Number
     brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'))
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     producer_id = db.Column(db.Integer, db.ForeignKey('producers.id'))
