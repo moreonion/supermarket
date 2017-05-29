@@ -66,9 +66,10 @@ class Category(db.Model):
 class Certificate(db.Model):
     __tablename__ = 'certificates'
     id = db.Column(db.Integer(), primary_key=True)
-    number = db.Column(db.String(8))
     name = db.Column(db.String(64))
-    details = db.Column(Serialized()) # holds question, response options, explanation, possible scores
+    description = db.Column(db.Text)
+    logo = db.Column(db.String(256))
+    criteria = db.relationship('CertificateMeetsCriterion', lazy=True)
 
 
 class CertificateMeetsCriterion(db.Model):
@@ -83,8 +84,9 @@ class CertificateMeetsCriterion(db.Model):
 class Criterion(db.Model):
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
+    number = db.Column(db.String(8))
     name = db.Column(db.String(64))
-    description = db.Column(db.Text)
+    details = db.Column(Serialized()) # holds question, response options, explanation, possible scores
     hotspots = db.relationship('CriterionInfluencesHotspot', lazy=True)
 
 
