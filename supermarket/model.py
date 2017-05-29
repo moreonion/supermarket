@@ -76,8 +76,8 @@ class CertificateMeetsCriterion(db.Model):
     __tablename__ = 'certificates_criteria'
     certificate_id = db.Column('certificate_id', db.Integer, db.ForeignKey('certificates.id'), primary_key=True)
     criterion_id = db.Column('criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
-    score = db.Column('score', db.Integer)
-    explanation = db.Column('explanation', db.Text)
+    score = db.Column(db.Integer)
+    explanation = db.Column(db.Text)
     criterion = db.relationship('Criterion', lazy=True)
 
 
@@ -94,8 +94,8 @@ class CriterionInfluencesHotspot(db.Model):
     __tablename__ = 'criteria_hotspots'
     criterion_id = db.Column('criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
     hotspot_id = db.Column('hotspot_id', db.Integer, db.ForeignKey('hotspots.id'), primary_key=True)
-    score = db.Column('score', db.Integer)
-    explanation = db.Column('explanation', db.Text)
+    score = db.Column(db.Integer)
+    explanation = db.Column(db.Text)
     hotspot = db.relationship('Hotspot', lazy=True)
 
 
@@ -119,8 +119,8 @@ class LabelMeetsCriterion(db.Model):
     __tablename__ = 'labels_criteria'
     label_id = db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True)
     criterion_id = db.Column('criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
-    score = db.Column('score', db.Integer)
-    explanation = db.Column('explanation', db.Text)
+    score = db.Column(db.Integer)
+    explanation = db.Column(db.Text)
     criterion = db.relationship('Criterion', lazy=True)
 
 
