@@ -146,31 +146,18 @@ class Product(db.Model):
     brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'))
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     producer_id = db.Column(db.Integer, db.ForeignKey('producers.id'))
-    resources = db.relationship(
-        'Resource', secondary=products_resources,
-        lazy='subquery', backref=db.backref('products', lazy=True)
-    )
     labels = db.relationship(
         'Label', secondary=products_labels,
+        lazy='subquery', backref=db.backref('products', lazy=True)
+    )
+    resources = db.relationship(
+        'Resource', secondary=products_resources,
         lazy='subquery', backref=db.backref('products', lazy=True)
     )
     stores = db.relationship(
         'Store', secondary=products_stores,
         lazy='subquery', backref=db.backref('products', lazy=True)
     )
-
-
-class Store(db.Model):
-    __tablename__ = 'stores'
-    id = db.Column(db.Integer(), primary_key=True)
-    retailer_id = db.Column(db.Integer, db.ForeignKey('retailers.id'))
-    name = db.Column(db.String(64))
-
-
-class Supplier(db.Model):
-    __tablename__ = 'suppliers'
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(64))
 
 
 class Resource(db.Model):
@@ -189,3 +176,16 @@ class Retailer(db.Model):
         'Certificate', secondary=retailers_certificates,
         lazy='subquery', backref=db.backref('retailers', lazy=True)
     )
+
+
+class Store(db.Model):
+    __tablename__ = 'stores'
+    id = db.Column(db.Integer(), primary_key=True)
+    retailer_id = db.Column(db.Integer, db.ForeignKey('retailers.id'))
+    name = db.Column(db.String(64))
+
+
+class Supplier(db.Model):
+    __tablename__ = 'suppliers'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(64))
