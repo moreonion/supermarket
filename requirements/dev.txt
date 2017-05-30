@@ -1,4 +1,5 @@
 -r common.txt
 py==1.4.33
 pytest==3.1.0
-pytest-flask==0.10.0
+# up-to-date version of pytest-flaks, fixes deprecation warnings
+git+https://github.com/pytest-dev/pytest-flask@3cb5d00#egg=pytest-flask
