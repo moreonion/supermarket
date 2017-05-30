@@ -1,0 +1,17 @@
+[flake8]
+max-line-length = 99
+count = True
+ignore =
+    # ‘from module import *’ used; unable to detect undefined names
+    F403
+exclude =
+    # git
+    .git,
+    # caches
+    __pycache__, .cache,
+    # virtual environments
+    env, .venv,
+    # project folders without python files
+    requirements
+
+# http://flake8.pycqa.org/en/latest/user/configuration.html
