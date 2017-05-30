@@ -12,9 +12,8 @@ pip install -r requirements.txt
 
 ```bash
 # Virtual env
-sudo pip install virtualenv
 cd supermarket
-virtualenv env
+python3 -m venv env
 source env/bin/activate
 
 # Dependencies
@@ -41,6 +40,8 @@ For production you should use some real HTTP server like gunicorn or uWSGI.
 
 
 ## Tests
+
+With server running:
 
 ```bash
 py.test
