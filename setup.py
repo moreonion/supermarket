@@ -21,7 +21,7 @@ setup(
         'moflask',
     ],
     dependency_links=[
-      'git+https://github.com/moreonion/moflask.git@master#egg=moflask-0.1',
+        'git+https://github.com/moreonion/moflask.git@master#egg=moflask-0.1',
     ],
     extras_require={
         'test': ['pytest'],

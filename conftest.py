@@ -8,6 +8,7 @@ from supermarket.model import db as _db
 def app():
     return App('supermarket', env='Testing')
 
+
 @pytest.fixture(scope='session')
 def db(app):
     '''Session-wide test database.'''
@@ -23,6 +24,7 @@ def db(app):
         print(id(_db))
         _db.session.remove()
         _db.drop_all()
+
 
 @pytest.fixture(scope='function')
 def session(db, app):

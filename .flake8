@@ -1,9 +1,6 @@
 [flake8]
 max-line-length = 99
 count = True
-ignore =
-    # ‘from module import *’ used; unable to detect undefined names
-    F403
 exclude =
     # git
     .git,

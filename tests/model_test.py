@@ -1,9 +1,9 @@
-from supermarket.model import *
+import supermarket.model as m
 
 
 def test_brand_model(session):
-    retailer = Retailer(name='Rewe')
-    brand = Brand(name="Clever", retailer=retailer)
+    retailer = m.Retailer(name='Rewe')
+    brand = m.Brand(name="Clever", retailer=retailer)
 
     session.add(brand)
     session.commit()
@@ -16,9 +16,9 @@ def test_brand_model(session):
 
 
 def test_category_model(session):
-    category = Category(name='cookies')
-    product_1 = Product(name='Chocolate chip cookies', category=category)
-    product_2 = Product(name='Triple chocolate bombs', category=category)
+    category = m.Category(name='cookies')
+    product_1 = m.Product(name='Chocolate chip cookies', category=category)
+    product_2 = m.Product(name='Triple chocolate bombs', category=category)
 
     session.add(product_1)
     session.add(product_2)
@@ -30,17 +30,17 @@ def test_category_model(session):
 
 
 def test_certificate_model(session):
-    certificate = Certificate(name='BEPI', description='A cool certificate.', logo='some url')
+    certificate = m.Certificate(name='BEPI', description='A cool certificate.', logo='some url')
 
-    criterion_1_assoc = CertificateMeetsCriterion(score=0, explanation='Nope.')
-    criterion_1_assoc.criterion = Criterion(name='Saves the world')
+    criterion_1_assoc = m.CertificateMeetsCriterion(score=0, explanation='Nope.')
+    criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
     certificate.criteria.append(criterion_1_assoc)
 
-    criterion_2_assoc = CertificateMeetsCriterion(score=1, explanation='At least a few of us...')
-    criterion_2_assoc.criterion = Criterion(name='Makes us all happy')
+    criterion_2_assoc = m.CertificateMeetsCriterion(score=1, explanation='At least a few of us...')
+    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
     certificate.criteria.append(criterion_2_assoc)
 
-    retailer = Retailer(name='Rewe')
+    retailer = m.Retailer(name='Rewe')
     retailer.certificates.append(certificate)
 
     session.add(certificate)
@@ -56,16 +56,16 @@ def test_certificate_model(session):
 
 
 def test_criterion_model(session):
-    criterion = Criterion(number='1.2.3', name='Saves the world')
+    criterion = m.Criterion(number='1.2.3', name='Saves the world')
     criterion.details = {
         'question': 'Does the certificate/label save the world?',
         'response_options': '0 - no, 1 - partly, 2 - totally!',
         'explanation': '2 applies only if it really saves the world.',
-        'possible_scores': [-1, 0, 1, 2] # -1 means not applicable
+        'possible_scores': [-1, 0, 1, 2]  # -1 means not applicable
     }
 
-    hotspot_assoc = CriterionInfluencesHotspot(score=2, explanation='Obvious.')
-    hotspot_assoc.hotspot = Hotspot(name='Saving the world')
+    hotspot_assoc = m.CriterionInfluencesHotspot(score=2, explanation='Obvious.')
+    hotspot_assoc.hotspot = m.Hotspot(name='Saving the world')
     criterion.hotspots.append(hotspot_assoc)
 
     session.add(criterion)
@@ -80,7 +80,7 @@ def test_criterion_model(session):
 
 
 def test_hotspot_model(session):
-    hotspot = Hotspot(name='Saving the world', description='Today’s agenda')
+    hotspot = m.Hotspot(name='Saving the world', description='Today’s agenda')
 
     session.add(hotspot)
     session.commit()
@@ -89,17 +89,17 @@ def test_hotspot_model(session):
 
 
 def test_label_model(session):
-    label = Label(name='EU organic', description='A cool label.', logo='some url')
+    label = m.Label(name='EU organic', description='A cool label.', logo='some url')
 
-    criterion_1_assoc = LabelMeetsCriterion(score=0, explanation='Nope.')
-    criterion_1_assoc.criterion = Criterion(name='Saves the world')
+    criterion_1_assoc = m.LabelMeetsCriterion(score=0, explanation='Nope.')
+    criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
     label.criteria.append(criterion_1_assoc)
 
-    criterion_2_assoc = LabelMeetsCriterion(score=1, explanation='At least a few of us...')
-    criterion_2_assoc.criterion = Criterion(name='Makes us all happy')
+    criterion_2_assoc = m.LabelMeetsCriterion(score=1, explanation='At least a few of us...')
+    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
     label.criteria.append(criterion_2_assoc)
 
-    product = Product(name='Organic vegan gluten-free cookies')
+    product = m.Product(name='Organic vegan gluten-free cookies')
     product.labels.append(label)
 
     session.add(label)
@@ -115,7 +115,7 @@ def test_label_model(session):
 
 
 def test_origin_model(session):
-    origin = Origin(name='Indonesia')
+    origin = m.Origin(name='Indonesia')
 
     session.add(origin)
     session.commit()
@@ -124,8 +124,8 @@ def test_origin_model(session):
 
 
 def test_producer_model(session):
-    producer = Producer(name='Willy Wonka’s Chocolate Factory')
-    product = Product(name='Zucchini Chocolate', producer=producer)
+    producer = m.Producer(name='Willy Wonka’s Chocolate Factory')
+    product = m.Product(name='Zucchini Chocolate', producer=producer)
 
     session.add(product)
     session.commit()
@@ -136,29 +136,29 @@ def test_producer_model(session):
 
 
 def test_product_model(session):
-    palm_oil = Resource(name='Palm oil')
-    cocoa = Resource(name='Cocoa')
-    organic = Label(name='EU organic')
-    billa = Store(name='Billa')
-    brand = Brand(name='BestBio')
-    producer = Producer(name='Raw Organic Cookie Factory')
-    category = Category(name='Cookies')
+    palm_oil = m.Resource(name='Palm oil')
+    cocoa = m.Resource(name='Cocoa')
+    organic = m.Label(name='EU organic')
+    billa = m.Store(name='Billa')
+    brand = m.Brand(name='BestBio')
+    producer = m.Producer(name='Raw Organic Cookie Factory')
+    category = m.Category(name='Cookies')
 
-    product = Product(
-        name = 'Raw organic vegan gluten-free cookies',
-        gtin = '99999999999999',
-        stores = [billa],
-        brand = brand,
-        producer = producer,
-        category = category,
-        details = {
+    product = m.Product(
+        name='Raw organic vegan gluten-free cookies',
+        gtin='99999999999999',
+        stores=[billa],
+        brand=brand,
+        producer=producer,
+        category=category,
+        details={
             'image': 'some url',
             'weight': '300 g',
             'price': '2,99',
             'currency': 'Euro'
         },
-        resources = [palm_oil, cocoa],
-        labels = [organic]
+        resources=[palm_oil, cocoa],
+        labels=[organic]
     )
 
     session.add(product)
@@ -175,7 +175,7 @@ def test_product_model(session):
 
 
 def test_resource_model(session):
-    resource = Resource(name='pork fat')
+    resource = m.Resource(name='pork fat')
     # TODO: association with origins, hotspots, certificates, suppliers via model
     # with score and description
 
@@ -183,10 +183,10 @@ def test_resource_model(session):
 
 
 def test_retailer_model(session):
-    retailer = Retailer(name='Rewe')
-    Store(name='Billa', retailer=retailer)
-    Store(name='Penny', retailer=retailer)
-    Brand(name='Clever', retailer=retailer)
+    retailer = m.Retailer(name='Rewe')
+    m.Store(name='Billa', retailer=retailer)
+    m.Store(name='Penny', retailer=retailer)
+    m.Brand(name='Clever', retailer=retailer)
 
     session.add(retailer)
     session.commit()
@@ -197,8 +197,8 @@ def test_retailer_model(session):
 
 
 def test_store_model(session):
-    retailer = Retailer(name='Rewe')
-    store = Store(name='Billa', retailer=retailer)
+    retailer = m.Retailer(name='Rewe')
+    store = m.Store(name='Billa', retailer=retailer)
 
     session.add(store)
     session.commit()

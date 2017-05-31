@@ -25,22 +25,26 @@ class Serialized(TypeDecorator):
 
 # helper tables
 
-products_resources = db.Table('products_resources',
+products_resources = db.Table(
+    'products_resources',
     db.Column('product_id', db.Integer, db.ForeignKey('products.id'), primary_key=True),
     db.Column('resource_id', db.Integer, db.ForeignKey('resources.id'), primary_key=True)
 )
 
-products_labels = db.Table('products_labels',
+products_labels = db.Table(
+    'products_labels',
     db.Column('product_id', db.Integer, db.ForeignKey('products.id'), primary_key=True),
     db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True)
 )
 
-products_stores = db.Table('products_stores',
+products_stores = db.Table(
+    'products_stores',
     db.Column('product_id', db.Integer, db.ForeignKey('products.id'), primary_key=True),
     db.Column('store_id', db.Integer, db.ForeignKey('stores.id'), primary_key=True)
 )
 
-retailers_certificates = db.Table('retailers_certificates',
+retailers_certificates = db.Table(
+    'retailers_certificates',
     db.Column('retailer_id', db.Integer, db.ForeignKey('retailers.id'), primary_key=True),
     db.Column('certificate_id', db.Integer, db.ForeignKey('certificates.id'), primary_key=True)
 )
@@ -74,8 +78,10 @@ class Certificate(db.Model):
 
 class CertificateMeetsCriterion(db.Model):
     __tablename__ = 'certificates_criteria'
-    certificate_id = db.Column('certificate_id', db.Integer, db.ForeignKey('certificates.id'), primary_key=True)
-    criterion_id = db.Column('criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
+    certificate_id = db.Column(
+        'certificate_id', db.Integer, db.ForeignKey('certificates.id'), primary_key=True)
+    criterion_id = db.Column(
+        'criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
     score = db.Column(db.Integer)
     explanation = db.Column(db.Text)
     criterion = db.relationship('Criterion', lazy=True)
@@ -86,14 +92,17 @@ class Criterion(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     number = db.Column(db.String(8))
     name = db.Column(db.String(64))
-    details = db.Column(Serialized()) # holds question, response options, explanation, possible scores
+    # details holds question, response options, explanation, possible scores
+    details = db.Column(Serialized())
     hotspots = db.relationship('CriterionInfluencesHotspot', lazy=True)
 
 
 class CriterionInfluencesHotspot(db.Model):
     __tablename__ = 'criteria_hotspots'
-    criterion_id = db.Column('criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
-    hotspot_id = db.Column('hotspot_id', db.Integer, db.ForeignKey('hotspots.id'), primary_key=True)
+    criterion_id = db.Column(
+        'criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
+    hotspot_id = db.Column(
+        'hotspot_id', db.Integer, db.ForeignKey('hotspots.id'), primary_key=True)
     score = db.Column(db.Integer)
     explanation = db.Column(db.Text)
     hotspot = db.relationship('Hotspot', lazy=True)
@@ -117,8 +126,10 @@ class Label(db.Model):
 
 class LabelMeetsCriterion(db.Model):
     __tablename__ = 'labels_criteria'
-    label_id = db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True)
-    criterion_id = db.Column('criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
+    label_id = db.Column(
+        'label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True)
+    criterion_id = db.Column(
+        'criterion_id', db.Integer, db.ForeignKey('criteria.id'), primary_key=True)
     score = db.Column(db.Integer)
     explanation = db.Column(db.Text)
     criterion = db.relationship('Criterion', lazy=True)
@@ -141,7 +152,7 @@ class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
-    details = db.Column(Serialized()) # holds image url, weight, price, currency
+    details = db.Column(Serialized())  # holds image url, weight, price, currency
     gtin = db.Column(db.String(14))   # Global Trade Item Number
     brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'))
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
