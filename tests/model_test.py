@@ -3,16 +3,21 @@ import supermarket.model as m
 
 def test_brand_model(session):
     retailer = m.Retailer(name='Rewe')
-    brand = m.Brand(name="Clever", retailer=retailer)
+    store = m.Store(name='Billa')
+    brand = m.Brand(name="Clever", retailer=retailer, stores=[store])
 
     session.add(brand)
     session.commit()
 
     assert brand.id > 0
     assert retailer.id > 0
+    assert store.id > 0
     assert brand.retailer.name == 'Rewe'
+    assert brand.stores[0].name == 'Billa'
     assert len(retailer.brands) == 1
+    assert len(store.brands) == 1
     assert retailer.brands[0].name == 'Clever'
+    assert store.brands[0].name == 'Clever'
 
 
 def test_category_model(session):
@@ -29,32 +34,6 @@ def test_category_model(session):
     assert product_1.category.name == 'cookies'
 
 
-def test_certificate_model(session):
-    certificate = m.Certificate(name='BEPI', description='A cool certificate.', logo='some url')
-
-    criterion_1_assoc = m.CertificateMeetsCriterion(score=0, explanation='Nope.')
-    criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
-    certificate.criteria.append(criterion_1_assoc)
-
-    criterion_2_assoc = m.CertificateMeetsCriterion(score=1, explanation='At least a few of us...')
-    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
-    certificate.criteria.append(criterion_2_assoc)
-
-    retailer = m.Retailer(name='Rewe')
-    retailer.certificates.append(certificate)
-
-    session.add(certificate)
-    session.commit()
-
-    assert certificate.id > 0
-    assert retailer.id > 0
-    assert len(certificate.criteria) == 2
-    assert certificate.retailers[0].name == 'Rewe'
-    assert certificate.criteria[0].score == 0
-    assert certificate.criteria[0].explanation == 'Nope.'
-    assert certificate.criteria[0].criterion.name == 'Saves the world'
-
-
 def test_criterion_model(session):
     criterion = m.Criterion(number='1.2.3', name='Saves the world')
     criterion.details = {
@@ -64,7 +43,7 @@ def test_criterion_model(session):
         'possible_scores': [-1, 0, 1, 2]  # -1 means not applicable
     }
 
-    hotspot_assoc = m.CriterionInfluencesHotspot(score=2, explanation='Obvious.')
+    hotspot_assoc = m.CriterionImprovesHotspot(weight=2, explanation='Obvious.')
     hotspot_assoc.hotspot = m.Hotspot(name='Saving the world')
     criterion.hotspots.append(hotspot_assoc)
 
@@ -74,7 +53,7 @@ def test_criterion_model(session):
     assert criterion.id > 0
     assert criterion.details['possible_scores'][0] == -1
     assert len(criterion.hotspots) == 1
-    assert criterion.hotspots[0].score == 2
+    assert criterion.hotspots[0].weight == 2
     assert criterion.hotspots[0].explanation == 'Obvious.'
     assert criterion.hotspots[0].hotspot.name == 'Saving the world'
 
@@ -91,11 +70,11 @@ def test_hotspot_model(session):
 def test_label_model(session):
     label = m.Label(name='EU organic', description='A cool label.', logo='some url')
 
-    criterion_1_assoc = m.LabelMeetsCriterion(score=0, explanation='Nope.')
+    criterion_1_assoc = m.LabelMeetsCriterion(satisfied=False, explanation='Nope.')
     criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
     label.criteria.append(criterion_1_assoc)
 
-    criterion_2_assoc = m.LabelMeetsCriterion(score=1, explanation='At least a few of us...')
+    criterion_2_assoc = m.LabelMeetsCriterion(satisfied=True, explanation='At least a few of us...')
     criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
     label.criteria.append(criterion_2_assoc)
 
@@ -109,7 +88,7 @@ def test_label_model(session):
     assert product.id > 0
     assert len(label.criteria) == 2
     assert label.products[0].name == 'Organic vegan gluten-free cookies'
-    assert label.criteria[0].score == 0
+    assert label.criteria[0].satisfied is False
     assert label.criteria[0].explanation == 'Nope.'
     assert label.criteria[0].criterion.name == 'Saves the world'
 
@@ -188,12 +167,26 @@ def test_retailer_model(session):
     m.Store(name='Penny', retailer=retailer)
     m.Brand(name='Clever', retailer=retailer)
 
+    criterion_1_assoc = m.RetailerMeetsCriterion(satisfied=False, explanation='Nope.')
+    criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
+    retailer.criteria.append(criterion_1_assoc)
+
+    criterion_2_assoc = m.RetailerMeetsCriterion(
+        satisfied=True, explanation='At least a few of us...')
+    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
+    retailer.criteria.append(criterion_2_assoc)
+
     session.add(retailer)
     session.commit()
 
     assert retailer.id > 0
     assert len(retailer.stores) == 2
     assert len(retailer.brands) == 1
+    assert len(retailer.criteria) == 2
+    assert retailer.name == 'Rewe'
+    assert retailer.criteria[0].satisfied is False
+    assert retailer.criteria[0].explanation == 'Nope.'
+    assert retailer.criteria[0].criterion.name == 'Saves the world'
 
 
 def test_store_model(session):
