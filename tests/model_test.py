@@ -35,7 +35,7 @@ def test_category_model(session):
 
 
 def test_criterion_model(session):
-    criterion = m.Criterion(number='1.2.3', name='Saves the world')
+    criterion = m.Criterion(code='1.2.3', name='Saves the world')
     criterion.details = {
         'question': 'Does the certificate/label save the world?',
         'response_options': '0 - no, 1 - partly, 2 - totally!',
@@ -45,17 +45,17 @@ def test_criterion_model(session):
 
     hotspot_assoc = m.CriterionImprovesHotspot(weight=2, explanation='Obvious.')
     hotspot_assoc.hotspot = m.Hotspot(name='Saving the world')
-    criterion.hotspots.append(hotspot_assoc)
+    criterion.improves_hotspots.append(hotspot_assoc)
 
     session.add(criterion)
     session.commit()
 
     assert criterion.id > 0
     assert criterion.details['possible_scores'][0] == -1
-    assert len(criterion.hotspots) == 1
-    assert criterion.hotspots[0].weight == 2
-    assert criterion.hotspots[0].explanation == 'Obvious.'
-    assert criterion.hotspots[0].hotspot.name == 'Saving the world'
+    assert len(criterion.improves_hotspots) == 1
+    assert criterion.improves_hotspots[0].weight == 2
+    assert criterion.improves_hotspots[0].explanation == 'Obvious.'
+    assert criterion.improves_hotspots[0].hotspot.name == 'Saving the world'
 
 
 def test_hotspot_model(session):
@@ -72,11 +72,11 @@ def test_label_model(session):
 
     criterion_1_assoc = m.LabelMeetsCriterion(satisfied=False, explanation='Nope.')
     criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
-    label.criteria.append(criterion_1_assoc)
+    label.meets_criteria.append(criterion_1_assoc)
 
     criterion_2_assoc = m.LabelMeetsCriterion(satisfied=True, explanation='At least a few of us...')
     criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
-    label.criteria.append(criterion_2_assoc)
+    label.meets_criteria.append(criterion_2_assoc)
 
     product = m.Product(name='Organic vegan gluten-free cookies')
     product.labels.append(label)
@@ -86,11 +86,11 @@ def test_label_model(session):
 
     assert label.id > 0
     assert product.id > 0
-    assert len(label.criteria) == 2
+    assert len(label.meets_criteria) == 2
     assert label.products[0].name == 'Organic vegan gluten-free cookies'
-    assert label.criteria[0].satisfied is False
-    assert label.criteria[0].explanation == 'Nope.'
-    assert label.criteria[0].criterion.name == 'Saves the world'
+    assert label.meets_criteria[0].satisfied is False
+    assert label.meets_criteria[0].explanation == 'Nope.'
+    assert label.meets_criteria[0].criterion.name == 'Saves the world'
 
 
 def test_origin_model(session):
@@ -166,15 +166,16 @@ def test_retailer_model(session):
     m.Store(name='Billa', retailer=retailer)
     m.Store(name='Penny', retailer=retailer)
     m.Brand(name='Clever', retailer=retailer)
+    m.Label(name='BEPI', type='retailer', retailers=[retailer])
 
     criterion_1_assoc = m.RetailerMeetsCriterion(satisfied=False, explanation='Nope.')
-    criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
-    retailer.criteria.append(criterion_1_assoc)
+    criterion_1_assoc.criterion = m.Criterion(name='Saves the world', type='retailer')
+    retailer.meets_criteria.append(criterion_1_assoc)
 
     criterion_2_assoc = m.RetailerMeetsCriterion(
         satisfied=True, explanation='At least a few of us...')
-    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
-    retailer.criteria.append(criterion_2_assoc)
+    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy', type='retailer')
+    retailer.meets_criteria.append(criterion_2_assoc)
 
     session.add(retailer)
     session.commit()
@@ -182,11 +183,14 @@ def test_retailer_model(session):
     assert retailer.id > 0
     assert len(retailer.stores) == 2
     assert len(retailer.brands) == 1
-    assert len(retailer.criteria) == 2
+    assert len(retailer.meets_criteria) == 2
+    assert len(retailer.labels) == 1
     assert retailer.name == 'Rewe'
-    assert retailer.criteria[0].satisfied is False
-    assert retailer.criteria[0].explanation == 'Nope.'
-    assert retailer.criteria[0].criterion.name == 'Saves the world'
+    assert retailer.meets_criteria[0].satisfied is False
+    assert retailer.meets_criteria[0].explanation == 'Nope.'
+    assert retailer.meets_criteria[0].criterion.name == 'Saves the world'
+    assert retailer.meets_criteria[0].criterion.type == 'retailer'
+    assert retailer.labels[0].name == 'BEPI'
 
 
 def test_store_model(session):

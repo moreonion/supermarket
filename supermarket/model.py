@@ -43,6 +43,12 @@ products_stores = db.Table(
     db.Column('store_id', db.Integer, db.ForeignKey('stores.id'), primary_key=True)
 )
 
+retailers_labels = db.Table(
+    'retailers_labels',
+    db.Column('retailer_id', db.Integer, db.ForeignKey('retailers.id'), primary_key=True),
+    db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True)
+)
+
 
 # main tables
 
@@ -68,12 +74,11 @@ class Category(db.Model):
 class Criterion(db.Model):
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
-    type = db.Column(db.String(32))  # label, retailer
-    number = db.Column(db.String(8))  # consortium identifier
+    type = db.Column(db.String(32)) # 'label' or 'retailer'
+    code = db.Column(db.String(8))  # consortium identifier
     name = db.Column(db.String(64))
-    # details holds question, response options, explanation, possible scores
-    details = db.Column(Serialized())
-    hotspots = db.relationship('CriterionImprovesHotspot', lazy=True)
+    details = db.Column(Serialized()) # details holds question, explanation
+    improves_hotspots = db.relationship('CriterionImprovesHotspot', lazy=True)
 
 
 class CriterionImprovesHotspot(db.Model):
@@ -103,10 +108,11 @@ class Ingredient(db.Model):
 class Label(db.Model):
     __tablename__ = 'labels'
     id = db.Column(db.Integer(), primary_key=True)
+    type = db.Column(db.String(32))  # 'product' or 'retailer'
     name = db.Column(db.String(64))
     description = db.Column(db.Text)
     logo = db.Column(db.String(256))
-    criteria = db.relationship('LabelMeetsCriterion', lazy=True)
+    meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True)
 
 
 class LabelMeetsCriterion(db.Model):
@@ -167,7 +173,11 @@ class Retailer(db.Model):
     name = db.Column(db.String(64))
     brands = db.relationship('Brand', backref='retailer', lazy=True)
     stores = db.relationship('Store', backref='retailer', lazy=True)
-    criteria = db.relationship('RetailerMeetsCriterion', lazy=True)
+    meets_criteria = db.relationship('RetailerMeetsCriterion', lazy=True)
+    labels = db.relationship(
+        'Label', secondary=retailers_labels,
+        lazy='subquery', backref=db.backref('retailers', lazy=True)
+    )
 
 
 class RetailerMeetsCriterion(db.Model):
