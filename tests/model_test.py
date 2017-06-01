@@ -115,8 +115,20 @@ def test_producer_model(session):
 
 
 def test_product_model(session):
-    palm_oil = m.Resource(name='Palm oil')
-    cocoa = m.Resource(name='Cocoa')
+    raw_palm_oil = m.Resource(name='Palm oil')
+    palm_oil = m.Ingredient(
+        resource=raw_palm_oil,
+        percentage=90
+    )
+    raw_cocoa = m.Resource(name='Cocoa')
+    peru = m.Origin(name='Peru')
+    supplier = m.Supplier(name='Cocoa Trade Inc.')
+    cocoa = m.Ingredient(
+        resource=raw_cocoa,
+        origin=peru,
+        supplier=supplier,
+        percentage=10
+    )
     organic = m.Label(name='EU organic')
     billa = m.Store(name='Billa')
     brand = m.Brand(name='BestBio')
@@ -136,7 +148,7 @@ def test_product_model(session):
             'price': '2,99',
             'currency': 'Euro'
         },
-        resources=[palm_oil, cocoa],
+        ingredients=[palm_oil, cocoa],
         labels=[organic]
     )
 
@@ -145,20 +157,17 @@ def test_product_model(session):
 
     assert product.id > 0
     assert organic.products[0] == product
-    assert palm_oil.products[0] == product
-    assert cocoa.products[0] == product
+    assert raw_palm_oil.ingredients[0].product == product
+    assert raw_cocoa.ingredients[0].product == product # Read: Raw cocoa used as an ingredient
+    assert raw_cocoa.ingredients[0].origin == peru
+    assert raw_cocoa.ingredients[0].supplier == supplier
+    assert raw_cocoa.ingredients[0].percentage == 10
+    assert peru.ingredients[0].product == product      # Read: Ingredients from Peru
+    assert supplier.ingredients[0].product == product  # Read: Ingredients from this supplier
     assert billa.products[0] == product
     assert brand.products[0] == product
     assert producer.products[0] == product
     assert category.products[0] == product
-
-
-def test_resource_model(session):
-    resource = m.Resource(name='pork fat')
-    # TODO: association with origins, hotspots, certificates, suppliers via model
-    # with score and description
-
-    assert 0
 
 
 def test_retailer_model(session):
@@ -191,6 +200,31 @@ def test_retailer_model(session):
     assert retailer.meets_criteria[0].criterion.name == 'Saves the world'
     assert retailer.meets_criteria[0].criterion.type == 'retailer'
     assert retailer.labels[0].name == 'BEPI'
+
+
+def test_score_model(session):
+    resource = m.Resource(name='pork fat')
+    origin = m.Origin(name='austria')
+    supplier = m.Supplier(name='huber-bauer')
+    hotspot = m.Hotspot(name='animal rights')
+    score = m.Score(
+        resource=resource,
+        origin=origin,
+        supplier=supplier,
+        hotspot=hotspot,
+        score=3,
+        explanation='foo'
+    )
+
+    session.add(score)
+    session.commit()
+
+    assert resource.scores[0].origin == origin
+    assert resource.scores[0].supplier == supplier
+    assert resource.scores[0].hotspot == hotspot
+    assert origin.scores[0].resource == resource
+    assert supplier.scores[0].resource == resource
+    assert hotspot.scores[0].resource == resource
 
 
 def test_store_model(session):

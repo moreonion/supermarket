@@ -103,6 +103,11 @@ class Ingredient(db.Model):
     resource_id = db.Column(db.ForeignKey('resources.id'), primary_key=True)
     origin_id = db.Column(db.ForeignKey('origins.id'), nullable=True)
     supplier_id = db.Column(db.ForeignKey('suppliers.id'), nullable=True)
+    product = db.relationship('Product', lazy=True, backref=db.backref('ingredients', lazy=True))
+    resource = db.relationship('Resource', lazy=True, backref=db.backref('ingredients', lazy=True))
+    origin = db.relationship('Origin', lazy=True, backref=db.backref('ingredients', lazy=True))
+    supplier = db.relationship('Supplier', lazy=True, backref=db.backref('ingredients', lazy=True))
+    percentage = db.Column(db.Integer)
 
 
 class Label(db.Model):
@@ -150,10 +155,6 @@ class Product(db.Model):
         'Label', secondary=products_labels,
         lazy='subquery', backref=db.backref('products', lazy=True)
     )
-    resources = db.relationship(
-        'Resource', secondary='ingredients',
-        lazy='subquery', backref=db.backref('products', lazy=True)
-    )
     stores = db.relationship(
         'Store', secondary=products_stores,
         lazy='subquery', backref=db.backref('products', lazy=True)
@@ -164,7 +165,6 @@ class Resource(db.Model):
     __tablename__ = 'resources'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
-    suppliers = db.relationship('Supplier', backref='resource', lazy=True)
 
 
 class Retailer(db.Model):
@@ -189,6 +189,20 @@ class RetailerMeetsCriterion(db.Model):
     criterion = db.relationship('Criterion', lazy=True)
 
 
+class Score(db.Model):
+    __tablename__ = 'scores'
+    resource_id = db.Column(db.ForeignKey('resources.id'), primary_key=True)
+    origin_id = db.Column(db.ForeignKey('origins.id'), primary_key=True)
+    supplier_id = db.Column(db.ForeignKey('suppliers.id'), primary_key=True, nullable=True)
+    hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True, nullable=True)
+    resource = db.relationship('Resource', lazy=True, backref=db.backref('scores', lazy=True))
+    origin = db.relationship('Origin', lazy=True, backref=db.backref('scores', lazy=True))
+    supplier = db.relationship('Supplier', lazy=True, backref=db.backref('scores', lazy=True))
+    hotspot = db.relationship('Hotspot', lazy=True, backref=db.backref('scores', lazy=True))
+    score = db.Column(db.Float, nullable=False)
+    explanation = db.Column(db.Text)
+
+
 class Store(db.Model):
     __tablename__ = 'stores'
     id = db.Column(db.Integer(), primary_key=True)
@@ -199,5 +213,4 @@ class Store(db.Model):
 class Supplier(db.Model):
     __tablename__ = 'suppliers'
     id = db.Column(db.Integer(), primary_key=True)
-    resource_id = db.Column(db.ForeignKey('resources.id'))
     name = db.Column(db.String(64))
