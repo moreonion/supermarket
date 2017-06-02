@@ -74,10 +74,10 @@ class Category(db.Model):
 class Criterion(db.Model):
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
-    type = db.Column(db.String(32)) # 'label' or 'retailer'
+    type = db.Column(db.String(32))  # 'label' or 'retailer'
     code = db.Column(db.String(8))  # consortium identifier
     name = db.Column(db.String(64))
-    details = db.Column(Serialized()) # details holds question, explanation
+    details = db.Column(Serialized())  # details holds question, explanation
     improves_hotspots = db.relationship('CriterionImprovesHotspot', lazy=True)
 
 

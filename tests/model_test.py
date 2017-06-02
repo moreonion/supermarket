@@ -74,7 +74,7 @@ def test_label_model(session):
     criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
     label.meets_criteria.append(criterion_1_assoc)
 
-    criterion_2_assoc = m.LabelMeetsCriterion(satisfied=True, explanation='At least a few of us...')
+    criterion_2_assoc = m.LabelMeetsCriterion(satisfied=True, explanation='At least a few of us…')
     criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
     label.meets_criteria.append(criterion_2_assoc)
 
@@ -158,7 +158,7 @@ def test_product_model(session):
     assert product.id > 0
     assert organic.products[0] == product
     assert raw_palm_oil.ingredients[0].product == product
-    assert raw_cocoa.ingredients[0].product == product # Read: Raw cocoa used as an ingredient
+    assert raw_cocoa.ingredients[0].product == product  # Read: Raw cocoa used as an ingredient
     assert raw_cocoa.ingredients[0].origin == peru
     assert raw_cocoa.ingredients[0].supplier == supplier
     assert raw_cocoa.ingredients[0].percentage == 10
