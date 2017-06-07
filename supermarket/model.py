@@ -191,16 +191,14 @@ class RetailerMeetsCriterion(db.Model):
 
 class Score(db.Model):
     __tablename__ = 'scores'
-    resource_id = db.Column(db.ForeignKey('resources.id'), primary_key=True)
-    origin_id = db.Column(db.ForeignKey('origins.id'), primary_key=True)
-    supplier_id = db.Column(db.ForeignKey('suppliers.id'), primary_key=True, nullable=True)
-    hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True, nullable=True)
-    resource = db.relationship('Resource', lazy=True, backref=db.backref('scores', lazy=True))
-    origin = db.relationship('Origin', lazy=True, backref=db.backref('scores', lazy=True))
-    supplier = db.relationship('Supplier', lazy=True, backref=db.backref('scores', lazy=True))
-    hotspot = db.relationship('Hotspot', lazy=True, backref=db.backref('scores', lazy=True))
+    hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
+    supply_id = db.Column(db.ForeignKey('supplies.id'), primary_key=True)
     score = db.Column(db.Float, nullable=False)
     explanation = db.Column(db.Text)
+    hotspot = db.relationship(
+        'Hotspot', lazy=True, backref=db.backref('scores', lazy=True))
+    supply = db.relationship(
+        'Supply', lazy=True, backref=db.backref('scores', lazy=True))
 
 
 class Store(db.Model):
@@ -214,3 +212,17 @@ class Supplier(db.Model):
     __tablename__ = 'suppliers'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
+
+
+class Supply(db.Model):
+    __tablename__ = 'supplies'
+    id = db.Column(db.Integer(), primary_key=True)
+    resource_id = db.Column(db.ForeignKey('resources.id'))
+    origin_id = db.Column(db.ForeignKey('origins.id'), nullable=True)
+    supplier_id = db.Column(db.ForeignKey('suppliers.id'), nullable=True)
+    resource = db.relationship(
+        'Resource', lazy=True, backref=db.backref('supplies', lazy=True))
+    origin = db.relationship(
+        'Origin', lazy=True, backref=db.backref('supplies', lazy=True))
+    supplier = db.relationship(
+        'Supplier', lazy=True, backref=db.backref('supplies', lazy=True))

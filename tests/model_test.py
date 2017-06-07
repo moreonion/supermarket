@@ -206,25 +206,36 @@ def test_score_model(session):
     resource = m.Resource(name='pork fat')
     origin = m.Origin(name='austria')
     supplier = m.Supplier(name='huber-bauer')
+    supply_from_country = m.Supply(resource=resource, origin=origin)
+    supply_from_supplier = m.Supply(resource=resource, supplier=supplier)
     hotspot = m.Hotspot(name='animal rights')
-    score = m.Score(
-        resource=resource,
-        origin=origin,
-        supplier=supplier,
+    country_score = m.Score(
+        supply=supply_from_country,
+        hotspot=hotspot,
+        score=3,
+        explanation='foo'
+    )
+    supplier_score = m.Score(
+        supply=supply_from_supplier,
         hotspot=hotspot,
         score=3,
         explanation='foo'
     )
 
-    session.add(score)
+    session.add(country_score, supplier_score)
     session.commit()
 
-    assert resource.scores[0].origin == origin
-    assert resource.scores[0].supplier == supplier
-    assert resource.scores[0].hotspot == hotspot
-    assert origin.scores[0].resource == resource
-    assert supplier.scores[0].resource == resource
-    assert hotspot.scores[0].resource == resource
+    assert country_score.supply.resource == resource
+    assert country_score.supply.origin == origin
+    assert country_score.supply.supplier is None
+    assert country_score.hotspot == hotspot
+    assert country_score.score == 3
+    assert resource.supplies[1].scores[0] == country_score
+
+    assert supplier_score.supply.resource == resource
+    assert supplier_score.supply.origin is None
+    assert supplier_score.supply.supplier == supplier
+    assert resource.supplies[0].scores[0] == supplier_score
 
 
 def test_store_model(session):
