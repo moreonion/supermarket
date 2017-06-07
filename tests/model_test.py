@@ -170,6 +170,30 @@ def test_product_model(session):
     assert category.products[0] == product
 
 
+def test_resource_model(session):
+    resource = m.Resource(name='Cocoa')
+    origin = m.Origin(name='Ghana')
+    supplier = m.Supplier(name='XY')
+    product = m.Product(name='Chocolate')
+    ingredient = m.Ingredient(resource=resource, supplier=supplier, origin=origin, product=product)
+    supply = m.Supply(resource=resource, supplier=supplier)
+
+    resource.ingredients.append(ingredient)
+    resource.supplies.append(supply)
+
+    session.add(resource)
+    session.commit()
+
+    assert resource.id > 0
+    assert resource.ingredients[0].origin == origin      # Read: Resource used as an ingredient
+    assert resource.ingredients[0].supplier == supplier
+    assert resource.supplies[0].supplier == supplier
+    assert origin.ingredients[0].resource == resource    # Read: Ingredients from this origin
+    assert product.ingredients[0].resource == resource
+    assert supplier.ingredients[0].resource == resource  # Read: Ingredients from this supplier
+    assert supplier.supplies[0].resource == resource     # Read: Supplies from this supplier
+
+
 def test_retailer_model(session):
     retailer = m.Retailer(name='Rewe')
     m.Store(name='Billa', retailer=retailer)
