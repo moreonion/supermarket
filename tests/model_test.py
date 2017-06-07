@@ -78,8 +78,12 @@ def test_label_model(session):
     criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
     label.meets_criteria.append(criterion_2_assoc)
 
+    resource_1 = m.Resource(name='cocoa')
+    resource_2 = m.Resource(name='palm oil')
+    label.resources = [resource_1, resource_2]
+
     product = m.Product(name='Organic vegan gluten-free cookies')
-    product.labels.append(label)
+    label.products.append(product)
 
     session.add(label)
     session.commit()
@@ -87,10 +91,14 @@ def test_label_model(session):
     assert label.id > 0
     assert product.id > 0
     assert len(label.meets_criteria) == 2
+    assert len(label.resources) == 2
     assert label.products[0].name == 'Organic vegan gluten-free cookies'
     assert label.meets_criteria[0].satisfied is False
     assert label.meets_criteria[0].explanation == 'Nope.'
     assert label.meets_criteria[0].criterion.name == 'Saves the world'
+    assert label.resources[0].name == 'cocoa'
+    assert product.labels[0] == label
+    assert resource_2.labels[0] == label
 
 
 def test_origin_model(session):
@@ -173,18 +181,23 @@ def test_product_model(session):
 def test_resource_model(session):
     resource = m.Resource(name='Cocoa')
     origin = m.Origin(name='Ghana')
+    label = m.Label(name='Fairtrade')
     supplier = m.Supplier(name='XY')
-    product = m.Product(name='Chocolate')
+    product = m.Product(name='Chocolate', labels=[label])
     ingredient = m.Ingredient(resource=resource, supplier=supplier, origin=origin, product=product)
     supply = m.Supply(resource=resource, supplier=supplier)
 
     resource.ingredients.append(ingredient)
     resource.supplies.append(supply)
+    resource.labels.append(label)
 
     session.add(resource)
     session.commit()
 
     assert resource.id > 0
+    assert resource.name == 'Cocoa'
+    assert resource.labels[0] == label
+    assert product.labels[0] in resource.labels
     assert resource.ingredients[0].origin == origin      # Read: Resource used as an ingredient
     assert resource.ingredients[0].supplier == supplier
     assert resource.supplies[0].supplier == supplier

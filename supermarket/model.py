@@ -31,6 +31,12 @@ brands_stores = db.Table(
     db.Column('store_id', db.Integer, db.ForeignKey('stores.id'), primary_key=True)
 )
 
+labels_resources = db.Table(
+    'labels_resources',
+    db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True),
+    db.Column('resource_id', db.Integer, db.ForeignKey('resources.id'), primary_key=True)
+)
+
 products_labels = db.Table(
     'products_labels',
     db.Column('product_id', db.Integer, db.ForeignKey('products.id'), primary_key=True),
@@ -120,6 +126,10 @@ class Label(db.Model):
     description = db.Column(db.Text)
     logo = db.Column(db.String(256))
     meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True)
+    resources = db.relationship(
+        'Resource', secondary=labels_resources,
+        lazy='subquery', backref=db.backref('labels', lazy=True)
+    )
     # products – backref from Product
     # retailers – backref from Retailer
 
@@ -175,6 +185,7 @@ class Resource(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
     # ingredients – backref from Ingredient
+    # labels – backref from Label
     # supplies – backref from Supply
 
 
