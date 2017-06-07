@@ -62,6 +62,7 @@ class Brand(db.Model):
         'Store', secondary=brands_stores,
         lazy='subquery', backref=db.backref('brands', lazy=True)
     )
+    # retailer – backref from Retailer
 
 
 class Category(db.Model):
@@ -95,6 +96,7 @@ class Hotspot(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(256))
     description = db.Column(db.Text)
+    # scores – backref from Score
 
 
 class Ingredient(db.Model):
@@ -118,6 +120,8 @@ class Label(db.Model):
     description = db.Column(db.Text)
     logo = db.Column(db.String(256))
     meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True)
+    # products – backref from Product
+    # retailers – backref from Retailer
 
 
 class LabelMeetsCriterion(db.Model):
@@ -133,6 +137,8 @@ class Origin(db.Model):
     __tablename__ = 'origins'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
+    # ingredients – backref from Ingredient
+    # supplies – backref from Supply
 
 
 class Producer(db.Model):
@@ -159,12 +165,17 @@ class Product(db.Model):
         'Store', secondary=products_stores,
         lazy='subquery', backref=db.backref('products', lazy=True)
     )
+    # category – backref from Category
+    # ingredients – backref from Ingredient
+    # producer – backref from Producer
 
 
 class Resource(db.Model):
     __tablename__ = 'resources'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
+    # ingredients – backref from Ingredient
+    # supplies – backref from Supply
 
 
 class Retailer(db.Model):
@@ -206,12 +217,17 @@ class Store(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     retailer_id = db.Column(db.ForeignKey('retailers.id'))
     name = db.Column(db.String(64))
+    # brands – backref from Brand
+    # products – backref from Product
+    # retailer – backref from Retailer
 
 
 class Supplier(db.Model):
     __tablename__ = 'suppliers'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
+    # ingredients – backref from Ingredient
+    # supplies – backref from Supply
 
 
 class Supply(db.Model):
@@ -226,3 +242,4 @@ class Supply(db.Model):
         'Origin', lazy=True, backref=db.backref('supplies', lazy=True))
     supplier = db.relationship(
         'Supplier', lazy=True, backref=db.backref('supplies', lazy=True))
+    # scores – backref from Score
