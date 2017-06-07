@@ -1,26 +1,8 @@
-import json
-
 from moflask.flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.types import TypeDecorator
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 db = SQLAlchemy()
-
-
-# custom data types
-
-class Serialized(TypeDecorator):
-    impl = db.Text
-
-    def process_bind_param(self, value, dialect):
-        if value is not None:
-            value = json.dumps(value)
-        return value
-
-    def process_result_value(self, value, dialect):
-        if value is not None:
-            value = json.loads(value)
-        return value
 
 
 # helper tables
@@ -81,10 +63,10 @@ class Category(db.Model):
 class Criterion(db.Model):
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
-    type = db.Column(db.String(32))  # 'label' or 'retailer'
+    type = db.Column(db.Enum('label', 'retailer', name='criterion_type'))
     code = db.Column(db.String(8))  # consortium identifier
     name = db.Column(db.String(64))
-    details = db.Column(Serialized())  # details holds question, explanation
+    details = db.Column(JSONB)  # details holds question, explanation
     improves_hotspots = db.relationship('CriterionImprovesHotspot', lazy=True)
 
 
@@ -100,7 +82,7 @@ class CriterionImprovesHotspot(db.Model):
 class Hotspot(db.Model):
     __tablename__ = 'hotspots'
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(256))
+    name = db.Column(db.String(64))
     description = db.Column(db.Text)
     # scores – backref from Score
 
@@ -121,7 +103,7 @@ class Ingredient(db.Model):
 class Label(db.Model):
     __tablename__ = 'labels'
     id = db.Column(db.Integer(), primary_key=True)
-    type = db.Column(db.String(32))  # 'product' or 'retailer'
+    type = db.Column(db.Enum('product', 'retailer', name='label_type'))
     name = db.Column(db.String(64))
     description = db.Column(db.Text)
     logo = db.Column(db.String(256))
@@ -162,7 +144,7 @@ class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
-    details = db.Column(Serialized())  # holds image url, weight, price, currency
+    details = db.Column(JSONB)  # holds image url, weight, price, currency
     gtin = db.Column(db.String(14))   # Global Trade Item Number
     brand_id = db.Column(db.ForeignKey('brands.id'))
     category_id = db.Column(db.ForeignKey('categories.id'))
@@ -215,7 +197,7 @@ class Score(db.Model):
     __tablename__ = 'scores'
     hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
     supply_id = db.Column(db.ForeignKey('supplies.id'), primary_key=True)
-    score = db.Column(db.Float, nullable=False)
+    score = db.Column(db.Integer, nullable=False)
     explanation = db.Column(db.Text)
     hotspot = db.relationship(
         'Hotspot', lazy=True, backref=db.backref('scores', lazy=True))
