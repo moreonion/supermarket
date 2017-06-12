@@ -74,7 +74,7 @@ class CriterionImprovesHotspot(db.Model):
     __tablename__ = 'criteria_hotspots'
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
     hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
-    weight = db.Column(db.Integer)
+    weight = db.Column(db.SmallInteger)
     explanation = db.Column(db.Text)
     hotspot = db.relationship('Hotspot', lazy=True)
 
@@ -97,7 +97,7 @@ class Ingredient(db.Model):
     resource = db.relationship('Resource', lazy=True, backref=db.backref('ingredients', lazy=True))
     origin = db.relationship('Origin', lazy=True, backref=db.backref('ingredients', lazy=True))
     supplier = db.relationship('Supplier', lazy=True, backref=db.backref('ingredients', lazy=True))
-    percentage = db.Column(db.Integer)
+    percentage = db.Column(db.SmallInteger)
 
 
 class Label(db.Model):
@@ -197,7 +197,7 @@ class Score(db.Model):
     __tablename__ = 'scores'
     hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
     supply_id = db.Column(db.ForeignKey('supplies.id'), primary_key=True)
-    score = db.Column(db.Integer, nullable=False)
+    score = db.Column(db.SmallInteger, nullable=False)
     explanation = db.Column(db.Text)
     hotspot = db.relationship(
         'Hotspot', lazy=True, backref=db.backref('scores', lazy=True))
