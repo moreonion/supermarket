@@ -18,9 +18,9 @@ class Product(Resource):
 
     def put(self, product_id):
         p = m.Product.query.get_or_404(product_id)
-        data = request.get_json()
-        for k, v in data.items():
-            setattr(p, k, v)
+        data = product_schema.load(request.get_json(), instance=p)
+        if data.errors:
+            return data.errors, 400
         m.db.session.commit()
         return product_schema.dump(p).data, 201
 
@@ -37,8 +37,10 @@ class ProductList(Resource):
         return product_list_schema.dump(p_list).data, 200
 
     def post(self):
-        data = request.get_json()
-        p = m.Product(**data)
+        data = product_schema.load(request.get_json())
+        if data.errors:
+            return data.errors, 400
+        p = data.data
         m.db.session.add(p)
         m.db.session.commit()
         return product_schema.dump(p).data, 201
