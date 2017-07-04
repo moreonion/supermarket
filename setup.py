@@ -16,8 +16,11 @@ setup(
     install_requires=[
         'Flask',
         'Flask-Cors',
+        'flask-marshmallow',
+        'Flask-RESTful',
         'Flask-Script',
         'Flask-SQLAlchemy',
+        'marshmallow-sqlalchemy'
         'moflask',
     ],
     dependency_links=[

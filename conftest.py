@@ -38,3 +38,17 @@ def session(db, app):
     transaction.rollback()
     connection.close()
     session.remove()
+
+
+@pytest.fixture(scope='class')
+def session_class(db, app):
+    '''Creates a new database session for all tests of a class.'''
+    connection = db.engine.connect()
+    transaction = connection.begin()
+    options = dict(bind=connection, binds={})
+    session = db.create_scoped_session(options=options)
+    db.session = session
+    yield session
+    transaction.rollback()
+    connection.close()
+    session.remove()
