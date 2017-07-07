@@ -8,7 +8,7 @@ import supermarket.api as api
 url_for = api.api.url_for
 
 
-@pytest.mark.usefixtures('client_class', 'session_class')
+@pytest.mark.usefixtures('client_class', 'db')
 class TestProductApi:
     def test_post(self):
         res = self.client.post(

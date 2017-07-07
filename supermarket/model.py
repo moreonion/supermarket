@@ -157,6 +157,7 @@ class Product(db.Model):
         'Store', secondary=products_stores,
         lazy='subquery', backref=db.backref('products', lazy=True)
     )
+    # brand – backref from Brand
     # category – backref from Category
     # ingredients – backref from Ingredient
     # producer – backref from Producer

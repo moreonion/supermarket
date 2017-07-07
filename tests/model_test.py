@@ -1,13 +1,13 @@
 import supermarket.model as m
 
 
-def test_brand_model(session):
+def test_brand_model(db):
     retailer = m.Retailer(name='Rewe')
     store = m.Store(name='Billa')
     brand = m.Brand(name="Clever", retailer=retailer, stores=[store])
 
-    session.add(brand)
-    session.commit()
+    db.session.add(brand)
+    db.session.commit()
 
     assert brand.id > 0
     assert retailer.id > 0
@@ -20,21 +20,21 @@ def test_brand_model(session):
     assert store.brands[0].name == 'Clever'
 
 
-def test_category_model(session):
+def test_category_model(db):
     category = m.Category(name='cookies')
     product_1 = m.Product(name='Chocolate chip cookies', category=category)
     product_2 = m.Product(name='Triple chocolate bombs', category=category)
 
-    session.add(product_1)
-    session.add(product_2)
-    session.commit()
+    db.session.add(product_1)
+    db.session.add(product_2)
+    db.session.commit()
 
     assert category.id > 0
     assert len(category.products) == 2
     assert product_1.category.name == 'cookies'
 
 
-def test_criterion_model(session):
+def test_criterion_model(db):
     criterion = m.Criterion(code='1.2.3', name='Saves the world')
     criterion.details = {
         'question': 'Does the certificate/label save the world?',
@@ -47,8 +47,8 @@ def test_criterion_model(session):
     hotspot_assoc.hotspot = m.Hotspot(name='Saving the world')
     criterion.improves_hotspots.append(hotspot_assoc)
 
-    session.add(criterion)
-    session.commit()
+    db.session.add(criterion)
+    db.session.commit()
 
     assert criterion.id > 0
     assert criterion.details['possible_scores'][0] == -1
@@ -58,16 +58,16 @@ def test_criterion_model(session):
     assert criterion.improves_hotspots[0].hotspot.name == 'Saving the world'
 
 
-def test_hotspot_model(session):
+def test_hotspot_model(db):
     hotspot = m.Hotspot(name='Saving the world', description='Today’s agenda')
 
-    session.add(hotspot)
-    session.commit()
+    db.session.add(hotspot)
+    db.session.commit()
 
     assert hotspot.id > 0
 
 
-def test_label_model(session):
+def test_label_model(db):
     label = m.Label(name='EU organic', description='A cool label.', logo='some url')
 
     criterion_1_assoc = m.LabelMeetsCriterion(satisfied=False, explanation='Nope.')
@@ -85,8 +85,8 @@ def test_label_model(session):
     product = m.Product(name='Organic vegan gluten-free cookies')
     label.products.append(product)
 
-    session.add(label)
-    session.commit()
+    db.session.add(label)
+    db.session.commit()
 
     assert label.id > 0
     assert product.id > 0
@@ -101,28 +101,28 @@ def test_label_model(session):
     assert resource_2.labels[0] == label
 
 
-def test_origin_model(session):
+def test_origin_model(db):
     origin = m.Origin(name='Indonesia')
 
-    session.add(origin)
-    session.commit()
+    db.session.add(origin)
+    db.session.commit()
 
     assert origin.id > 0
 
 
-def test_producer_model(session):
+def test_producer_model(db):
     producer = m.Producer(name='Willy Wonka’s Chocolate Factory')
     product = m.Product(name='Zucchini Chocolate', producer=producer)
 
-    session.add(product)
-    session.commit()
+    db.session.add(product)
+    db.session.commit()
 
     assert producer.id > 0
     assert producer.products[0] == product
     assert product.producer == producer
 
 
-def test_product_model(session):
+def test_product_model(db):
     raw_palm_oil = m.Resource(name='Palm oil')
     palm_oil = m.Ingredient(
         resource=raw_palm_oil,
@@ -160,8 +160,8 @@ def test_product_model(session):
         labels=[organic]
     )
 
-    session.add(product)
-    session.commit()
+    db.session.add(product)
+    db.session.commit()
 
     assert product.id > 0
     assert organic.products[0] == product
@@ -178,7 +178,7 @@ def test_product_model(session):
     assert category.products[0] == product
 
 
-def test_resource_model(session):
+def test_resource_model(db):
     resource = m.Resource(name='Cocoa')
     origin = m.Origin(name='Ghana')
     label = m.Label(name='Fairtrade')
@@ -191,8 +191,8 @@ def test_resource_model(session):
     resource.supplies.append(supply)
     resource.labels.append(label)
 
-    session.add(resource)
-    session.commit()
+    db.session.add(resource)
+    db.session.commit()
 
     assert resource.id > 0
     assert resource.name == 'Cocoa'
@@ -207,7 +207,7 @@ def test_resource_model(session):
     assert supplier.supplies[0].resource == resource     # Read: Supplies from this supplier
 
 
-def test_retailer_model(session):
+def test_retailer_model(db):
     retailer = m.Retailer(name='Rewe')
     m.Store(name='Billa', retailer=retailer)
     m.Store(name='Penny', retailer=retailer)
@@ -223,8 +223,8 @@ def test_retailer_model(session):
     criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy', type='retailer')
     retailer.meets_criteria.append(criterion_2_assoc)
 
-    session.add(retailer)
-    session.commit()
+    db.session.add(retailer)
+    db.session.commit()
 
     assert retailer.id > 0
     assert len(retailer.stores) == 2
@@ -239,7 +239,7 @@ def test_retailer_model(session):
     assert retailer.labels[0].name == 'BEPI'
 
 
-def test_score_model(session):
+def test_score_model(db):
     resource = m.Resource(name='pork fat')
     origin = m.Origin(name='austria')
     supplier = m.Supplier(name='huber-bauer')
@@ -259,8 +259,8 @@ def test_score_model(session):
         explanation='foo'
     )
 
-    session.add(country_score, supplier_score)
-    session.commit()
+    db.session.add(country_score, supplier_score)
+    db.session.commit()
 
     assert country_score.supply.resource == resource
     assert country_score.supply.origin == origin
@@ -275,12 +275,12 @@ def test_score_model(session):
     assert resource.supplies[0].scores[0] == supplier_score
 
 
-def test_store_model(session):
+def test_store_model(db):
     retailer = m.Retailer(name='Rewe')
     store = m.Store(name='Billa', retailer=retailer)
 
-    session.add(store)
-    session.commit()
+    db.session.add(store)
+    db.session.commit()
 
     assert store.id > 0
     assert store.retailer.id > 0
