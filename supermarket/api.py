@@ -16,11 +16,21 @@ class Product(Resource):
         p = m.Product.query.get_or_404(product_id)
         return product_schema.dump(p).data, 200
 
-    def put(self, product_id):
+    def patch(self, product_id):
         p = m.Product.query.get_or_404(product_id)
         data = product_schema.load(request.get_json(), instance=p)
         if data.errors:
             return data.errors, 400
+        m.db.session.commit()
+        return product_schema.dump(p).data, 201
+
+    def put(self, product_id):
+        data = product_schema.load(request.get_json())
+        if data.errors:
+            return data.errors, 400
+        p = data.data
+        p.id = product_id
+        m.db.session.merge(p)
         m.db.session.commit()
         return product_schema.dump(p).data, 201
 
