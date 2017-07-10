@@ -11,6 +11,29 @@ product_schema = s.ProductSchema()
 product_list_schema = s.ProductSchema(many=True)
 
 
+# Custom errors and responses
+
+class ValidationFailed(Exception):
+    code = 400
+    message = 'Validation failed.'
+
+    def __init__(self, fields):
+        super().__init__()
+        self.errors = []
+        for f, msg in fields.items():
+            self.errors.append({'field': f, 'messages': msg})
+
+
+@app.errorhandler(ValidationFailed)
+def handle_validation_failed(e):
+    return api.make_response(
+        code=e.code,
+        data={'messages': e.message, 'errors': e.errors}
+    )
+
+
+# Resources
+
 class Product(Resource):
     def get(self, product_id):
         p = m.Product.query.get_or_404(product_id)
@@ -20,14 +43,14 @@ class Product(Resource):
         p = m.Product.query.get_or_404(product_id)
         data = product_schema.load(request.get_json(), instance=p)
         if data.errors:
-            return data.errors, 400
+            raise ValidationFailed(data.errors)
         m.db.session.commit()
         return product_schema.dump(p).data, 201
 
     def put(self, product_id):
         data = product_schema.load(request.get_json())
         if data.errors:
-            return data.errors, 400
+            raise ValidationFailed(data.errors)
         p = data.data
         p.id = product_id
         m.db.session.merge(p)
@@ -49,7 +72,7 @@ class ProductList(Resource):
     def post(self):
         data = product_schema.load(request.get_json())
         if data.errors:
-            return data.errors, 400
+            raise ValidationFailed(data.errors)
         p = data.data
         m.db.session.add(p)
         m.db.session.commit()

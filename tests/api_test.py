@@ -1,9 +1,6 @@
 import pytest
-
-
 import json
 import supermarket.api as api
-
 
 url_for = api.api.url_for
 
@@ -96,9 +93,24 @@ class TestProductApi:
         res = self.client.get(url_for(api.Product, product_id=2))
         assert res.status_code == 404
 
+    def test_wrong_method(self):
+        res = self.client.put(url_for(api.ProductList))
+        assert res.status_code == 405
+
 
 @pytest.mark.usefixtures('client_class', 'db')
 class TestProductApiValidation:
+    @classmethod
+    def assert_validation_failed(cls, res):
+        assert res.status_code == 400
+        assert res.mimetype == 'application/json'
+        assert len(res.json['errors']) == 2
+        for error in res.json['errors']:
+            if error['field'] == 'gtin':
+                assert error['messages'][0] == 'Not a valid string.'
+            if error['field'] == 'foo':
+                assert error['messages'][0] == 'Unknown field.'
+
     def test_post_valid(self):
         res = self.client.post(
             url_for(api.ProductList),
@@ -122,10 +134,7 @@ class TestProductApiValidation:
                 'gtin': 99999999999999
             }),
             content_type='application/json')
-        assert res.status_code == 400
-        assert res.mimetype == 'application/json'
-        assert res.json['gtin'][0] == 'Not a valid string.'
-        assert res.json['foo'][0] == 'Unknown field.'
+        self.assert_validation_failed(res)
 
     def test_put_nonsense(self):
         res = self.client.put(
@@ -136,17 +145,11 @@ class TestProductApiValidation:
                 'gtin': 99999999999999
             }),
             content_type='application/json')
-        assert res.status_code == 400
-        assert res.mimetype == 'application/json'
-        assert res.json['gtin'][0] == 'Not a valid string.'
-        assert res.json['foo'][0] == 'Unknown field.'
+        self.assert_validation_failed(res)
 
     def test_patch_nonsense(self):
         res = self.client.patch(
             url_for(api.Product, product_id=1),
             data=json.dumps({'gtin': 99999999999999, 'foo': 'bar'}),
             content_type='application/json')
-        assert res.status_code == 400
-        assert res.mimetype == 'application/json'
-        assert res.json['gtin'][0] == 'Not a valid string.'
-        assert res.json['foo'][0] == 'Unknown field.'
+        self.assert_validation_failed(res)
