@@ -5,7 +5,7 @@ import supermarket.model as m
 ma = Marshmallow()
 
 
-class ProductSchema(ma.ModelSchema):
+class Product(ma.ModelSchema):
     class Meta:
         model = m.Product
 

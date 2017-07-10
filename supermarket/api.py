@@ -7,9 +7,6 @@ import supermarket.schema as s
 app = Blueprint('api', __name__)
 api = Api(app)
 
-product_schema = s.ProductSchema()
-product_list_schema = s.ProductSchema(many=True)
-
 
 # Custom errors and responses
 
@@ -34,50 +31,80 @@ def handle_validation_failed(e):
 
 # Resources
 
-class Product(Resource):
-    def get(self, product_id):
-        p = m.Product.query.get_or_404(product_id)
-        return product_schema.dump(p).data, 200
+class BaseResource(Resource):
+    model = None
+    schema = None
+    path = ''
 
-    def patch(self, product_id):
-        p = m.Product.query.get_or_404(product_id)
-        data = product_schema.load(request.get_json(), instance=p)
+    def get(self, id):
+        r = self.model.query.get_or_404(id)
+        return self.schema().dump(r).data, 200
+
+    def patch(self, id):
+        r = self.model.query.get_or_404(id)
+        data = self.schema().load(request.get_json(), instance=r)
         if data.errors:
             raise ValidationFailed(data.errors)
         m.db.session.commit()
-        return product_schema.dump(p).data, 201
+        return self.schema().dump(r).data, 201
 
-    def put(self, product_id):
-        data = product_schema.load(request.get_json())
+    def put(self, id):
+        data = self.schema().load(request.get_json())
         if data.errors:
             raise ValidationFailed(data.errors)
-        p = data.data
-        p.id = product_id
-        m.db.session.merge(p)
+        r = data.data
+        r.id = id
+        m.db.session.merge(r)
         m.db.session.commit()
-        return product_schema.dump(p).data, 201
+        return self.schema().dump(r).data, 201
 
-    def delete(self, product_id):
-        p = m.Product.query.get_or_404(product_id)
-        m.db.session.delete(p)
+    def delete(self, id):
+        r = self.model.query.get_or_404(id)
+        m.db.session.delete(r)
         m.db.session.commit()
         return '', 204
 
+    @classmethod
+    def add_resource(cls):
+        api.add_resource(cls, '{}/<int:id>'.format(cls.path))
 
-class ProductList(Resource):
+
+class BaseResourceList(Resource):
+    model = None
+    schema = None
+    path = ''
+
     def get(self):
-        p_list = m.Product.query.all()
-        return product_list_schema.dump(p_list).data, 200
+        list = self.model.query.all()
+        return self.schema(many=True).dump(list).data, 200
 
     def post(self):
-        data = product_schema.load(request.get_json())
+        data = self.schema().load(request.get_json())
         if data.errors:
             raise ValidationFailed(data.errors)
-        p = data.data
-        m.db.session.add(p)
+        r = data.data
+        m.db.session.add(r)
         m.db.session.commit()
-        return product_schema.dump(p).data, 201
+        return self.schema().dump(r).data, 201
+
+    @classmethod
+    def add_resource(cls):
+        api.add_resource(cls, cls.path)
 
 
-api.add_resource(ProductList, '/products')
-api.add_resource(Product, '/products/<int:product_id>')
+# make this part less redundant?
+
+class Product(BaseResource):
+    model = m.Product
+    schema = s.Product
+    path = '/products'
+
+
+class ProductList(BaseResourceList):
+    model = m.Product
+    schema = s.Product
+    path = '/products'
+
+
+Product.add_resource()
+ProductList.add_resource()
