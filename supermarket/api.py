@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from flask_restful import Resource, Api
+from flask_restful import Api, Resource as BaseResource
 
 import supermarket.model as m
 import supermarket.schema as s
@@ -12,10 +12,10 @@ api = Api(app)
 
 class ValidationFailed(Exception):
 
-    """Raise when schema validation fails.
+    """Raised when schema validation fails.
 
     All ValidationErrors are put in a consistent error message format
-    for a ‘Bad request’ response.
+    for a ‘400 Bad request’ response.
 
     :errors     Errors dict as returned by Marshmellow schema_load().
 
@@ -39,30 +39,40 @@ def handle_validation_failed(e):
     )
 
 
-# Resource prototypes
+# Resources
 
-class BaseResource(Resource):
+resources = {
+    'products': {'model': m.Product, 'schema': s.Product}
+}
 
-    """Prototype for a resource item, identified by its ID.
+
+@api.resource('/<any({}):type>/<int:id>'.format(', '.join(resources)))
+class Resource(BaseResource):
+
+    """A resource item of type ‘type’, identified by its ID.
 
     Attributes:
         model       The SQLAlchemy model to query and save to.
         schema      The Marshmallow schema associated with the model.
-        path        The path suffix representing the resource.
 
     """
 
     model = None
     schema = None
-    path = ''
 
-    def get(self, id):
-        """Get an item by ID."""
+    def _set_resource(self, type):
+        self.model = resources[type]['model']
+        self.schema = resources[type]['schema']
+
+    def get(self, type, id):
+        """Get an item of ‘type’ by ‘ID’."""
+        self._set_resource(type)
         r = self.model.query.get_or_404(id)
         return self.schema().dump(r).data, 200
 
-    def patch(self, id):
+    def patch(self, type, id):
         """Update an existing item with new data."""
+        self._set_resource(type)
         r = self.model.query.get_or_404(id)
         data = self.schema().load(request.get_json(), instance=r)
         if data.errors:
@@ -70,8 +80,9 @@ class BaseResource(Resource):
         m.db.session.commit()
         return self.schema().dump(r).data, 201
 
-    def put(self, id):
-        """Add a new item if the ID doesn't exist, or replace the existing one."""
+    def put(self, type, id):
+        """Add a new item if the ID doesn’t exist, or replace the existing one."""
+        self._set_resource(type)
         data = self.schema().load(request.get_json())
         if data.errors:
             raise ValidationFailed(data.errors)
@@ -81,41 +92,42 @@ class BaseResource(Resource):
         m.db.session.commit()
         return self.schema().dump(r).data, 201
 
-    def delete(self, id):
-        """Delete an item by its ID."""
+    def delete(self, type, id):
+        """Delete an item of ‘type’ by its ID."""
+        self._set_resource(type)
         r = self.model.query.get_or_404(id)
         m.db.session.delete(r)
         m.db.session.commit()
         return '', 204
 
-    @classmethod
-    def add_resource(cls, api):
-        """Add the path for the resource to an Api."""
-        api.add_resource(cls, '{}/<int:id>'.format(cls.path))
 
+@api.resource('/<any({}):type>'.format(', '.join(resources)))
+class ResourceList(BaseResource):
 
-class BaseResourceList(Resource):
-
-    """Prototype for a resource list.
+    """A list of resources of type ‘type’.
 
     Attributes:
         model       The SQLAlchemy model to query and save to.
         schema      The Marshmallow schema associated with the model.
-        path        The path suffix representing the resource.
 
     """
 
     model = None
     schema = None
-    path = ''
 
-    def get(self):
-        """Get a list containing all items."""
+    def _set_resource(self, type):
+        self.model = resources[type]['model']
+        self.schema = resources[type]['schema']
+
+    def get(self, type):
+        """Get a list containing all items of type ‘type’."""
+        self._set_resource(type)
         list = self.model.query.all()
         return self.schema(many=True).dump(list).data, 200
 
-    def post(self):
-        """Add a new item."""
+    def post(self, type):
+        """Add a new item of type ‘type’."""
+        self._set_resource(type)
         data = self.schema().load(request.get_json())
         if data.errors:
             raise ValidationFailed(data.errors)
@@ -123,26 +135,3 @@ class BaseResourceList(Resource):
         m.db.session.add(r)
         m.db.session.commit()
         return self.schema().dump(r).data, 201
-
-    @classmethod
-    def add_resource(cls, api):
-        """Add the path for the resource to an Api."""
-        api.add_resource(cls, cls.path)
-
-
-# Actual resources
-
-class Product(BaseResource):
-    model = m.Product
-    schema = s.Product
-    path = '/products'
-
-
-class ProductList(BaseResourceList):
-    model = m.Product
-    schema = s.Product
-    path = '/products'
-
-
-Product.add_resource(api)
-ProductList.add_resource(api)
