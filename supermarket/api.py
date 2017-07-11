@@ -11,13 +11,23 @@ api = Api(app)
 # Custom errors and responses
 
 class ValidationFailed(Exception):
+
+    """Raise when schema validation fails.
+
+    All ValidationErrors are put in a consistent error message format
+    for a ‘Bad request’ response.
+
+    :errors     Errors dict as returned by Marshmellow schema_load().
+
+    """
+
     code = 400
     message = 'Validation failed.'
 
-    def __init__(self, fields):
+    def __init__(self, errors):
         super().__init__()
         self.errors = []
-        for f, msg in fields.items():
+        for f, msg in errors.items():
             self.errors.append({'field': f, 'messages': msg})
 
 
@@ -29,18 +39,30 @@ def handle_validation_failed(e):
     )
 
 
-# Resources
+# Resource prototypes
 
 class BaseResource(Resource):
+
+    """Prototype for a resource item, identified by its ID.
+
+    Attributes:
+        model       The SQLAlchemy model to query and save to.
+        schema      The Marshmallow schema associated with the model.
+        path        The path suffix representing the resource.
+
+    """
+
     model = None
     schema = None
     path = ''
 
     def get(self, id):
+        """Get an item by ID."""
         r = self.model.query.get_or_404(id)
         return self.schema().dump(r).data, 200
 
     def patch(self, id):
+        """Update an existing item with new data."""
         r = self.model.query.get_or_404(id)
         data = self.schema().load(request.get_json(), instance=r)
         if data.errors:
@@ -49,6 +71,7 @@ class BaseResource(Resource):
         return self.schema().dump(r).data, 201
 
     def put(self, id):
+        """Add a new item if the ID doesn't exist, or replace the existing one."""
         data = self.schema().load(request.get_json())
         if data.errors:
             raise ValidationFailed(data.errors)
@@ -59,26 +82,40 @@ class BaseResource(Resource):
         return self.schema().dump(r).data, 201
 
     def delete(self, id):
+        """Delete an item by its ID."""
         r = self.model.query.get_or_404(id)
         m.db.session.delete(r)
         m.db.session.commit()
         return '', 204
 
     @classmethod
-    def add_resource(cls):
+    def add_resource(cls, api):
+        """Add the path for the resource to an Api."""
         api.add_resource(cls, '{}/<int:id>'.format(cls.path))
 
 
 class BaseResourceList(Resource):
+
+    """Prototype for a resource list.
+
+    Attributes:
+        model       The SQLAlchemy model to query and save to.
+        schema      The Marshmallow schema associated with the model.
+        path        The path suffix representing the resource.
+
+    """
+
     model = None
     schema = None
     path = ''
 
     def get(self):
+        """Get a list containing all items."""
         list = self.model.query.all()
         return self.schema(many=True).dump(list).data, 200
 
     def post(self):
+        """Add a new item."""
         data = self.schema().load(request.get_json())
         if data.errors:
             raise ValidationFailed(data.errors)
@@ -88,11 +125,12 @@ class BaseResourceList(Resource):
         return self.schema().dump(r).data, 201
 
     @classmethod
-    def add_resource(cls):
+    def add_resource(cls, api):
+        """Add the path for the resource to an Api."""
         api.add_resource(cls, cls.path)
 
 
-# make this part less redundant?
+# Actual resources
 
 class Product(BaseResource):
     model = m.Product
@@ -106,5 +144,5 @@ class ProductList(BaseResourceList):
     path = '/products'
 
 
-Product.add_resource()
-ProductList.add_resource()
+Product.add_resource(api)
+ProductList.add_resource(api)
