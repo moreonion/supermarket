@@ -1,5 +1,6 @@
 from flask import Blueprint, request
 from flask_restful import Api, Resource as BaseResource
+from werkzeug.exceptions import HTTPException
 
 import supermarket.model as m
 import supermarket.schema as s
@@ -8,9 +9,9 @@ app = Blueprint('api', __name__)
 api = Api(app)
 
 
-# Custom errors and responses
+# Custom errors
 
-class ValidationFailed(Exception):
+class ValidationFailed(HTTPException):
 
     """Raised when schema validation fails.
 
@@ -22,21 +23,14 @@ class ValidationFailed(Exception):
     """
 
     code = 400
-    message = 'Validation failed.'
+    data = {}
 
-    def __init__(self, errors):
+    def __init__(self, errors, description='Validation error.'):
         super().__init__()
-        self.errors = []
+        self.data['message'] = description
+        self.data['errors'] = []
         for f, msg in errors.items():
-            self.errors.append({'field': f, 'messages': msg})
-
-
-@app.errorhandler(ValidationFailed)
-def handle_validation_failed(e):
-    return api.make_response(
-        code=e.code,
-        data={'messages': e.message, 'errors': e.errors}
-    )
+            self.data['errors'].append({'field': f, 'messages': msg})
 
 
 # Resources
