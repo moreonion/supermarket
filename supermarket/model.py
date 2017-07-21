@@ -67,7 +67,7 @@ class Criterion(db.Model):
     code = db.Column(db.String(8))  # consortium identifier
     name = db.Column(db.String(64))
     details = db.Column(JSONB)  # details holds question, explanation
-    improves_hotspots = db.relationship('CriterionImprovesHotspot', lazy=True)
+    improves_hotspots = db.relationship('CriterionImprovesHotspot', backref=db.backref('criterion'))
 
 
 class CriterionImprovesHotspot(db.Model):
@@ -90,13 +90,15 @@ class Hotspot(db.Model):
 class Ingredient(db.Model):
     __tablename__ = 'ingredients'
     product_id = db.Column(db.ForeignKey('products.id'), primary_key=True)
-    resource_id = db.Column(db.ForeignKey('resources.id'), primary_key=True)
+    weight = db.Column(db.Integer(), primary_key=True)
+    resource_id = db.Column(db.ForeignKey('resources.id'), nullable=True)
     origin_id = db.Column(db.ForeignKey('origins.id'), nullable=True)
     supplier_id = db.Column(db.ForeignKey('suppliers.id'), nullable=True)
     product = db.relationship('Product', lazy=True, backref=db.backref('ingredients', lazy=True))
     resource = db.relationship('Resource', lazy=True, backref=db.backref('ingredients', lazy=True))
     origin = db.relationship('Origin', lazy=True, backref=db.backref('ingredients', lazy=True))
     supplier = db.relationship('Supplier', lazy=True, backref=db.backref('ingredients', lazy=True))
+    name = db.Column(db.String(256))
     percentage = db.Column(db.SmallInteger)
 
 
@@ -106,6 +108,7 @@ class Label(db.Model):
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
     name = db.Column(db.String(64))
     description = db.Column(db.Text)
+    details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(db.String(256))
     meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True)
     resources = db.relationship(
@@ -120,14 +123,16 @@ class LabelMeetsCriterion(db.Model):
     __tablename__ = 'labels_criteria'
     label_id = db.Column(db.ForeignKey('labels.id'), primary_key=True)
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
-    satisfied = db.Column(db.Boolean)
+    score = db.Column(db.SmallInteger)
     explanation = db.Column(db.Text)
-    criterion = db.relationship('Criterion', lazy=True)
+    criterion = db.relationship('Criterion')
+    label = db.relationship('Label')
 
 
 class Origin(db.Model):
     __tablename__ = 'origins'
     id = db.Column(db.Integer(), primary_key=True)
+    code = db.Column(db.String(2))
     name = db.Column(db.String(64))
     # ingredients – backref from Ingredient
     # supplies – backref from Supply
