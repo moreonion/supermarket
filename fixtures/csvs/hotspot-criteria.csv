@@ -1,0 +1,71 @@
+type,ID,Score,Label mapping,Measures,Climate Risk,Risk Deforestation / Biodiversity,Pollution / Pesticides,Risk of Landrights Violation,Risk of Workers Right Violation,Poverty Risk,Transparency
+Label Check,1.1.1,2,1.1.1.2,Green: The scheme is owned by a broad group of different stakeholders and is not owned by just companies;,,,,,,,3
+Label Check,1.1.2,1,1.1.2.1," Trade unions are represented in permanent advisory bodies, but not in decision-making bodies; ",,,,1,1,1,
+Label Check,1.1.2,2,1.1.2.2,Green: Trade unions are represented in the scheme's decision-making bodies,,,,2,2,2,
+Label Check,1.1.3,2,1.1.3.2,"- An overview of quantitative information on the income sources or financing structure of the scheme (e.g. potentially including type of funding (i.e. financial, assets, manpower, etc), name of funders, amount or %-distribution of income sources). Eg. provided in the form of an annex to annual reports.",,,,,,,2
+Label Check,1.2.1,1,1.2.1.1,"The scheme monitors impacts, but does not have set indicators and/or ist indicators are inadequate and/or the impacts are not assessed systematically; ",,,,,,,1
+Label Check,1.2.1,2,1.2.1.2,Green: The scheme monitors the impacts of its work using indicators of a high standard,,,,,,,2
+Label Check,1.2.2,1,1.2.2.1," The scheme regularly feeds in the results of monitoring & evaluation in its internal processes, e.g. records of inclusion on the agenda of meetings, policy for when results are considered;",,,,,,,2
+Label Check,1.2.2,2,1.2.2.2, Green: The scheme regularly feeds in the results of monitoring & evaluation in its internal processes and those information are made publicaly available ,,,,,,,3
+Label Check,1.2.3,1,1.2.3.1," The compaanies that are being audited have been advised to exercise human rights due diligence or systematic risk assessments, but this is not monitored;",,,,,,,1
+Label Check,1.2.3,2,1.2.3.2, Green: The companies that are being audited are required to exercise huamn rights due diligene or systematic risk assessments.,,,,,,,3
+Label Check,1.3.1,1,1.3.1.1,Audits are realised through second-party; .,,,,,,,1
+Label Check,1.3.1,2,1.3.1.2,Green: Audits are conducted by a third-party service provider or a independent verification,,,,,,,2
+Label Check,1.3.3,1,1.3.3.1," Yellow: Workers are interviewed as part of the audit process, but the interviews is carried out mainly on-site at the production facility.",,,,,,,1
+Label Check,1.3.3,2,1.3.3.2, Green: Workers must be interviewed as part of the audit process. Interviews or at least some of the interviews must be carried out off-site or without management beeing present,,,,,,,2
+Label Check,1.3.4,1,1.3.4.1,"Yellow: External stakeholder input from local trade unions and/or NGOs is recommended/optional during audits;
+",,,,,,,1
+Label Check,1.3.4,2,1.3.4.2," Green: External stakeholder input from local trade unions and/or NGOs is required during audits
+",,,,,,,2
+Label Check,1.4.1,1,1.4.1.1,The scheme provides access to technical or financial assistance for compliance with the standard.,,,,,,,1
+Label Check,1.4.2,1,1.4.2.1, A traceability system is in place but it is (1) not or only in part publicly available OR based on mass balance only  ,,,,,,,1
+Vs01,1.4.2,2,1.4.2.2,"; Green: A traceability system schelf to farm is in place, compulsory and publicly available (e.g. on website).",,,,,,,3
+Label Check,1.4.3,1,1.4.3.1," Audit reports are not available to the public, but
+a general summary of the report and/or audit results is available to the public. ",,,,,,,1
+Label Check,1.4.3,2,1.4.3.2,Green: Audit reports and audit results are available to the public.,,,,,,,3
+Label Check,1.4.4,1,1.4.4.1,"Yellow: A consumer product can carry the scheme’s logo or a text that references it, when the product is at least 30 per cent certified or audited. ",,,,,,,1
+Label Check,1.4.4,2,1.4.4.2,"Green: A consumer product can carry the scheme’s logo or a text that references it, when the product is at least 80 per cent certified or audited.",,,,,,,1
+Label Check,2.1.1,1,2.1.1.1,The use of hazardous chemicals is restricted and  recommendations exist to phase out the use of such substances,,,1,,,,
+Label Check,2.1.1,2,2.1.1.2,The use of hazardous chemicals is prohibited,,,2,,,,
+Vs01,2.1.2,1,2.1.2.1, The scheme  requiers Integrated Pest Management (IPM) or other ways to systematically reduse the use of chemical pesticides.,,,1,,,,
+Label Check,2.1.2,2,2.1.2.2, Green: The use of Synthetic chemicals is prohibited,,,3,,,,
+Vs01,2.2.1,1,2.2.1.1,The scheme recommends criteria on crop rotation or maintenance of biodiversity;,,1,,,,,
+Label Check,2.2.1,2,2.2.1.2," Green: the scheme requires  crop rotation and othe measures to maintenan of biodiversity (e.g. hedgrows, intercropping, fallow land managment,...)",,2,,,,,
+Vs01,2.2.1,2,2.2.1.2,Intercropping or Agroforestry,,2,,,,,
+Vs01,2.2.2,1,2.2.2.1,criteria that prohibt use of recently  (<5 years) deforested land (or other valuable ecosystems),,1,,,,,
+Vs01,2.2.2,2,2.2.2.2,Crteiria that prevent use of  land that has been deforested in the last 20 years AND criteria that prohibt the destruction of other valuable ecosystems e.g. peat land,,3,,,,,
+Label Check,2.2.3,1,2.2.3.1, the use of GMOs is restricted ,,,1,,,,
+Label Check,2.2.3,2,2.2.3.2,The use of GMOs is prohibited,,,1,,,,
+Label Check,,,2.2.4.1,-- inserted because referenced in label criteria mapping --,,,,,,,
+Label Check,2.2.4,2,2.2.4.2,The scheme requires to conduct reguar EIA.,1,1,1,,,,
+Label Check,2.3.1,1,2.3.1.1, monitoring of water is requiered and efficient use of water recomended  ,,1,,,,,
+Label Check,2.3.1,2,2.3.1.2,the monitoring and reduction / efficient use of water is required,,2,,,,,
+Label Check,2.3.2,1,2.3.2.1,The monitoring of energy use and/or GHG emissions is requiered but  there are no regulations on how to do and document it; ,1,,,,,,
+Label Check,2.3.2,2,2.3.2.2,The monitoring of energy use and/or GHG emissions is required AND the method to do so clearly described (or refernced to existing and established methodology). ,1,,,,,,
+Label Check,2.3.3,2,2.3.3.2,Based on monitoring measures requiered to reduce GHG OR Criteria included that prevent GHG (e.g. exclusion of fossil fules to heat glashouses),2,,,,,,
+Vs01,na,,na.,Mesures to achieve positive GHG balance are implemented,3,,,,,,
+Vs01,na,,na.,Minimum farm gate prices are guranteed ,,,,,,1,
+Vs01,na,,na.,Fair farm gate prices are guranteed ,,,,,,3,
+Label Check,3.1.1,1,3.1.1.1,"Payment of a living wage is a requirement, but no sufficient tools exist for the implementation of this criterion or these are only now just being developed. ",,,,,,2,
+Label Check,3.1.1,2,3.1.1.2,"Green: Payment of a living wage is a requirement, and sufficient tools exist for the implementation of this criterion. In order to assess wage payments, audits have to include working time and payment principles like piece rate wages. Standard ",,,,,,3,
+Label Check,3.1.1,2,3.1.1.2,schemes have to participate in a dialogue with all relevant stakeholders and set a common framework to assess a living wage. At the same time initiatives to increase wages are necessary.,,,,,1,1,
+Label Check,3.1.2,1,3.1.2.1,"These sub-contracted workers need to be granted the same rights as formal employees and producers shall not use sub-contracted labour to avoid their obligations. Though placed under the topic Labour Rights, this includes benefits and rights of other sections (e.g. health and safety), too.",,,,,1,,
+Label Check,3.2.2,1,3.2.2.1, Freedom of assication and collective bargaining is actively advanced through some individual activities;,,,,,1,,
+Label Check,3.2.2,2,3.2.2.2, Freedom of association and collective bargaining is advanced through many different ways,,,,,2,,
+Label Check,3.2.3,1,3.2.3.1, Indepdent complaints mechanisms do exist but are not included into the auditing process; ,,,,,1,,
+Label Check,3.2.3,2,3.2.3.2,Independent complaints mechanisms are in place and included into the auditing process also under participation of relevant local stakeholders (i.e. trade unions),,,,,3,,
+Vs01,3.2.1,1,3.2.1.1,ILO is implemented,,,,,2,,
+Label Check,3.3.1,1,3.3.1.1, Provision for training on health and security; ,,,,,1,,
+Vs01,new,n.a.,new.n.a., Provision for training on alternative farming practice; ,,1,1,1,,,
+Vs02,new,n.a.,new.n.a.,FIPC is compulsory ,,,,1,,,
+Vs02,new,n.a.,new.n.a.,FIPC is compulsory and third party has to be involved for monetoring,,,,3,,,
+Vs02,new,n.a.,new.n.a.,There are grievence mechanisms available which are easily accessible by effected people,,,,2,,,
+Label Check,3.3.1,2,3.3.1.2,"Professional training, training on health and security as well as on labour rights",,,,,1,,
+Label Check,3.3.2,1,3.3.2.1,"
+The scheme gives recommendations on companies’
+purchasing practices. Compliance with these recommendations
+is not compulsory.
+",1,1,1,1,1,1,
+Label Check,3.3.2,1,3.3.2.1,"The purchasing
+recommendations given by the scheme are marginal.",1,1,1,1,1,1,
+Label Check,3.3.2,2,3.3.2.2,Green: The scheme requires that companies have responsible purchasing practices.,1,1,1,1,1,1,

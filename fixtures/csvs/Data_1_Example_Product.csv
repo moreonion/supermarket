@@ -1,0 +1,98 @@
+Product ID,Date of entry,Name or acronym of Researcher entering the data,"Retailer",Supermarket,"Product category",Frozen (yes/no),Product type,Complete product Name,Store brand (Yes / No),Brand,Name of Production Company (if stated),Country of production (if stated),Name of distribution Company (if stated),Address of distribution Company (if stated),Product Weight,g /l,Prize in Euro,Barcode Number (number below barcode),Organic? (Yes/No),Energy,kj / kcal,protein,carbohydrates,Sugar,Fett,saturated fat,Salt,Green claim? (Yes / No),Description,Number Ingreadeants,Number Labels,Number pakaging material
+__005_000001,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Schoko Milch Minis,,,,,,,,,,,,,,,,,,,,,,25,2,0
+__005_000002,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Korn-fit,,,,,,,,,,,,,,,,,,,,,,26,1,0
+__005_000003,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Schoko Waffeln,,,,,,,,,,,,,,,,,,,,,,10,2,0
+__005_000004,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Chocolate Chip Cookies,,,,,,,,,,,,,,,,,,,,,,19,2,0
+__005_000005,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Choco Snack,,,,,,,,,,,,,,,,,,,,,,18,2,0
+__005_000006,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Gebäckmischung (2),,,,,,,,,,,,,,,,,,,,,,0,1,0
+__005_000007,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Mandel Spekulatius,,,,,,,,,,,,,,,,,,,,,,9,1,0
+__005_000008,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Vollkornbutterkeks,,,,,,,,,,,,,,,,,,,,,,9,1,0
+__005_000009,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Bio Vollkornhafergebäck,,,,,,,,,,,,,,,,,,,,,,14,6,0
+__005_000010,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Choco Coeur,,,,,,,,,,,,,,,,,,,,,,23,2,0
+__005_000011,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Schoko Karamell Taler,,,,,,,,,,,,,,,,,,,,,,19,1,0
+__005_000012,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Granada,,,,,,,,,,,,,,,,,,,,,,17,1,0
+__005_000013,11.08.2016,AP,,Hofer,Snacks and Sweets,No,Cookies,Kaffeegebäck Spezialitäten,,,,,,,,,,,,,,,,,,,,,,10,0,0
+__1005_000014,02.11.2016,Kate Heschl,1,Merkur,Snacks and Sweets,No,Cookies,Haselnusscookies,,,Banketbakkerij,Niederlande,,,,,,,,,,,,,,,,,,12,2,0
+__1005_000015,02.11.2016,Kate Heschl,1,Merkur,Snacks and Sweets,No,Cookies,Butterwaffeln,yes,Merkur immer gut,Destrooper-Olivier,Belgien,,,,,,,,,,,,,,,,,,8,0,0
+__1005_000016,02.11.2016,Kate Heschl,1,Merkur,Snacks and Sweets,No,Cookies,Cookie Chips,,Bahlsen,Bahlsen,Deutschland,,,,,,,,,,,,,,,,,,12,1,0
+__1005_000017,02.11.2016,Kate Heschl,1,Merkur,Snacks and Sweets,No,Cookies,Applepie Cookies,,Merkur immer gut,Banketbakkerij,Niederlande,,,,,,,,,,,,,,,,,,14,0,0
+__1005_000018,02.11.2016,Kate Heschl,1,Merkur,Snacks and Sweets,No,Cookies,Getreidekekse,,Merkur immer gut,Banketbakkerij,Niederlande,,,,,,,,,,,,,,,,,,12,0,0
+__1005_000019,02.11.2016,Kate Heschl,1,Merkur,Snacks and Sweets,No,Cookies,Kakaokeks,yes,Merkur immer gut,Bisquiva,Deutschland,,,,,,,,,,,,,,,,,,11,1,0
+__1005_000020,02.11.2016,Kate Heschl,1,Merkur,Snacks and Sweets,No,Cookies,Waffeletten,no,Bahlsen,Bahlsen,Deutschland,,,,,,,,,,,,,,,,,,11,1,0
+__Lidl005_000021,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Firone Gebäckmischung,Yes,Sondey,,,Inter Biscuits GmbH,,,,,,,,,,,,,,,,,30,1,0
+__1005_000022,02.11.2016,Kate Heschl,1,Merkur,Snacks and Sweets,No,Cookies,Vanillekipferl,yes,Merkur immer gut,Temizkan&Co,Österreich,,,,,,,,,,,,,,,,,,7,0,0
+__Lidl005_000023,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Carré Milch-Haselnuss 10x,Yes,Sondey,,,Compliment GmbH,"Johann Galler-Str. 9, A-2120 Wolkersdorf",,,,,,,,,,,,,,,,0,1,0
+__Lidl005_000024,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Ambito Vollmilch,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdingen",,,,,,,,,,,,,,,,0,2,0
+__Lidl005_000025,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Ambito Zartbitter,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdingen",,,,,,,,,,,,,,,,20,2,0
+__Lidl005_000026,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Biscino Zartbitter,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdingen",,,,,,,,,,,,,,,,17,2,0
+__Lidl005_000027,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Biscino Black & White,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdingen",,,,,,,,,,,,,,,,17,1,0
+__Lidl005_000028,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Biscino Vollmilch,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdingen",,,,,,,,,,,,,,,,19,2,0
+__Lidl005_000029,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Chocolate Cookies mit 50% Schokostückchen,Yes,Fairglobe,,,Flämische Keksfabrik GmbH,"Arnoldstr. 62, D-47906 Kempen",,,,,,,,,,,,,,,,19,1,0
+__Lidl005_000030,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Cuoricini,Yes,Sondey,,,BIANCOFORNO SPA,"Via Mazzei 1, I-56012 Fornacette (Pl)",,,,,,,,,,,,,,,,10,0,0
+__Lidl005_000031,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,BIO Dinkel-Honig-Tiere,Yes,Sondey,,,George Parlasca Keksfabrik GmbH,D-31303 Burgdorf,,,,,,,,,,,,,,,,11,1,0
+__Lidl005_000032,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,BIO Dinkel Marmor,Yes,Sondey,,,George Parlasca Keksfabrik GmbH,D-31303 Burgdorf,,,,,,,,,,,,,,,,11,1,0
+__Lidl005_000033,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,BIO Dinkel-Hafer-Kränze,Yes,Sondey,,,George Parlasca Keksfabrik GmbH,D-31303 Burgdorf,,,,,,,,,,,,,,,,5,1,0
+__Lidl005_000034,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Grandino Soft Baked Triple Choc,Yes,Sondey,,,Banketbakkerij Merba. B.V.,Wilhelminakanaal Noord 2 NL-4902 VR Oosterhout,,,,,,,,,,,,,,,,22,1,0
+__Lidl005_000035,06.11.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Mandel Spekulatius,Yes,Favorina,,,D. Borggreve KG,"Hermann-Borggreve-Str. 1-3, D-49828 Neuenhaus",,,,,,,,,,,,,,,,9,0,0
+__Lidl005_000036,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Grandino White Choc & Cranberry Cookies,Yes,Sondey,,,Banketbakkerij Merba. B.V.,Wilhelminakanaal Noord 2 NL-4902 VR Oosterhout,,,,,,,,,,,,,,,,21,1,0
+__Lidl005_000037,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Grandino Triple Chocolate Cookies,Yes,Sondey,,,Banketbakkerij Merba. B.V.,Wilhelminakanaal Noord 2 NL-4902 VR Oosterhout,,,,,,,,,,,,,,,,22,1,0
+__Lidl005_000038,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,NEO Kakaokekse mit Kakaocremefüllung 5x5,Yes,Sondey,,,Flämische Keksfabrik ,"Arnoldstraße 62, D- 47906 Kempen",,,,,,,,,,,,,,,,15,1,0
+__Lidl005_000039,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,NEO Kakaokekse mit Vanillecremefüllung 5x5,Yes,Sondey,,,Flämische Keksfabrik ,"Arnoldstraße 62, D- 47906 Kempen",,,,,,,,,,,,,,,,16,1,0
+__Lidl005_000040,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Butterkeks Vollkorn,Yes,Sondey,,,Flämische Keksfabrik ,"Arnoldstraße 62, D- 47906 Kempen",,,,,,,,,,,,,,,,9,0,0
+__Lidl005_000041,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Butterkeks der Klassiker,Yes,Sondey,,,Flämische Keksfabrik ,"Arnoldstraße 62, D- 47906 Kempen",,,,,,,,,,,,,,,,9,0,0
+__Lidl005_000042,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Jaffa Cake Pflaume Winter Edition,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdinger",,,,,,,,,,,,,,,,20,1,0
+__Lidl005_000043,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Jaffa Cake Kirsch,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdinger",,,,,,,,,,,,,,,,21,2,0
+__Lidl005_000044,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Jaffa Cake Orange,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdinger",,,,,,,,,,,,,,,,20,1,0
+__Lidl005_000045,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Rondissimo Zartbitter,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdinger",,,,,,,,,,,,,,,,14,1,0
+__Lidl005_000046,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Rondissimo Vollmilch,Yes,Sondey,,,Inter Biscuits GmbH,"Postfach 1144, D-29634 Schneverdinger",,,,,,,,,,,,,,,,17,2,0
+__Lidl005_000047,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Captain Rondo Kakao,Yes,Sondey,,,Flämische Keksfabrik,"Arnoldstraße 62, D-47906 Kempen",,,,,,,,,,,,,,,,13,1,0
+__Lidl005_000048,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Captain Rondo Minis 6x5 Stück Vanille,Yes,Sondey,,,Flämische Keksfabrik,"Arnoldstraße 62, D-47906 Kempen",,,,,,,,,,,,,,,,14,0,0
+__Lidl005_000049,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Captain Rondo Minis 6x5 Stück Vanille,Yes,Sondey,,,Flämische Keksfabrik,"Arnoldstraße 62, D-47906 Kempen",,,,,,,,,,,,,,,,15,0,0
+__Lidl005_000050,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Grandino Vollmilch,Yes,Sondey,,,Inter Bisciuts GmbH,"Postfach D-1144, D-29634 Schneverdingen",,,,,,,,,,,,,,,,15,1,0
+__Lidl005_000051,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Grandino Kokos,Yes,Sondey,,,Inter Bisciuts GmbH,"Postfach D-1144, D-29634 Schneverdingen",,,,,,,,,,,,,,,,18,1,0
+__Lidl005_000052,31.10.2016,Natalie Lehner,Lidl,Lidl,Snacks and Sweets,No,Cookies,Cranberry White Cookies,Yes,Fairglobe,,,Flämische Keksfabrik GmbH,"Arnoldstr. 62, D-47906 Kempen",,,,,,,,,,,,,,,,19,1,0
+__REWE005_000053,31.10.2016,Bannholzer,REWE,Penny,Snacks and Sweets,No,Cookies,Classic Cookies,No,COVO,HG GmbH ,Germany,HG GmbH,Im Camisch 1 D-07768 Kahla,225g,,,,,,,,,,,,,Yes,Pro Plante 4011 002,18,2,1
+__REWE005_000054,31.10.2016,Bannholzer,REWE,Penny,Snacks and Sweets,No,Cookies,Kakaocreme Schnitten,Yes,PENNY,,Austria,Billa AG/Abteilung Penny,"Postfach 0115P, A-2355 Wr. Neudorf",,,,,,,,,,,,,,No,,9,1,1
+__REWE005_000055,31.10.2016,Bannholzer,REWE,Penny,Snacks and Sweets,No,Cookies,Schoko Butterkeks Vollmilch,Yes,PENNY,,Germany,Billa AG/Abteilung Penny,"Postfach 0115P, A-2355 Wr. Neudorf",125 g mal 2,,,,,,,,,,,,,No,,19,1,1
+__REWE005_000056,31.10.2016,Bannholzer,REWE,Penny,Snacks and Sweets,No,Cookies,Gebäck Mischung ,Yes,PENNY,Continental Bakeries Deutschland GmbH,Germany,Billa AG/Abteilung Penny,"Postfach 0115P, A-2355 Wr. Neudorf",,,,,No,,,,,,,,,No,,15,1,1
+__REWE005_000057,31.10.2016,Bannholzer,REWE,Penny,Snacks and Sweets,No,Cookies,Waffel Mischung ,Yes,PENNY,Continental Bakeries Deutschland GmbH,Germany,Billa AG/Abteilung Penny,"Postfach 0115P, A-2355 Wr. Neudorf",400 g,,,,No,,,,,,,,,No,,4,1,1
+__REWE005_000058,31.10.2016,Bannholzer,REWE,Penny,Snacks and Sweets,No,Cookies,Doppel Keks,Yes,PENNY,,Holland,,"Postfach 0115P, A-2355 Wr. Neudorf",500g,,,,No,,,,,,,,,No,,12,1,1
+__REWE005_000059,31.10.2016,Bannholzer,REWE,Penny,Snacks and Sweets,No,Cookies,Mini Doppel Keks Haselnuss,Yes,PENNY,,,Billa AG/Abteilung Penny,"Postfach 0115P, A-2355 Wr. Neudorf",250g ,,,,,,,,,,,,,No,,15,0,1
+__Spar005_000060,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Feine Bäckerei florentiner,No,De Beukelaer,,,,,,,,,,,,,,,,,,,,24,1,0
+__Spar005_000061,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Vollmilch Ohne Gleichen,No,Bahlsen,,Deutschland,,,,,,,,,,,,,,,,,,11,1,0
+__Spar005_000062,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Loacker Gran Pasticceria,No,Loacker,,Italy,,,,,,,,,,,,,,,,,,11,0,0
+__Spar005_000063,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Air Japonais,No,Swiss Delice,MIDOR AG,Switzeland,,,,,,,,,,,,,,,,,,15,1,0
+__Spar005_000064,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Choco Pause,No,Milka,,,,,,,,,,,,,,,,,,,,9,0,0
+__Spar005_000065,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Pure Butter Shortbread,No,,,Scotland,Walkers Shortbread Ltd,,,,,,,,,,,,,,,,,4,0,0
+__Spar005_000066,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Chocolate Chip Cookies,Yes,Spar,,Deutschland,,,,,,,,,,,,,,,,,,10,0,0
+__Spar005_000067,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Choco Cookie Nut,No,,Milka,,,,,,,,,,,,,,,,,,,11,0,0
+__Spar005_000068,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Grain Biscuits,Yes,Spar,,Deutschland,,,,,,,,,,,,,,,,,,11,0,0
+__Spar005_000069,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Tortina White,No,,Loacker,Italy,,,,,,,,,,,,,,,,,,13,0,0
+__Spar005_000070,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Cereola Hafer-Cookie,No,,Griesson-de Beukelaer,,,,,,,,,,,,,,,,,,,9,4,0
+__Spar005_000071,05.11.2016,Prem CHHETRI,Spar,Spar,Snacks and Sweets,No,Cookies,Blaschke Kokoskuppel,No,,Auer-Blascke Gmbh &Co KG,Austria,,,,,,,,,,,,,,,,,,19,1,0
+__REWE005_000072,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kekse,Getreidekeks Banane,Yes,BILLA,Banketbakkerij Nora B.V.,Niederlande,,,,,,,,,,,,,,,,,,26,1,2
+__REWE005_000073,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kekse,Doppelkekse,Yes,Clever,,,,,,,,,,,,,,,,,,,,10,1,1
+__REWE005_000074,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kekse,Haselnuss-Röllchen,Yes,Clever,,Österreich,Delikatessa GmbH,,,,,,,,,,,,,,,,,14,1,1
+__REWE005_000075,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kakaoschnitten,Kakaoschnitten,Yes,Clever,,Österreich,Delikatessa GmbH,,500,g,,9003740087530,No,493,kcal,"5,5",63,43,24,20,"0,25",No,,10,1,1
+__REWE005_000076,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kekse,Soft-cake Orange,Yes,Clever,,Deutschland,Delikatessa GmbH,,300,g,,,No,394,kcal,"3,4",67,52,12,"6,9","0,24",No,,19,0,2
+__REWE005_000077,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Weihnachtsgebäck,Butterstollen,Yes,Clever,,,Delikatessa GmbH,,500,g,,9009865009709,No,389,kcal,"4,7",60,39,14,"9,1","0,4",No,,18,0,1
+__REWE005_000078,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kakaoschnitten,Heumilch-Mignon-Schnitten,Yes,BILLA,,Österreich,,,250,g,"1,89",9002233018501,No,527,kcal,"6,1",57,43,30,17,"0,19",No,,17,1,1
+__REWE005_000079,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kekse,Dinkel-Vollkornkeks,Yes,BILLA,,Österreich,,,180,g,"1,89",9002233011328,No,459,kcal,"8,5",59,24,20,"9,2","0,19",No,,12,0,2
+__REWE005_000080,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kekse,Schoko Butterkeks,Yes,Clever,,Deutschland,Delicatessa GmbH,,250,g,"1,38",9003740068157,No,512,kcal,7,61,39,26,26,"0,65",No,,19,1,2
+__REWE005_000081,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kekse,Gebäckmischung,Yes,Clever,,Deutschland,Delicatessa GmbH,,600,g,"1,29",9003740098611,No,483,kcal,"5,9",67,28,21,11,"0,52",No,,35,1,1
+__REWE005_000082,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Cookies,Chocolate Chip Cookies,Yes,Clever,,,,,225,g,"0,89",9003740086755,No,502,kcal,"6,7",61,36,25,14,"0,68",No,,19,1,1
+__REWE005_000083,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kekse,Mürbteig-Kekse,Yes,Clever,,Deutschland,Delikatessa GmbH,,200,g,"0,85",9009504007561,No,502,kcal,"7,8",62,27,24,14,1,No,,17,1,1
+__REWE005_000084,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Kakaoschnitten,Mignon Schnitten,Yes,Clever,,Österreich,Delikatessa GmbH,,400,g,"1,69",9009504001132,No,529,kcal,"6,2",56,45,30,17,"0,17",No,,15,1,1
+__REWE005_000085,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Weihnachtskeks,Gewürz-Spekulatius,Yes,Clever,,Deutschland,Delikatessa GmbH,,600,g,"0,99",9009865007675,No,477,kcal,6,70,27,19,"9,4","0,88",No,,7,1,1
+__REWE005_000086,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Butterkekse,Belgische Butterwaffeln,Yes,BILLA,,Belgien,,,250,g,"1,59",9002233024687,No,491,kcal,"6,1",69,36,21,13,"0,53",No,,7,1,2
+__REWE005_000087,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Cookies,Soft Brownie-Cookies,Yes,BILLA,Banketbakkerij Merba B.V.,Niederlande,,,210,g,"1,89",9002233025592,No,478,kcal,"5,4",61,29,23,12,"0,56",No,,21,2,1
+__REWE005_000088,08.11.2016,Julia Kammer,REWE,BILLA,Snacks and Sweets,No,Cookies,Cranberry-Cookies,Yes,BILLA,,Niederlande,,,200,g,"1,89",9002233025585,No,448,kcal,6,64,33,18,"8,1","0,53",No,,13,0,1
+__REWE005_000089,08.11.2016,Julia Kammer,REWE,Billa,Snacks and Sweets,No,Cookies,Getreidekeks Erdbeere,Yes,BILLA,,Niederlande,,,125,g,"1,69",900223302249,No,461,kcal,20,63,29,20,11,"0,55",No,,32,0,2
+__Lidl005_000090,08.11.2016,ct,Lidl,Lidl,Snacks and Sweets,no,Cookies,Grandino-Chocolate Chip Cookies,Yes,Sondey,,,,,225,g /l,,,,502,kcal,"6,7",61,36,25,14,"0,68",no,,18,0,0
+__Lidl005_000091,08.11.2016,ct,Lidl,Lidl,Snacks and Sweets,no,Cookies,Butter Cookies,Yes,Sondey,,,,,500,g /l,,,,498,kcal,7,"66,7",26,23,"15,7","0,25",no,,14,0,0
+__Lidl005_000092,08.11.2016,ct,Lidl,Lidl,Snacks and Sweets,no,Cookies,Grandino-Chocolate Chip Cookies,Yes,Sondey,,,,,225,g /l,,,,502,kcal,"6,7",61,36,25,14,"0,68",no,,18,0,0
+__Lidl005_000093,08.11.2016,ct,Lidl,Lidl,Snacks and Sweets,no,Cookies,Butter Spritzgebäck,Yes,Sondey,,,,,400,g /l,,,,551,kcal,"4,9",62,24,31,21,"0,18",no,,4,0,2
+__Lidl005_000094,08.11.2016,ct,Lidl,Lidl,Snacks and Sweets,no,Cookies,Dominosteine Zartbitter,Yes,Favorina,,,,,250,g /l,,,,389,kcal,"3,8","62,1","50,1","12,9","6,5","0,05",no,,0,1,1
+__Lidl005_000095,08.11.2016,ct,Lidl,Lidl,Snacks and Sweets,no,Cookies,Dorolia Kokos,Yes,Sondey,,,,,300,g /l,,,,559,kcal,"5,2",52,"26,2",36,"21,6","0,43",no,,13,0,2
+__Lidl005_000096,08.11.2016,ct,Lidl,Lidl,Snacks and Sweets,no,Cookies,Dorolio Mandel,Yes,Sondey,,,,,300,g /l,,,,544,kcal,7,"50,6",36,"34,1",16,"0,43",no,,17,0,2
+__Lidl005_000097,08.11.2016,ct,Lidl,Lidl,Snacks and Sweets,no,Cookies,Firone Waffelmischung,Yes,Sondey,,,,,400,g /l,,,,543,kcal,"5,1","54,9","31,7","32,8",22,"0,2",no,,0,1,0
