@@ -22,6 +22,7 @@ from supermarket.model import (
 
 criteria_code_pattern = re.compile('^\d\.\d\.\d$')
 
+
 def import_example_data():
     db.drop_all()
     db.create_all()
@@ -60,7 +61,8 @@ def import_example_data():
                 if 'Product Certification' in row[0]:
                     ltype = 'product'
                 continue
-            acronym, name, description, credibility, environment, social = row[0], row[1], row[2], row[18], row[19], row[20]
+            acronym, name, description = row[0], row[1], row[2]
+            credibility, environment, social = row[18], row[19], row[20]
             l = Label(
                 type=ltype,
                 name=name,
@@ -109,13 +111,10 @@ def import_example_data():
                         ))
     db.session.commit()
 
-    # Criteria and Critia-Hotspot mapping
-    criteria_hotspot = {}
+    # Criteria and Criteria-Hotspot mapping
     with open(os.path.dirname(__file__) + '/csvs/hotspot-criteria.csv') as csv_file:
         reader = csv.DictReader(csv_file)
         hotspots = Hotspot.query.all()
-        prev_id = None
-        prev_c = None
         for row in reader:
             if not row['ID'] in criteria:
                 print("Unknown criterion: {}".format(row['ID']))
@@ -190,14 +189,15 @@ def import_example_data():
 
     # Ingredients
     with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Ingredients.csv') as csv_file:
-        next(csv_file) # Skip header line.
+        next(csv_file)  # Skip header line.
         for row in csv.reader(csv_file):
             if not row[0] in products:
                 print("Ingredient for unknown product: {}".format(row[0]))
                 continue
 
             weight = 1
-            for ingredient, percentage, origin in [(row[i], row[i+1], row[i+2]) for i in range(4, len(row)-2, 3)]:
+            for ingredient, percentage, origin in [
+                    (row[i], row[i+1], row[i+2]) for i in range(4, len(row)-2, 3)]:
                 if not ingredient:
                     continue
                 i = Ingredient(
@@ -220,7 +220,7 @@ def import_example_data():
     labels = {l.name: l for l in Label.query.all()}
     print(list(labels.keys()))
     with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
-        next(csv_file) # Skip header line.
+        next(csv_file)  # Skip header line.
         for row in csv.reader(csv_file):
             if not row[0] in products:
                 print("Label for unknown product: {}".format(row[0]))

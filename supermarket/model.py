@@ -67,7 +67,8 @@ class Criterion(db.Model):
     code = db.Column(db.String(8))  # consortium identifier
     name = db.Column(db.String(64))
     details = db.Column(JSONB)  # details holds question, explanation
-    improves_hotspots = db.relationship('CriterionImprovesHotspot', backref=db.backref('criterion'))
+    improves_hotspots = db.relationship(
+        'CriterionImprovesHotspot', backref=db.backref('criterion'))
 
 
 class CriterionImprovesHotspot(db.Model):
@@ -77,6 +78,7 @@ class CriterionImprovesHotspot(db.Model):
     weight = db.Column(db.SmallInteger)
     explanation = db.Column(db.Text)
     hotspot = db.relationship('Hotspot', lazy=True)
+    # criterion – backref from Criterion
 
 
 class Hotspot(db.Model):

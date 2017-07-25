@@ -21,6 +21,7 @@ class ExampleDataFixture(Command):
     def run(self):
         fixtures.import_example_data()
 
+
 manager.add_command('fixture-example-data', ExampleDataFixture())
 
 if __name__ == '__main__':
