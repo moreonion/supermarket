@@ -37,7 +37,18 @@ class ValidationFailed(HTTPException):
 
 resources = {
     'brands': {'model': m.Brand, 'schema': s.Brand},
-    'products': {'model': m.Product, 'schema': s.Product}
+    'categories': {'model': m.Category, 'schema': s.Category},
+    'criteria': {'model': m.Criterion, 'schema': s.Criterion},
+    'hotspots': {'model': m.Hotspot, 'schema': s.Hotspot},
+    'labels': {'model': m.Label, 'schema': s.Label},
+    'origins': {'model': m.Origin, 'schema': s.Origin},
+    'producers': {'model': m.Producer, 'schema': s.Producer},
+    'products': {'model': m.Product, 'schema': s.Product},
+    'resources': {'model': m.Resource, 'schema': s.Resource},
+    'retailers': {'model': m.Retailer, 'schema': s.Retailer},
+    'stores': {'model': m.Store, 'schema': s.Store},
+    'suppliers': {'model': m.Supplier, 'schema': s.Supplier},
+    'supplies': {'model': m.Supply, 'schema': s.Supply}
 }
 
 

@@ -67,10 +67,106 @@ class CustomSchema(ma.ModelSchema):
 
 
 class Brand(CustomSchema):
+    # id, name
+    # refs: retailer, products, stores
+
     class Meta(CustomSchema.Meta):
         model = m.Brand
 
 
+class Category(CustomSchema):
+    # id, name
+    # refs: products
+
+    class Meta(CustomSchema.Meta):
+        model = m.Category
+
+
+class Criterion(CustomSchema):
+    # id, name, type (label, retailer), code, details (JSONB)
+    # refs: improves_hotspots
+
+    class Meta(CustomSchema.Meta):
+        model = m.Criterion
+
+
+class Hotspot(CustomSchema):
+    # id, name, description
+    # refs: scores
+
+    class Meta(CustomSchema.Meta):
+        model = m.Hotspot
+
+
+class Label(CustomSchema):
+    # id, name, type (product, retailer), description, details (JSONB), logo
+    # meets_criteria, resources
+    # refs: products, retailers
+
+    class Meta(CustomSchema.Meta):
+        model = m.Label
+
+
+class Origin(CustomSchema):
+    # id, name, code
+    # refs: ingredients, supplies
+
+    class Meta(CustomSchema.Meta):
+        model = m.Origin
+
+
+class Producer(CustomSchema):
+    # id, name
+    # refs: products
+
+    class Meta(CustomSchema.Meta):
+        model = m.Producer
+
+
 class Product(CustomSchema):
+    # id, name, details (JSONB), gtin
+    # refs: brand, category, prodcuer, ingredients, labels, stores
+
     class Meta(CustomSchema.Meta):
         model = m.Product
+
+
+class Resource(CustomSchema):
+    # id, name
+    # refs: ingredients, labels, supplies
+
+    class Meta(CustomSchema.Meta):
+        model = m.Resource
+
+
+class Retailer(CustomSchema):
+    # id, name
+    # refs: meets_criteria, brands, stores, labels
+
+    class Meta(CustomSchema.Meta):
+        model = m.Retailer
+
+
+class Store(CustomSchema):
+    # id, name
+    # refs: retailer, brands, products
+
+    class Meta(CustomSchema.Meta):
+        model = m.Store
+
+
+class Supplier(CustomSchema):
+    # id, name
+    # refs: ingredients, supplies
+
+    class Meta(CustomSchema.Meta):
+        model = m.Supplier
+
+
+class Supply(CustomSchema):
+    # id
+    # refs: resource, origin, supplier, scores
+    # scores = Nested(Score, many=True)
+
+    class Meta(CustomSchema.Meta):
+        model = m.Supply
