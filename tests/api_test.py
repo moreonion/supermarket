@@ -99,6 +99,60 @@ class TestProductApi:
 
 
 @pytest.mark.usefixtures('client_class', 'db')
+class TestProductApiRelations:
+    def test_post_new_relation(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='products'),
+            data=json.dumps({
+                'name': 'Organic cookies',
+                'brand': {'name': 'Spar'}
+            }),
+            content_type='application/json')
+        assert res.status_code == 201
+        assert res.json['id'] == 1
+        assert res.json['name'] == 'Organic cookies'
+        assert res.json['brand'] == 1
+
+        related_brand = self.client.get(
+            url_for(api.Resource, type='brands', id=res.json['brand']))
+        assert related_brand.json['name'] == 'Spar'
+        assert related_brand.json['products'][0] == 1
+
+    def test_post_relation_as_id(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='products'),
+            data=json.dumps({
+                'name': 'Vanillia Ice Cream',
+                'brand': 1
+            }),
+            content_type='application/json')
+        assert res.status_code == 201
+        assert res.json['id'] == 2
+        assert res.json['brand'] == 1
+
+        related_brand = self.client.get(
+            url_for(api.Resource, type='brands', id=res.json['brand']))
+        assert 1 in related_brand.json['products']
+        assert 2 in related_brand.json['products']
+
+    def test_post_relation_with_id(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='products'),
+            data=json.dumps({
+                'name': 'Fluffy Cake',
+                'brand': {'id': 1}
+            }),
+            content_type='application/json')
+        assert res.status_code == 201
+        assert res.json['id'] == 3
+        assert res.json['brand'] == 1
+
+        related_brand = self.client.get(
+            url_for(api.Resource, type='brands', id=res.json['brand']))
+        assert 3 in related_brand.json['products']
+
+
+@pytest.mark.usefixtures('client_class', 'db')
 class TestProductApiValidation:
     @classmethod
     def assert_validation_failed(cls, res):
@@ -153,3 +207,16 @@ class TestProductApiValidation:
             data=json.dumps({'gtin': 99999999999999, 'foo': 'bar'}),
             content_type='application/json')
         self.assert_validation_failed(res)
+
+    def test_post_bogus_relation(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='products'),
+            data=json.dumps({
+                'name': 'Organic cookies',
+                'brand': 1
+            }),
+            content_type='application/json')
+        assert res.status_code == 400
+        assert res.mimetype == 'application/json'
+        assert res.json['errors'][0]['field'] == 'brand'
+        assert res.json['errors'][0]['messages'][0] == 'There is no brand with id 1.'

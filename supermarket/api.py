@@ -36,6 +36,7 @@ class ValidationFailed(HTTPException):
 # Resources
 
 resources = {
+    'brands': {'model': m.Brand, 'schema': s.Brand},
     'products': {'model': m.Product, 'schema': s.Product}
 }
 
@@ -77,7 +78,7 @@ class Resource(BaseResource):
     def put(self, type, id):
         """Add a new item if the ID doesn’t exist, or replace the existing one."""
         self._set_resource(type)
-        data = self.schema().load(request.get_json())
+        data = self.schema().load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
@@ -122,7 +123,7 @@ class ResourceList(BaseResource):
     def post(self, type):
         """Add a new item of type ‘type’."""
         self._set_resource(type)
-        data = self.schema().load(request.get_json())
+        data = self.schema().load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
