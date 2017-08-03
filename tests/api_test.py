@@ -76,14 +76,14 @@ class TestProductApi:
         res = self.client.get(url_for(api.ResourceList, type='products'))
         assert res.status_code == 200
         assert res.mimetype == 'application/json'
-        assert res.json[0]['id'] == 1
-        assert res.json[0]['name'] == 'Organic cookies'
-        assert res.json[0]['gtin'] == '99999999999999'
-        assert res.json[0]['details']['currency'] == 'Euro'
-        assert res.json[1]['id'] == 2
-        assert res.json[1]['name'] == 'Vanilla Ice Cream'
-        assert res.json[1]['gtin'] == '11111111111111'
-        assert res.json[1]['details'] is None
+        assert res.json['items'][0]['id'] == 1
+        assert res.json['items'][0]['name'] == 'Organic cookies'
+        assert res.json['items'][0]['gtin'] == '99999999999999'
+        assert res.json['items'][0]['details']['currency'] == 'Euro'
+        assert res.json['items'][1]['id'] == 2
+        assert res.json['items'][1]['name'] == 'Vanilla Ice Cream'
+        assert res.json['items'][1]['gtin'] == '11111111111111'
+        assert res.json['items'][1]['details'] is None
 
     def test_delete(self):
         res = self.client.delete(url_for(api.Resource, type='products', id=2))

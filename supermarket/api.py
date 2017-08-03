@@ -1,3 +1,5 @@
+import re
+
 from flask import Blueprint, request
 from flask_restful import Api, Resource as BaseResource
 from werkzeug.exceptions import HTTPException
@@ -18,7 +20,8 @@ class ValidationFailed(HTTPException):
     All ValidationErrors are put in a consistent error message format
     for a ‘400 Bad request’ response.
 
-    :errors     Errors dict as returned by Marshmellow schema_load().
+    :param dict errors       Errors dict as returned by Marshmellow schema_load().
+    :param str description   Error message, defaults to "Validation Error".
 
     """
 
@@ -125,11 +128,100 @@ class ResourceList(BaseResource):
         self.model = resources[type]['model']
         self.schema = resources[type]['schema']
 
+    def _sort(self, query, sort_fields):
+        if not sort_fields:
+            return query
+        fields = []
+        for field in sort_fields.split(','):
+            if field[0] == '-':
+                attr = self._field_to_attr(field[1:])
+                if attr:
+                    fields.append(attr.desc())
+            else:
+                attr = self._field_to_attr(field)
+                if attr:
+                    fields.append(attr)
+        return query.order_by(*fields)
+
+    def _filter(self, query, filter_fields):
+        for field, value in filter_fields.items():
+            attr = self._field_to_attr(field)
+            if attr and value[:2] == '>=':
+                query = query.filter(attr >= value[2:])
+            elif attr and value[0] == '>':
+                query = query.filter(attr > value[1:])
+            elif attr and value[:2] == '<=':
+                query = query.filter(attr <= value[2:])
+            elif attr and value[0] == '<':
+                query = query.filter(attr < value[1:])
+            elif attr:
+                query = query.filter(attr == value)
+        return query
+
+    def _field_to_attr(self, field):
+        field = field.strip()
+        if field in self.schema().related_lists:
+            return None  # can't sort or filter by lists
+        if field in self.schema().related_fields:
+            field = '{}_id'.format(field)
+        attr = getattr(self.model, field, None)
+        return attr
+
+    def _sanitize_only(self, only_fields):
+        if not only_fields:
+            return only_fields
+        sanitized = []
+        for field in only_fields.split(','):
+            field = field.strip()
+            if field in self.schema().fields:
+                sanitized.append(field)
+        return sanitized
+
+    def _pagination_info(self, page):
+        next_url = re.sub(
+            'page=\d+', 'page={}'.format(page.next_num), request.url) if page.has_next else False
+        prev_url = re.sub(
+            'page=\d+', 'page={}'.format(page.prev_num), request.url) if page.has_prev else False
+        pages = {
+            'total': page.pages,
+            'current': page.page,
+            'next': page.next_num or False,
+            'prev': page.prev_num or False,
+            'next_url': next_url,
+            'prev_url': prev_url
+        }
+        return pages
+
     def get(self, type):
-        """Get a list containing all items of type ‘type’."""
+        """Get a paged list containing all items of type ‘type’.
+
+        It's possible to amend the list with query parameters:
+        - limit: maximum number of items per page (default 20)
+        - page: which page to display (default 1)
+        - only: comma seperated field names to return in the result (includes all fields if empty).
+        - sort: comma seperated field names to sort by, preceed by '-' to sort descending.
+        - <fieldname>: filter by the given value,
+                       preceed by '<', '>', '<=', '=>' to use this operator instead of equals.
+        """
         self._set_resource(type)
-        list = self.model.query.all()
-        return self.schema(many=True).dump(list).data, 200
+
+        # get arguments from query parameters
+        args = request.args.copy()
+        page = int(args.pop('page', 1))
+        limit = int(args.pop('limit', 20))
+        sort = args.pop('sort', 'name')
+        only = self._sanitize_only(args.pop('only', None))
+
+        # get data from model
+        query = self.model.query
+        query = self._sort(query, sort)
+        query = self._filter(query, args)
+        page = query.paginate(page=page, per_page=limit)
+
+        return {
+            'items': self.schema(many=True, only=only).dump(page.items).data,
+            'pages': self._pagination_info(page)
+        }, 200
 
     def post(self, type):
         """Add a new item of type ‘type’."""

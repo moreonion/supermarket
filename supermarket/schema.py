@@ -10,14 +10,16 @@ class CustomSchema(ma.ModelSchema):
 
     """Config and validation that all our schemas share"""
 
-    def _get_related_fields(self):
+    @property
+    def related_fields(self):
         fields = []
         for key, field in self.fields.items():
             if isinstance(field, masqla_fields.Related):
                 fields.append(key)
         return fields
 
-    def _get_related_lists(self):
+    @property
+    def related_lists(self):
         lists = []
         for key, field in self.fields.items():
             if (isinstance(field, ma.List) and
@@ -42,13 +44,13 @@ class CustomSchema(ma.ModelSchema):
                 return item.id is None or item.__class__.query.get(item.id) is not None
             return True
 
-        for field in self._get_related_fields():
+        for field in self.related_fields:
             if field in data:
                 item = data[field]
                 if check(data[field]) is False:
                     errors[field] = ['There is no {} with id {}.'.format(field, data[field].id)]
 
-        for list in self._get_related_lists():
+        for list in self.related_lists:
             if list in data:
                 list_errors = []
                 for item in data[list]:
