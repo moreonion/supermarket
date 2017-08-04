@@ -237,3 +237,22 @@ class ResourceList(BaseResource):
         m.db.session.add(r)
         m.db.session.commit()
         return self.schema().dump(r).data, 201
+
+
+@api.resource('/doc/<any({}):type>'.format(', '.join(resources)))
+class ResourceDoc(BaseResource):
+
+    """API documentation for resources of type ‘type’.
+
+    Attributes:
+        schema      The Marshmallow schema associated with the model.
+
+    """
+
+    def _set_resource(self, type):
+        self.schema = resources[type]['schema']
+
+    def get(self, type):
+        """Get documentation for type ‘type’."""
+        self._set_resource(type)
+        return self.schema().schema_description, 200
