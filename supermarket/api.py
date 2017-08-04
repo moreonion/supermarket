@@ -83,7 +83,8 @@ class Resource(BaseResource):
         """Update an existing item with new data."""
         self._set_resource(type)
         r = self.model.query.get_or_404(id)
-        data = self.schema().load(request.get_json(), instance=r)
+        data = self.schema().load(request.get_json(),
+                                  session=m.db.session, instance=r)
         if data.errors:
             raise ValidationFailed(data.errors)
         m.db.session.commit()
@@ -146,7 +147,10 @@ class ResourceList(BaseResource):
     def _filter(self, query, filter_fields):
         for field, value in filter_fields.items():
             attr = self._field_to_attr(field)
-            if attr and value[:2] == '>=':
+            if attr and ',' in value:
+                values = [v.strip() for v in value.split(',')]
+                query = query.filter(attr.in_(values))
+            elif attr and value[:2] == '>=':
                 query = query.filter(attr >= value[2:])
             elif attr and value[0] == '>':
                 query = query.filter(attr > value[1:])
