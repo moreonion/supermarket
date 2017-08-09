@@ -103,10 +103,12 @@ def import_example_data():
                     c = criteria[c.code]
                     for label_code, e, s in zip(label_codes, explanations, row[7:7+19]):
                         l = labels[label_code]
+                        if not s or int(s) <= 0:
+                            continue
                         db.session.add(LabelMeetsCriterion(
                             label=l,
                             criterion=c,
-                            score=s or None,
+                            score=s,
                             explanation=e,
                         ))
     db.session.commit()
