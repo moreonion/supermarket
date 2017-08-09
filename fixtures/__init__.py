@@ -236,6 +236,7 @@ def import_example_data():
                         label = 'EU organic'
                     label = label.replace('UTZ Certified', 'UTZ')
                     label = label.replace('FAIRTRADE', 'Fairtrade')
+                    label = label.replace('RSPO', 'Roundtable on Sustainable Palm Oil (RSPO)')
                     if label not in labels:
                         print("Unknown label '{}'".format(label))
                         continue
