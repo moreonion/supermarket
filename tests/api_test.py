@@ -230,30 +230,35 @@ class TestLabelApiFilteringAndSorting:
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'A test label',
+                'name': 'A',
             }),
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.mimetype == 'application/json'
-        assert res.json['type'] == 'product'
-        assert res.json['name'] == 'A test label'
+        assert res.json['name'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'B test label',
+                'name': 'B',
             }),
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'B test label'
+        assert res.json['name'] == 'B'
 
         res = self.client.get(
             url_for(api.ResourceList, type='labels') + '?sort=-name',
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 2
-        assert res.json['items'][0]['name'] == 'B test label'
-        assert res.json['items'][1]['name'] == 'A test label'
+        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][1]['name'] == 'A'
+
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels') + '?name=B',
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert res.json['items'][0]['name'] == 'B'
