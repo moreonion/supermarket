@@ -70,11 +70,11 @@ def test_hotspot_model(db):
 def test_label_model(db):
     label = m.Label(name='EU organic', description='A cool label.', logo='some url')
 
-    criterion_1_assoc = m.LabelMeetsCriterion(satisfied=False, explanation='Nope.')
+    criterion_1_assoc = m.LabelMeetsCriterion(score=1, explanation='Nope.')
     criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
     label.meets_criteria.append(criterion_1_assoc)
 
-    criterion_2_assoc = m.LabelMeetsCriterion(satisfied=True, explanation='At least a few of us…')
+    criterion_2_assoc = m.LabelMeetsCriterion(score=2, explanation='At least a few of us…')
     criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
     label.meets_criteria.append(criterion_2_assoc)
 
@@ -93,7 +93,7 @@ def test_label_model(db):
     assert len(label.meets_criteria) == 2
     assert len(label.resources) == 2
     assert label.products[0].name == 'Organic vegan gluten-free cookies'
-    assert label.meets_criteria[0].satisfied is False
+    assert label.meets_criteria[0].score is 1
     assert label.meets_criteria[0].explanation == 'Nope.'
     assert label.meets_criteria[0].criterion.name == 'Saves the world'
     assert label.resources[0].name == 'cocoa'
@@ -126,7 +126,8 @@ def test_product_model(db):
     raw_palm_oil = m.Resource(name='Palm oil')
     palm_oil = m.Ingredient(
         resource=raw_palm_oil,
-        percentage=90
+        percentage=90,
+        weight=1,
     )
     raw_cocoa = m.Resource(name='Cocoa')
     peru = m.Origin(name='Peru')
@@ -135,7 +136,8 @@ def test_product_model(db):
         resource=raw_cocoa,
         origin=peru,
         supplier=supplier,
-        percentage=10
+        percentage=10,
+        weight=2,
     )
     organic = m.Label(name='EU organic')
     billa = m.Store(name='Billa')
@@ -184,7 +186,13 @@ def test_resource_model(db):
     label = m.Label(name='Fairtrade')
     supplier = m.Supplier(name='XY')
     product = m.Product(name='Chocolate', labels=[label])
-    ingredient = m.Ingredient(resource=resource, supplier=supplier, origin=origin, product=product)
+    ingredient = m.Ingredient(
+        resource=resource,
+        supplier=supplier,
+        origin=origin,
+        product=product,
+        weight=1,
+    )
     supply = m.Supply(resource=resource, supplier=supplier)
 
     resource.ingredients.append(ingredient)
