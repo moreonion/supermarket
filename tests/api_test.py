@@ -220,3 +220,40 @@ class TestProductApiValidation:
         assert res.mimetype == 'application/json'
         assert res.json['errors'][0]['field'] == 'brand'
         assert res.json['errors'][0]['messages'][0] == 'There is no brand with id 1.'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
+class TestLabelApiFilteringAndSorting:
+
+    def test_sort_by_name(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'type': 'product',
+                'name': 'A test label',
+            }),
+            content_type='application/json'
+        )
+        assert res.status_code == 201
+        assert res.mimetype == 'application/json'
+        assert res.json['type'] == 'product'
+        assert res.json['name'] == 'A test label'
+
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'type': 'product',
+                'name': 'B test label',
+            }),
+            content_type='application/json'
+        )
+        assert res.status_code == 201
+        assert res.json['name'] == 'B test label'
+
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels') + '?sort=-name',
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 2
+        assert res.json['items'][0]['name'] == 'B test label'
+        assert res.json['items'][1]['name'] == 'A test label'
