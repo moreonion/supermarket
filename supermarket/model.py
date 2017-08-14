@@ -1,5 +1,6 @@
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.associationproxy import association_proxy
 
 
 db = SQLAlchemy()
@@ -117,8 +118,19 @@ class Label(db.Model):
         'Resource', secondary=labels_resources,
         lazy='subquery', backref=db.backref('labels', lazy=True)
     )
+    countries = association_proxy('_countries', 'code',
+                                  creator=lambda x: LabelCountry(code=x))
     # products – backref from Product
     # retailers – backref from Retailer
+
+
+class LabelCountry(db.Model):
+    __tablename__ = 'label_countries'
+    label_id = db.Column(db.ForeignKey('labels.id'), primary_key=True)
+    code = db.Column(db.String(2), primary_key=True)
+    label = db.relationship(
+        'Label', backref=db.backref('_countries')
+    )
 
 
 class LabelMeetsCriterion(db.Model):
