@@ -68,7 +68,12 @@ def test_hotspot_model(db):
 
 
 def test_label_model(db):
-    label = m.Label(name='EU organic', description='A cool label.', logo='some url', countries=set(['GB', 'AT']))
+    label = m.Label(
+        name='EU organic',
+        description='A cool label.',
+        logo='some url',
+        countries=set(['GB', 'AT'])
+    )
 
     criterion_1_assoc = m.LabelMeetsCriterion(score=1, explanation='Nope.')
     criterion_1_assoc.criterion = m.Criterion(name='Saves the world')

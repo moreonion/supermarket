@@ -1,7 +1,7 @@
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
-from marshmallow import post_load, validates_schema, ValidationError, fields
+from marshmallow import post_load, validates_schema, ValidationError
 from marshmallow_sqlalchemy import fields as masqla_fields
 
 import supermarket.model as m
@@ -255,7 +255,10 @@ class Hotspot(CustomSchema):
 
 
 class LabelMeetsCriterion(CustomSchema):
-    criterion = fields.Nested(Criterion, only=('id', 'links', 'code', 'name', 'details'))
+    # primary key: label_id + criterion_id
+    # score, explanation
+    # refs: criterion, label
+    criterion = ma.Nested(Criterion, only=('id', 'links', 'code', 'name', 'details'))
 
     class Meta(CustomSchema.Meta):
         model = m.LabelMeetsCriterion
@@ -278,7 +281,7 @@ class Label(CustomSchema):
                 'api.resourcelist', {'type': 'retailers'}, external=True, attribute='retailers')
         }
     })
-    meets_criteria = fields.Nested(LabelMeetsCriterion, many=True)
+    meets_criteria = ma.Nested(LabelMeetsCriterion, many=True)
 
     class Meta(CustomSchema.Meta):
         model = m.Label
