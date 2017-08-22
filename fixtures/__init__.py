@@ -162,10 +162,22 @@ def import_example_data():
         db.session.add(Origin(code=code, name=name))
     db.session.commit()
 
-    # Resources
-    for name in ['Cocoa', 'Palm Oil']:
-        db.session.add(Resource(name=name))
-    db.session.commit()
+    # Resources and Resource label mapping
+    resources = {}
+    with open(os.path.dirname(__file__) + '/csvs/labels-resources.csv') as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader)
+        next(reader)
+        for row in reader:
+            l, rs = row[0].strip(), row[1]
+            if rs == 'n.a.' or rs.startswith('all '):
+                continue
+            label = labels[l]
+            for r in (r.strip() for r in rs.split(',')):
+                if not r in resources:
+                    resources[r] = Resource(name=r)
+                label.resources.append(resources[r])
+
 
     # Products - Brands - Retailers
     products = dict()
