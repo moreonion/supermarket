@@ -145,7 +145,7 @@ class ResourceList(BaseResource):
         return query.order_by(*fields)
 
     def _filter(self, query, filter_fields):
-        for field, value in filter_fields.items():
+        for field, value in filter_fields.items(multi=True):
             attr = self._field_to_attr(field)
             if attr and ',' in value:
                 values = [v.strip() for v in value.split(',')]
