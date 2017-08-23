@@ -263,3 +263,35 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_greater_than_name(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', **{'name:gt': 'A'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_greater_or_equal_name(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', **{'name:ge': 'B'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_name_in(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', **{'name:in': 'B,C'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_not_name(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', **{'name:ne': 'A'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert res.json['items'][0]['name'] == 'B'

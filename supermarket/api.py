@@ -1,4 +1,5 @@
 import re
+import operator
 
 from flask import Blueprint, request
 from flask_restful import Api, Resource as BaseResource
@@ -145,21 +146,18 @@ class ResourceList(BaseResource):
         return query.order_by(*fields)
 
     def _filter(self, query, filter_fields):
-        for field, value in filter_fields.items(multi=True):
+        accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in']
+        for key, value in filter_fields.items(multi=True):
+            (field, op) = key.split(':') if ':' in key else (key, 'eq')
             attr = self._field_to_attr(field)
-            if attr and ',' in value:
-                values = [v.strip() for v in value.split(',')]
+            if attr is None or op not in accepted_operators:
+                continue
+            if op == 'in':
+                values = [v.strip() for v in value.split(',')] if ',' in value else [value]
                 query = query.filter(attr.in_(values))
-            elif attr and value[:2] == '>=':
-                query = query.filter(attr >= value[2:])
-            elif attr and value[0] == '>':
-                query = query.filter(attr > value[1:])
-            elif attr and value[:2] == '<=':
-                query = query.filter(attr <= value[2:])
-            elif attr and value[0] == '<':
-                query = query.filter(attr < value[1:])
-            elif attr:
-                query = query.filter(attr == value)
+            else:
+                op = getattr(operator, op)
+                query = query.filter(op(attr, value))
         return query
 
     def _field_to_attr(self, field):
