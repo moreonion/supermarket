@@ -295,3 +295,81 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert res.json['items'][0]['name'] == 'B'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
+class TestLabelApiPagination:
+    def test_post_labels(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'type': 'product',
+                'name': 'A',
+            }),
+            content_type='application/json'
+        )
+        assert res.status_code == 201
+        assert res.json['name'] == 'A'
+
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'type': 'product',
+                'name': 'B',
+            }),
+            content_type='application/json'
+        )
+        assert res.status_code == 201
+        assert res.json['name'] == 'B'
+
+    def test_one_page(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels')
+        )
+        assert res.status_code == 200
+        assert res.json['pages']['total'] == 1
+        assert res.json['pages']['current'] == 1
+        assert res.json['pages']['next_url'] is False
+        assert res.json['pages']['prev_url'] is False
+
+    def test_first_page_without_page_param(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', limit=1)
+        )
+        assert res.status_code == 200
+        assert res.json['pages']['total'] == 2
+        assert res.json['pages']['current'] == 1
+        assert res.json['pages']['prev_url'] is False
+
+        next_url = res.json['pages']['next_url']
+        assert 'page=2' in next_url
+        assert 'limit=1' in next_url
+        assert self.client.get(next_url).status_code == 200
+
+    def test_first_page_with_page_param(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', limit=1, page=1)
+        )
+        assert res.status_code == 200
+        assert res.json['pages']['total'] == 2
+        assert res.json['pages']['current'] == 1
+        assert res.json['pages']['prev_url'] is False
+
+        next_url = res.json['pages']['next_url']
+        assert 'page=2' in next_url
+        assert 'limit=1' in next_url
+        assert self.client.get(next_url).status_code == 200
+
+    def test_last_page(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', limit=1, page=2)
+        )
+        assert res.status_code == 200
+        assert res.json['pages']['total'] == 2
+        assert res.json['pages']['current'] == 2
+        assert res.json['pages']['next_url'] is False
+
+        prev_url = res.json['pages']['prev_url']
+        assert 'page=1' in prev_url
+        assert 'limit=1' in prev_url
+        assert self.client.get(prev_url).status_code == 200

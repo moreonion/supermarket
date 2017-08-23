@@ -180,10 +180,16 @@ class ResourceList(BaseResource):
         return sanitized
 
     def _pagination_info(self, page):
-        next_url = re.sub(
-            'page=\d+', 'page={}'.format(page.next_num), request.url) if page.has_next else False
         prev_url = re.sub(
             'page=\d+', 'page={}'.format(page.prev_num), request.url) if page.has_prev else False
+        next_url = False
+        if page.has_next:
+            if 'page=' in request.url:
+                next_url = re.sub('page=\d+', 'page={}'.format(page.next_num), request.url)
+            elif request.args:
+                next_url = '{}&page={}'.format(request.url, page.next_num)
+            else:
+                next_url = '{}?page={}'.format(request.url, page.next_num)
         pages = {
             'total': page.pages,
             'current': page.page,
