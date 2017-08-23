@@ -282,7 +282,7 @@ class Label(CustomSchema):
         }
     })
     meets_criteria = ma.Nested(LabelMeetsCriterion, many=True)
-    hotspots = fields.Method('get_hotspots', dump_only=True)
+    hotspots = ma.Method('get_hotspots', dump_only=True)
 
     def get_hotspots(self, m):
         hs = Hotspot(only=('id', 'name', 'links'))

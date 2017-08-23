@@ -174,10 +174,9 @@ def import_example_data():
                 continue
             label = labels[l]
             for r in (r.strip() for r in rs.split(',')):
-                if not r in resources:
+                if r not in resources:
                     resources[r] = Resource(name=r)
                 label.resources.append(resources[r])
-
 
     # Products - Brands - Retailers
     products = dict()
@@ -245,8 +244,9 @@ def import_example_data():
             for label in row[5:]:
                 if label:
                     if label.startswith('EU Biosiegel'):
-                        label = 'EU organic'
+                        label = 'EU Organic'
                     label = label.replace('UTZ Certified', 'UTZ')
+                    label = label.replace('UTZ Kakao', 'UTZ Cacao')
                     label = label.replace('FAIRTRADE', 'Fairtrade')
                     label = label.replace('RSPO', 'Roundtable on Sustainable Palm Oil (RSPO)')
                     if label not in labels:
