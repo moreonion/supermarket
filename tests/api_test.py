@@ -253,6 +253,7 @@ class TestLabelApiFilteringAndSorting:
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 2
+        assert len(res.json['errors']) == 0
         assert res.json['items'][0]['name'] == 'B'
         assert res.json['items'][1]['name'] == 'A'
 
@@ -262,6 +263,7 @@ class TestLabelApiFilteringAndSorting:
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
         assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_greater_than_name(self):
@@ -270,6 +272,7 @@ class TestLabelApiFilteringAndSorting:
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
         assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_greater_or_equal_name(self):
@@ -278,6 +281,7 @@ class TestLabelApiFilteringAndSorting:
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
         assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_name_in(self):
@@ -286,6 +290,7 @@ class TestLabelApiFilteringAndSorting:
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
         assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_name_like(self):
@@ -294,6 +299,7 @@ class TestLabelApiFilteringAndSorting:
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
         assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_not_name(self):
@@ -302,7 +308,48 @@ class TestLabelApiFilteringAndSorting:
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
         assert res.json['items'][0]['name'] == 'B'
+
+    def test_reverse_sort_unknown_field(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', sort='-nonsense')
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 2
+        assert len(res.json['errors']) == 1
+        assert res.json['errors'][0]['errors'][0]['value'] == '-nonsense'
+        assert res.json['errors'][0]['errors'][0]['message'] == 'Unknown field `nonsense`.'
+
+    def test_filter_unknown_field(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', nonsense='A')
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 2
+        assert len(res.json['errors']) == 1
+        assert res.json['errors'][0]['errors'][0]['param'] == 'nonsense'
+        assert res.json['errors'][0]['errors'][0]['message'] == 'Unknown field `nonsense`.'
+
+    def test_filter_unknown_operator(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', **{'name:xy': 'A'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 2
+        assert len(res.json['errors']) == 1
+        assert res.json['errors'][0]['errors'][0]['param'] == 'name:xy'
+        assert res.json['errors'][0]['errors'][0]['message'].startswith('Unknown operator `xy`')
+
+    def test_filter_like_integer(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', **{'id:like': '1'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 2
+        assert len(res.json['errors']) == 1
+        assert res.json['errors'][0]['errors'][0]['param'] == 'id:like'
+        assert res.json['errors'][0]['errors'][0]['message'] == 'Can’t compare integer to string.'
 
 
 @pytest.mark.usefixtures('client_class', 'db')

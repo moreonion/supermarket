@@ -130,37 +130,79 @@ class ResourceList(BaseResource):
         self.model = resources[type]['model']
         self.schema = resources[type]['schema']
 
-    def _sort(self, query, sort_fields):
+    def _sort(self, query, sort_fields, errors):
         if not sort_fields:
             return query
         fields = []
+        not_sorted = []
         for field in sort_fields.split(','):
             if field[0] == '-':
                 attr = self._field_to_attr(field[1:])
                 if attr:
                     fields.append(attr.desc())
+                else:
+                    not_sorted.append({
+                        'value': field,
+                        'message': 'Unknown field `{}`.'.format(field[1:])
+                    })
             else:
                 attr = self._field_to_attr(field)
                 if attr:
                     fields.append(attr)
+                else:
+                    not_sorted.append({
+                        'value': field,
+                        'message': 'Unknown field `{}`.'.format(field)
+                    })
+        if not_sorted:
+            errors.append({
+                'errors': not_sorted,
+                'message': 'Some values have been ignored for sorting.'
+            })
         return query.order_by(*fields)
 
-    def _filter(self, query, filter_fields):
+    def _filter(self, query, filter_fields, errors):
         accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
+        not_filtered = []
+
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
             attr = self._field_to_attr(field)
-            if attr is None or op not in accepted_operators:
+            if attr is None:
+                not_filtered.append({
+                    'param': key,
+                    'message': 'Unknown field `{}`.'.format(field)
+                })
                 continue
-            if op == 'in':
-                values = [v.strip() for v in value.split(',')] if ',' in value else [value]
-                query = query.filter(attr.in_(values))
+            elif op not in accepted_operators:
+                not_filtered.append({
+                    'param': key,
+                    'message': 'Unknown operator `{op}`, try one of `{accepted}`.'.format(
+                        op=op, accepted=', '.join(accepted_operators))
+                })
+                continue
             elif op == 'like':
+                if not isinstance(attr.type, m.db.String):
+                    not_filtered.append({
+                        'param': key,
+                        'message': 'Can’t compare {type} to string.'.format(
+                            type=attr.type.__class__.__name__.lower())
+                    })
+                    continue
                 value = '%{}%'.format(value)
                 query = query.filter(attr.like(value))
+            elif op == 'in':
+                values = [v.strip() for v in value.split(',')] if ',' in value else [value]
+                query = query.filter(attr.in_(values))
             else:
                 op = getattr(operator, op)
                 query = query.filter(op(attr, value))
+
+        if not_filtered:
+            errors.append({
+                'errors': not_filtered,
+                'message': 'Some parameters have been ignored.'
+            })
         return query
 
     def _field_to_attr(self, field):
@@ -222,16 +264,18 @@ class ResourceList(BaseResource):
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', 'name')
         only = self._sanitize_only(args.pop('only', None))
+        errors = []
 
         # get data from model
         query = self.model.query
-        query = self._sort(query, sort)
-        query = self._filter(query, args)
+        query = self._sort(query, sort, errors)
+        query = self._filter(query, args, errors)
         page = query.paginate(page=page, per_page=limit)
 
         return {
             'items': self.schema(many=True, only=only).dump(page.items).data,
-            'pages': self._pagination_info(page)
+            'pages': self._pagination_info(page),
+            'errors': errors
         }, 200
 
     def post(self, type):
