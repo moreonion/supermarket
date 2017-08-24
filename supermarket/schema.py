@@ -121,6 +121,7 @@ class CustomSchema(ma.ModelSchema):
     @property
     def schema_description(self):
         """Document the schema."""
+        # TODO: better description for NestedFields, MethodFields
         fields = {}
         for k, v in self.fields.items():
             type = v.container if isinstance(v, ma.List) else v
@@ -294,6 +295,7 @@ class Label(CustomSchema):
 
     class Meta(CustomSchema.Meta):
         model = m.Label
+        exclude = ['_countries']
 
 
 class Origin(CustomSchema):
