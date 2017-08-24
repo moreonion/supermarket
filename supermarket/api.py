@@ -146,7 +146,7 @@ class ResourceList(BaseResource):
         return query.order_by(*fields)
 
     def _filter(self, query, filter_fields):
-        accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in']
+        accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
             attr = self._field_to_attr(field)
@@ -155,6 +155,9 @@ class ResourceList(BaseResource):
             if op == 'in':
                 values = [v.strip() for v in value.split(',')] if ',' in value else [value]
                 query = query.filter(attr.in_(values))
+            elif op == 'like':
+                value = '%{}%'.format(value)
+                query = query.filter(attr.like(value))
             else:
                 op = getattr(operator, op)
                 query = query.filter(op(attr, value))

@@ -288,6 +288,14 @@ class TestLabelApiFilteringAndSorting:
         assert len(res.json['items']) == 1
         assert res.json['items'][0]['name'] == 'B'
 
+    def test_filter_name_like(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', **{'name:like': 'B'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert res.json['items'][0]['name'] == 'B'
+
     def test_filter_not_name(self):
         res = self.client.get(
             url_for(api.ResourceList, type='labels', **{'name:ne': 'A'})
