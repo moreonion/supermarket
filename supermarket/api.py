@@ -138,7 +138,7 @@ class ResourceList(BaseResource):
         for field in sort_fields.split(','):
             if field[0] == '-':
                 attr = self._field_to_attr(field[1:])
-                if attr:
+                if attr is not None:
                     fields.append(attr.desc())
                 else:
                     not_sorted.append({
@@ -147,7 +147,7 @@ class ResourceList(BaseResource):
                     })
             else:
                 attr = self._field_to_attr(field)
-                if attr:
+                if attr is not None:
                     fields.append(attr)
                 else:
                     not_sorted.append({
@@ -182,7 +182,7 @@ class ResourceList(BaseResource):
                 })
                 continue
             elif op == 'like':
-                if not isinstance(attr.type, m.db.String):
+                if not (isinstance(attr.type, m.db.String) or isinstance(attr.type, m.db.Text)):
                     not_filtered.append({
                         'param': key,
                         'message': 'Can’t compare {type} to string.'.format(
@@ -211,7 +211,13 @@ class ResourceList(BaseResource):
             return None  # can't sort or filter by lists
         if field in self.schema().related_fields:
             field = '{}_id'.format(field)
-        attr = getattr(self.model, field, None)
+        if '.' in field:
+            keys = field.split('.')
+            a = getattr(self.model, keys.pop(0), None)
+            if a and isinstance(a.type, m.JSONB):
+                attr = a[[k for k in keys]].astext
+        else:
+            attr = getattr(self.model, field, None)
         return attr
 
     def _sanitize_only(self, only_fields):

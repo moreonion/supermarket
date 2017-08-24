@@ -43,7 +43,7 @@ def import_example_data():
     labels = {}
     score_map = {
         'red': 0,
-        'no evaluation*': None,
+        'no evaluation*': 0,
         'red/yellow': 0,
         'red/yellow mix': 0,
         'green/yellow': 1,
