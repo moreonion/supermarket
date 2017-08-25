@@ -137,7 +137,7 @@ class ResourceList(BaseResource):
         not_sorted = []
         for field in sort_fields.split(','):
             if field[0] == '-':
-                attr = self._field_to_attr(field[1:])
+                (attr, query) = self._field_to_attr(field[1:], query)
                 if attr is not None:
                     fields.append(attr.desc())
                 else:
@@ -146,7 +146,7 @@ class ResourceList(BaseResource):
                         'message': 'Unknown field `{}`.'.format(field[1:])
                     })
             else:
-                attr = self._field_to_attr(field)
+                (attr, query) = self._field_to_attr(field, query)
                 if attr is not None:
                     fields.append(attr)
                 else:
@@ -167,7 +167,7 @@ class ResourceList(BaseResource):
 
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
-            attr = self._field_to_attr(field)
+            (attr, query) = self._field_to_attr(field, query)
             if attr is None:
                 not_filtered.append({
                     'param': key,
@@ -205,20 +205,34 @@ class ResourceList(BaseResource):
             })
         return query
 
-    def _field_to_attr(self, field):
+    def _field_to_attr(self, field, query):
         field = field.strip()
-        if field in self.schema().related_lists:
-            return None  # can't sort or filter by lists
-        if field in self.schema().related_fields:
-            field = '{}_id'.format(field)
+        model = self.model
+        relation = None
+        keys = []
         if '.' in field:
             keys = field.split('.')
-            a = getattr(self.model, keys.pop(0), None)
-            if a and isinstance(a.type, m.JSONB):
-                attr = a[[k for k in keys]].astext
-        else:
-            attr = getattr(self.model, field, None)
-        return attr
+            field = keys.pop(0)
+        elif field in self.schema().related_fields:
+            field = '{}_id'.format(field)
+
+        if field in self.schema().related_fields + self.schema().related_lists:
+            relation = getattr(model, field)
+            field = keys.pop(0) if keys else 'id'
+            model = relation.property.mapper.class_
+
+        attr = getattr(model, field, None)
+        if not hasattr(attr, 'type'):  # not a proper column
+            attr = None
+        elif isinstance(attr.type, m.JSONB) and keys:
+            attr = attr[[k for k in keys]].astext
+        elif keys:  # not a perfect match after all
+            attr = None
+
+        if relation and attr is not None:
+            query = query.outerjoin(relation)
+
+        return (attr, query)
 
     def _sanitize_only(self, only_fields):
         if not only_fields:
