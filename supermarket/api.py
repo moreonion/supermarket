@@ -190,7 +190,7 @@ class ResourceList(BaseResource):
                     })
                     continue
                 value = '%{}%'.format(value)
-                query = query.filter(attr.like(value))
+                query = query.filter(attr.ilike(value))
             elif op == 'in':
                 values = [v.strip() for v in value.split(',')] if ',' in value else [value]
                 query = query.filter(attr.in_(values))
