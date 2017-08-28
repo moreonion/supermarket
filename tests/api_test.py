@@ -28,7 +28,7 @@ class TestProductApi:
 
     def test_put_new(self):
         res = self.client.put(
-            url_for(api.Resource, type='products', id=2),
+            url_for(api.ResourceItem, type='products', id=2),
             data=json.dumps({
                 'name': 'Chocolate Ice Cream',
                 'gtin': '11111111111111'
@@ -43,7 +43,7 @@ class TestProductApi:
 
     def test_put_existing(self):
         res = self.client.put(
-            url_for(api.Resource, type='products', id=2),
+            url_for(api.ResourceItem, type='products', id=2),
             data=json.dumps({'name': 'Vanilla Ice Cream'}),
             content_type='application/json')
         assert res.status_code == 201
@@ -54,7 +54,7 @@ class TestProductApi:
 
     def test_patch(self):
         res = self.client.patch(
-            url_for(api.Resource, type='products', id=2),
+            url_for(api.ResourceItem, type='products', id=2),
             data=json.dumps({'gtin': '11111111111111'}),
             content_type='application/json')
         assert res.status_code == 201
@@ -64,7 +64,7 @@ class TestProductApi:
         assert res.json['gtin'] == '11111111111111'
 
     def test_get(self):
-        res = self.client.get(url_for(api.Resource, type='products', id=1))
+        res = self.client.get(url_for(api.ResourceItem, type='products', id=1))
         assert res.status_code == 200
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 1
@@ -86,11 +86,11 @@ class TestProductApi:
         assert res.json['items'][1]['details'] is None
 
     def test_delete(self):
-        res = self.client.delete(url_for(api.Resource, type='products', id=2))
+        res = self.client.delete(url_for(api.ResourceItem, type='products', id=2))
         assert res.status_code == 204
 
     def test_get_deleted(self):
-        res = self.client.get(url_for(api.Resource, type='products', id=2))
+        res = self.client.get(url_for(api.ResourceItem, type='products', id=2))
         assert res.status_code == 404
 
     def test_wrong_method(self):
@@ -114,7 +114,7 @@ class TestProductApiRelations:
         assert res.json['brand'] == 1
 
         related_brand = self.client.get(
-            url_for(api.Resource, type='brands', id=res.json['brand']))
+            url_for(api.ResourceItem, type='brands', id=res.json['brand']))
         assert related_brand.json['name'] == 'Spar'
         assert related_brand.json['products'][0] == 1
 
@@ -131,7 +131,7 @@ class TestProductApiRelations:
         assert res.json['brand'] == 1
 
         related_brand = self.client.get(
-            url_for(api.Resource, type='brands', id=res.json['brand']))
+            url_for(api.ResourceItem, type='brands', id=res.json['brand']))
         assert 1 in related_brand.json['products']
         assert 2 in related_brand.json['products']
 
@@ -148,7 +148,7 @@ class TestProductApiRelations:
         assert res.json['brand'] == 1
 
         related_brand = self.client.get(
-            url_for(api.Resource, type='brands', id=res.json['brand']))
+            url_for(api.ResourceItem, type='brands', id=res.json['brand']))
         assert 3 in related_brand.json['products']
 
 
@@ -192,7 +192,7 @@ class TestProductApiValidation:
 
     def test_put_nonsense(self):
         res = self.client.put(
-            url_for(api.Resource, type='products', id=1),
+            url_for(api.ResourceItem, type='products', id=1),
             data=json.dumps({
                 'name': 'nonsense',
                 'foo': 'bar',
@@ -203,7 +203,7 @@ class TestProductApiValidation:
 
     def test_patch_nonsense(self):
         res = self.client.patch(
-            url_for(api.Resource, type='products', id=1),
+            url_for(api.ResourceItem, type='products', id=1),
             data=json.dumps({'gtin': 99999999999999, 'foo': 'bar'}),
             content_type='application/json')
         self.assert_validation_failed(res)
