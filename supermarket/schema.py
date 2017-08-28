@@ -123,6 +123,7 @@ class CustomSchema(ma.ModelSchema):
         """Document the schema."""
         # TODO: better description for NestedFields, MethodFields
         fields = {}
+        links = self.fields['links'].schema if 'links' in self.fields else None
         for k, v in self.fields.items():
             type = v.container if isinstance(v, ma.List) else v
             d = {
@@ -132,8 +133,11 @@ class CustomSchema(ma.ModelSchema):
                 'list': isinstance(v, ma.List)
             }
             if k in self.related_fields + self.related_lists:
-                link = self.fields['links'].schema['related'][k]
-                d['doc'] = url_for('api.resourcedoc', _external=True, **link.params)
+                if links and 'related' in links and k in links['related']:
+                    link = self.fields['links'].schema['related'][k]
+                    d['doc'] = url_for('api.resourcedoc', _external=True, **link.params)
+                else:
+                    d['doc'] = False
             fields[k] = d
         list = self.fields['links'].schema['list']
         list_url = url_for(list.endpoint, **list.params)
@@ -295,7 +299,6 @@ class Label(CustomSchema):
 
     class Meta(CustomSchema.Meta):
         model = m.Label
-        exclude = ['_countries']
 
 
 class Origin(CustomSchema):

@@ -1,6 +1,5 @@
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.associationproxy import association_proxy
 
 
 db = SQLAlchemy()
@@ -18,6 +17,12 @@ labels_resources = db.Table(
     'labels_resources',
     db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True),
     db.Column('resource_id', db.Integer, db.ForeignKey('resources.id'), primary_key=True)
+)
+
+labels_countries = db.Table(
+    'labels_countries',
+    db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True),
+    db.Column('country_code', db.String, db.ForeignKey('label_countries.code'), primary_key=True)
 )
 
 products_labels = db.Table(
@@ -118,19 +123,18 @@ class Label(db.Model):
         'Resource', secondary=labels_resources,
         lazy='subquery', backref=db.backref('labels', lazy=True)
     )
-    countries = association_proxy('_countries', 'code',
-                                  creator=lambda x: LabelCountry(code=x))
+    countries = db.relationship(
+        'LabelCountry', secondary=labels_countries,
+        lazy='subquery', backref=db.backref('labels', lazy=True)
+    )
     # products – backref from Product
     # retailers – backref from Retailer
 
 
 class LabelCountry(db.Model):
     __tablename__ = 'label_countries'
-    label_id = db.Column(db.ForeignKey('labels.id'), primary_key=True)
     code = db.Column(db.String(2), primary_key=True)
-    label = db.relationship(
-        'Label', backref=db.backref('_countries')
-    )
+    # labels – backref from Label
 
 
 class LabelMeetsCriterion(db.Model):
