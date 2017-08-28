@@ -271,12 +271,34 @@ class GenericResource:
         return self.schema().schema_description, 200
 
 
+class LabelResource(GenericResource):
+
+    """Has additional label specifc filters."""
+
+    def _filter(self, query, filter_fields, errors):
+        found_filters = set()
+        for key, value in filter_fields.items(multi=True):
+            (field, op) = key.split(':') if ':' in key else (key, 'eq')
+            if field == 'hotspots' and op in ['eq', 'in']:
+                hotspots = [v.strip() for v in value.split(',')] if ',' in value else [value]
+                query = query.filter(self.model.id.in_(
+                    m.db.session.query(m.LabelMeetsCriterion.label_id)
+                    .join(m.LabelMeetsCriterion.criterion)
+                    .join(m.Criterion.improves_hotspots)
+                    .filter(m.CriterionImprovesHotspot.hotspot_id.in_(hotspots))
+                ))
+                found_filters.add(key)
+        for f in found_filters:
+            filter_fields.pop(f)
+        return super()._filter(query, filter_fields, errors)
+
+
 resources = {
     'brands': GenericResource(m.Brand, s.Brand),
     'categories': GenericResource(m.Category, s.Category),
     'criteria': GenericResource(m.Criterion, s.Criterion),
     'hotspots': GenericResource(m.Hotspot, s.Hotspot),
-    'labels': GenericResource(m.Label, s.Label),
+    'labels': LabelResource(m.Label, s.Label),
     'origins': GenericResource(m.Origin, s.Origin),
     'producers': GenericResource(m.Producer, s.Producer),
     'products': GenericResource(m.Product, s.Product),
