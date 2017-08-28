@@ -102,6 +102,14 @@ class CustomSchema(ma.ModelSchema):
     """Config and validation that all our schemas share"""
 
     @property
+    def nested_fields(self):
+        fields = []
+        for key, field in self.fields.items():
+            if isinstance(field, ma.Nested):
+                fields.append(key)
+        return fields
+
+    @property
     def related_fields(self):
         fields = []
         for key, field in self.fields.items():
@@ -121,7 +129,7 @@ class CustomSchema(ma.ModelSchema):
     @property
     def schema_description(self):
         """Document the schema."""
-        # TODO: better description for NestedFields, MethodFields
+        # TODO: better description for MethodFields
         fields = {}
         links = self.fields['links'].schema if 'links' in self.fields else None
         for k, v in self.fields.items():
@@ -132,6 +140,8 @@ class CustomSchema(ma.ModelSchema):
                 'read-only': v.dump_only,
                 'list': isinstance(v, ma.List)
             }
+            if k in self.nested_fields:
+                d.update(self.fields[k].nested().schema_description)
             if k in self.related_fields + self.related_lists:
                 if links and 'related' in links and k in links['related']:
                     link = self.fields['links'].schema['related'][k]
@@ -139,8 +149,9 @@ class CustomSchema(ma.ModelSchema):
                 else:
                     d['doc'] = False
             fields[k] = d
-        list = self.fields['links'].schema['list']
-        list_url = url_for(list.endpoint, **list.params)
+        list_url = False
+        if links and 'list' in links:
+            list_url = url_for(links['list'].endpoint, **links['list'].params)
         return {'fields': fields, 'link': list_url}
 
     @validates_schema(pass_original=True)
