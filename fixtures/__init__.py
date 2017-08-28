@@ -42,13 +42,13 @@ def import_example_data():
     # Labels and general scoring
     labels = {}
     score_map = {
-        'red': 0,
+        'red': 1,
         'no evaluation*': 0,
-        'red/yellow': 0,
-        'red/yellow mix': 0,
-        'green/yellow': 1,
-        'yellow': 1,
-        'green': 2,
+        'red/yellow': 1,
+        'red/yellow mix': 1,
+        'green/yellow': 2,
+        'yellow': 2,
+        'green': 3,
     }
     with open(os.path.dirname(__file__) + '/csvs/Label-Info.csv') as csv_file:
         ltype = 'retailer'
