@@ -288,6 +288,11 @@ class LabelResource(GenericResource):
                     .filter(m.CriterionImprovesHotspot.hotspot_id.in_(hotspots))
                 ))
                 found_filters.add(key)
+            if field == 'countries' and op in ['eq', 'in']:
+                countries = [v.strip() for v in value.split(',')] if ',' in value else [value]
+                countries.append('*')  # include international labels
+                query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
+                found_filters.add(key)
         for f in found_filters:
             filter_fields.pop(f)
         return super()._filter(query, filter_fields, errors)

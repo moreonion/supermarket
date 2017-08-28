@@ -13,6 +13,7 @@ from supermarket.model import (
     Hotspot,
     Ingredient,
     Label,
+    LabelCountry,
     LabelMeetsCriterion,
     Origin,
     Product,
@@ -41,6 +42,7 @@ def import_example_data():
 
     # Labels and general scoring
     labels = {}
+    label_countries = [LabelCountry(code='*')]  # all labels are international for now
     score_map = {
         'red': 1,
         'no evaluation*': 1,
@@ -67,6 +69,7 @@ def import_example_data():
                 type=ltype,
                 name=name,
                 description=description,
+                countries=label_countries,
                 details=dict(score=dict(
                     credibility=score_map[credibility],
                     environment=score_map[environment],
