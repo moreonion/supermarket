@@ -129,7 +129,6 @@ class CustomSchema(ma.ModelSchema):
     @property
     def schema_description(self):
         """Document the schema."""
-        # TODO: better description for MethodFields
         fields = {}
         links = self.fields['links'].schema if 'links' in self.fields else None
         for k, v in self.fields.items():
@@ -306,6 +305,15 @@ class Label(CustomSchema):
             for ih in mc.criterion.improves_hotspots:
                 hotspots.add(ih.hotspot)
         return [hs.dump(h).data for h in hotspots]
+
+    @property
+    def schema_description(self):
+        """Replace method field in schema description."""
+        doc = super().schema_description
+        hs = Hotspot(only=('id', 'name', 'links'))
+        doc['fields']['hotspots']['type'] = 'nested'
+        doc['fields']['hotspots'].update(hs.schema_description)
+        return doc
 
     class Meta(CustomSchema.Meta):
         model = m.Label
