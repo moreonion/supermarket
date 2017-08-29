@@ -350,5 +350,5 @@ class ResourceDoc(BaseResource):
 
     """API documentation for resources of type ‘type’."""
 
-    def get_doc(self, type):
-        return resources[type].get_doc(id)
+    def get(self, type):
+        return resources[type].get_doc()

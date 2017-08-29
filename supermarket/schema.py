@@ -1,7 +1,7 @@
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
-from marshmallow import post_load, validates_schema, ValidationError
+from marshmallow import class_registry, post_load, validates_schema, ValidationError
 from marshmallow_sqlalchemy import fields as masqla_fields
 
 import supermarket.model as m
@@ -141,7 +141,15 @@ class CustomSchema(ma.ModelSchema):
                 'list': isinstance(v, ma.List)
             }
             if k in self.nested_fields:
-                d.update(self.fields[k].nested().schema_description)
+                if isinstance(self.fields[k].nested, str):
+                    nested_schema = class_registry.get_class(self.fields[k].nested)
+                else:
+                    nested_schema = self.fields[k].nested
+                nested_schema = nested_schema(
+                    only=self.fields[k].only,
+                    exclude=self.fields[k].exclude
+                )
+                d.update(nested_schema.schema_description)
             if k in self.related_fields + self.related_lists:
                 if links and 'related' in links and k in links['related']:
                     link = self.fields['links'].schema['related'][k]
