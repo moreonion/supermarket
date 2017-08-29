@@ -270,16 +270,6 @@ class Hotspot(CustomSchema):
         model = m.Hotspot
 
 
-class LabelMeetsCriterion(CustomSchema):
-    # primary key: label_id + criterion_id
-    # score, explanation
-    # refs: criterion, label
-    criterion = ma.Nested(Criterion, only=('id', 'links', 'code', 'name', 'details'))
-
-    class Meta(CustomSchema.Meta):
-        model = m.LabelMeetsCriterion
-
-
 class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
@@ -297,7 +287,8 @@ class Label(CustomSchema):
                 'api.resourcelist', {'type': 'retailers'}, external=True, attribute='retailers')
         }
     })
-    meets_criteria = ma.Nested(LabelMeetsCriterion, many=True)
+    meets_criteria = ma.Nested('LabelMeetsCriterion', many=True)
+    resources = ma.Nested('Resource', only=('id', 'links', 'name'), many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 
     def get_hotspots(self, m):
@@ -310,6 +301,16 @@ class Label(CustomSchema):
 
     class Meta(CustomSchema.Meta):
         model = m.Label
+
+
+class LabelMeetsCriterion(CustomSchema):
+    # primary key: label_id + criterion_id
+    # score, explanation
+    # refs: criterion, label
+    criterion = ma.Nested(Criterion, only=('id', 'links', 'code', 'name', 'details'))
+
+    class Meta(CustomSchema.Meta):
+        model = m.LabelMeetsCriterion
 
 
 class Origin(CustomSchema):
