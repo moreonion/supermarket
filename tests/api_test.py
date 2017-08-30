@@ -319,7 +319,8 @@ class TestLabelApiFilteringAndSorting:
         assert len(res.json['items']) == 2
         assert len(res.json['errors']) == 1
         assert res.json['errors'][0]['errors'][0]['value'] == '-nonsense'
-        assert res.json['errors'][0]['errors'][0]['message'] == 'Unknown field `nonsense`.'
+        assert res.json['errors'][0]['errors'][0]['message'] == (
+            'Unknown field `nonsense` for `labels`.')
 
     def test_filter_unknown_field(self):
         res = self.client.get(
@@ -329,7 +330,8 @@ class TestLabelApiFilteringAndSorting:
         assert len(res.json['items']) == 2
         assert len(res.json['errors']) == 1
         assert res.json['errors'][0]['errors'][0]['param'] == 'nonsense'
-        assert res.json['errors'][0]['errors'][0]['message'] == 'Unknown field `nonsense`.'
+        assert res.json['errors'][0]['errors'][0]['message'] == (
+            'Unknown field `nonsense` for `labels`.')
 
     def test_filter_unknown_operator(self):
         res = self.client.get(

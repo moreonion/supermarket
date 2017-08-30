@@ -37,6 +37,31 @@ class ValidationFailed(HTTPException):
             self.data['errors'].append({'field': f, 'messages': msg})
 
 
+class ParamException(Exception):
+    """Raised when an URL parameter cannot be applied.
+
+    :param str message      Error message to display.
+
+    """
+
+    def __init__(self, message, *args, **kwargs):
+        self.message = message
+        super().__init__(*args, **kwargs)
+
+
+class FilterOperatorException(ParamException):
+    """Raised when a field cannot be filtered because the operator doesn't make sense.
+
+    :param str op           Name of the operator that triggered the exception.
+    :param list accepted    List of accepted operators.
+
+    """
+
+    def __init__(self, op, accepted, *args, **kwargs):
+        self.message = 'Unknown operator `{}`, try one of `{}`.'.format(op, ', '.join(accepted))
+        super(ParamException).__init__(*args, **kwargs)
+
+
 # Resources
 
 class GenericResource:
@@ -48,9 +73,6 @@ class GenericResource:
         schema      The :class:`~supermarket.schema.CustomSchema` associated with the model.
 
     """
-
-    model = None
-    schema = None
 
     def __init__(self, model, schema):
         self.model = model
@@ -80,85 +102,79 @@ class GenericResource:
         elif keys:  # not a perfect match after all
             attr = None
 
-        if relation and attr is not None:
+        if attr is None:
+            raise ParamException(
+                'Unknown field `{}` for `{}`.'.format(field, model.__tablename__))
+        if relation:
             query = query.outerjoin(relation)
 
         return (attr, query)
 
-    def _sort(self, query, sort_fields, errors):
-        if not sort_fields:
-            return query
-        fields = []
-        not_sorted = []
-        for field in sort_fields.split(','):
-            if field[0] == '-':
-                (attr, query) = self._field_to_attr(field[1:], query)
-                if attr is not None:
-                    fields.append(attr.desc())
-                else:
-                    not_sorted.append({
-                        'value': field,
-                        'message': 'Unknown field `{}`.'.format(field[1:])
-                    })
-            else:
-                (attr, query) = self._field_to_attr(field, query)
-                if attr is not None:
-                    fields.append(attr)
-                else:
-                    not_sorted.append({
-                        'value': field,
-                        'message': 'Unknown field `{}`.'.format(field)
-                    })
-        if not_sorted:
-            errors.append({
-                'errors': not_sorted,
-                'message': 'Some values have been ignored for sorting.'
-            })
-        return query.order_by(*fields)
+    def _find_filter(self, field):
+        return self._default_filter
+
+    def _default_filter(self, query, field, op, value):
+        accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
+        (attr, query) = self._field_to_attr(field, query)
+        if op not in accepted_operators:
+            raise FilterOperatorException(op, accepted_operators)
+        if op == 'like':
+            if not (isinstance(attr.type, m.db.String) or isinstance(attr.type, m.db.Text)):
+                raise ParamException('Can’t compare {type} to string.'.format(
+                    type=attr.type.__class__.__name__.lower()))
+            value = '%{}%'.format(value)
+            query = query.filter(attr.ilike(value))
+        elif op == 'in':
+            values = [v.strip() for v in value.split(',')] if ',' in value else [value]
+            query = query.filter(attr.in_(values))
+        else:
+            op = getattr(operator, op)
+            query = query.filter(op(attr, value))
+        return query
 
     def _filter(self, query, filter_fields, errors):
-        accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
         not_filtered = []
-
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
-            (attr, query) = self._field_to_attr(field, query)
-            if attr is None:
+            filter = self._find_filter(field)
+            try:
+                query = filter(query, field, op, value)
+            except ParamException as pe:
                 not_filtered.append({
                     'param': key,
-                    'message': 'Unknown field `{}`.'.format(field)
+                    'message': str(pe.message)
                 })
-                continue
-            elif op not in accepted_operators:
-                not_filtered.append({
-                    'param': key,
-                    'message': 'Unknown operator `{op}`, try one of `{accepted}`.'.format(
-                        op=op, accepted=', '.join(accepted_operators))
-                })
-                continue
-            elif op == 'like':
-                if not (isinstance(attr.type, m.db.String) or isinstance(attr.type, m.db.Text)):
-                    not_filtered.append({
-                        'param': key,
-                        'message': 'Can’t compare {type} to string.'.format(
-                            type=attr.type.__class__.__name__.lower())
-                    })
-                    continue
-                value = '%{}%'.format(value)
-                query = query.filter(attr.ilike(value))
-            elif op == 'in':
-                values = [v.strip() for v in value.split(',')] if ',' in value else [value]
-                query = query.filter(attr.in_(values))
-            else:
-                op = getattr(operator, op)
-                query = query.filter(op(attr, value))
-
         if not_filtered:
             errors.append({
                 'errors': not_filtered,
                 'message': 'Some parameters have been ignored.'
             })
         return query
+
+    def _sort(self, query, sort_fields, errors):
+        if not sort_fields:
+            return query
+        fields = []
+        not_sorted = []
+        for value in sort_fields.split(','):
+            field = value.split('-')[-1]
+            order = 'desc' if value[0] == '-' else 'asc'
+            try:
+                (attr, query) = self._field_to_attr(field, query)
+                if order == 'desc':
+                    attr = attr.desc()
+                fields.append(attr)
+            except ParamException as pe:
+                not_sorted.append({
+                    'value': value,
+                    'message': pe.message
+                })
+        if not_sorted:
+            errors.append({
+                'errors': not_sorted,
+                'message': 'Some values have been ignored for sorting.'
+            })
+        return query.order_by(*fields)
 
     def _sanitize_only(self, only_fields):
         if not only_fields:
@@ -275,27 +291,36 @@ class LabelResource(GenericResource):
 
     """Has additional label specifc filters."""
 
-    def _filter(self, query, filter_fields, errors):
-        found_filters = set()
-        for key, value in filter_fields.items(multi=True):
-            (field, op) = key.split(':') if ':' in key else (key, 'eq')
-            if field == 'hotspots' and op in ['eq', 'in']:
-                hotspots = [v.strip() for v in value.split(',')] if ',' in value else [value]
-                query = query.filter(self.model.id.in_(
-                    m.db.session.query(m.LabelMeetsCriterion.label_id)
-                    .join(m.LabelMeetsCriterion.criterion)
-                    .join(m.Criterion.improves_hotspots)
-                    .filter(m.CriterionImprovesHotspot.hotspot_id.in_(hotspots))
-                ))
-                found_filters.add(key)
-            if field == 'countries' and op in ['eq', 'in']:
-                countries = [v.strip() for v in value.split(',')] if ',' in value else [value]
-                countries.append('*')  # include international labels
-                query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
-                found_filters.add(key)
-        for f in found_filters:
-            filter_fields.pop(f)
-        return super()._filter(query, filter_fields, errors)
+    def _find_filter(self, field):
+        if field == 'hotspots':
+            filter = self._hotspot_filter
+        elif field == 'countries':
+            filter = self._country_filter
+        else:
+            filter = super()._find_filter(field)
+        return filter
+
+    def _hotspot_filter(self, query, field, op, value):
+        accepted_operators = ['eq', 'in']
+        if op not in accepted_operators:
+            raise FilterOperatorException(op, accepted_operators)
+        hotspots = [v.strip() for v in value.split(',')] if ',' in value else [value]
+        query = query.filter(self.model.id.in_(
+            m.db.session.query(m.LabelMeetsCriterion.label_id)
+            .join(m.LabelMeetsCriterion.criterion)
+            .join(m.Criterion.improves_hotspots)
+            .filter(m.CriterionImprovesHotspot.hotspot_id.in_(hotspots))
+        ))
+        return query
+
+    def _country_filter(self, query, field, op, value):
+        accepted_operators = ['eq', 'in']
+        if op not in accepted_operators:
+            raise FilterOperatorException(op, accepted_operators)
+        countries = [v.strip() for v in value.split(',')] if ',' in value else [value]
+        countries.append('*')  # include international labels
+        query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
+        return query
 
 
 resources = {
