@@ -17,10 +17,10 @@ python3 -m venv env
 source env/bin/activate
 
 # Dependencies
+sudo apt-get install postgresql libpq-dev
 [env] pip install -r requirements/dev.txt
 
 # Databases
-sudo apt-get install postgresql
 createdb supermarket
 createdb supermarket_test
 
