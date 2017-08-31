@@ -72,7 +72,7 @@ def test_label_model(db):
         name='EU organic',
         description='A cool label.',
         logo='some url',
-        countries=set(['GB', 'AT'])
+        countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )
 
     criterion_1_assoc = m.LabelMeetsCriterion(score=1, explanation='Nope.')
@@ -102,7 +102,7 @@ def test_label_model(db):
     assert label.meets_criteria[0].explanation == 'Nope.'
     assert label.meets_criteria[0].criterion.name == 'Saves the world'
     assert label.resources[0].name == 'cocoa'
-    assert 'AT' in label.countries
+    assert label.countries[0].code == 'AT'
     assert product.labels[0] == label
     assert resource_2.labels[0] == label
 
