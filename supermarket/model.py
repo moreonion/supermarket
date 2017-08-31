@@ -70,11 +70,24 @@ class Criterion(db.Model):
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
     type = db.Column(db.Enum('label', 'retailer', name='criterion_type'))
-    code = db.Column(db.String(8))  # consortium identifier
-    name = db.Column(db.String(64))
-    details = db.Column(JSONB)  # details holds question, explanation
+    name = db.Column(db.String(128))
+    details = db.Column(JSONB)  # details holds question, measures
     improves_hotspots = db.relationship(
         'CriterionImprovesHotspot', backref=db.backref('criterion'))
+    category_id = db.Column(db.ForeignKey('criterion_category.id'))
+    # category – backref from CriterionCategory
+
+
+class CriterionCategory(db.Model):
+    __tablename__ = 'criterion_category'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(128))
+    parent_id = db.Column(db.ForeignKey('criterion_category.id'))
+    subcategories = db.relationship(
+        'CriterionCategory', backref=db.backref('category', remote_side=[id]))
+    criteria = db.relationship(
+        'Criterion', backref=db.backref('category'))
+    # category – backref from CriterionCategory
 
 
 class CriterionImprovesHotspot(db.Model):

@@ -35,7 +35,7 @@ def test_category_model(db):
 
 
 def test_criterion_model(db):
-    criterion = m.Criterion(code='1.2.3', name='Saves the world')
+    criterion = m.Criterion(name='Saves the world')
     criterion.details = {
         'question': 'Does the certificate/label save the world?',
         'response_options': '0 - no, 1 - partly, 2 - totally!',

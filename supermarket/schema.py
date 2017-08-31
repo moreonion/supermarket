@@ -256,6 +256,16 @@ class Criterion(CustomSchema):
             # TODO: improves_hotspots
         }
     })
+    category = ma.Nested('CriterionCategory', only=('id', 'name', 'category'))
+
+    class Meta(CustomSchema.Meta):
+        model = m.Criterion
+
+
+class CriterionCategory(CustomSchema):
+    # id, name
+    # refs: criteria, subcategories, category
+    category = ma.Nested('CriterionCategory', only=('id', 'name'))
 
     class Meta(CustomSchema.Meta):
         model = m.Criterion
@@ -323,7 +333,7 @@ class LabelMeetsCriterion(CustomSchema):
     # primary key: label_id + criterion_id
     # score, explanation
     # refs: criterion, label
-    criterion = ma.Nested(Criterion, only=('id', 'links', 'code', 'name', 'details'))
+    criterion = ma.Nested(Criterion, only=('id', 'links', 'category', 'name', 'details'))
 
     class Meta(CustomSchema.Meta):
         model = m.LabelMeetsCriterion
