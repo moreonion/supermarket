@@ -1,7 +1,7 @@
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
-from marshmallow import class_registry, post_load, validates_schema, ValidationError
+from marshmallow import post_dump, post_load, validates_schema, ValidationError
 from marshmallow_sqlalchemy import fields as masqla_fields
 
 import supermarket.model as m
@@ -101,17 +101,6 @@ class CustomSchema(ma.ModelSchema):
     """Config and validation that all our schemas share"""
 
     @property
-    def nested_fields(self):
-        """
-        Goes through the supplied items and stores the key for all fields of type Nested.
-        """
-        fields = []
-        for key, field in self.fields.items():
-            if isinstance(field, ma.Nested):
-                fields.append(key)
-        return fields
-
-    @property
     def related_fields(self):
         """
         Goes through the supplied items and stores the keys for all fields of type Related.
@@ -147,16 +136,6 @@ class CustomSchema(ma.ModelSchema):
                 'read-only': v.dump_only,
                 'list': isinstance(v, ma.List)
             }
-            if k in self.nested_fields:
-                if isinstance(self.fields[k].nested, str):
-                    nested_schema = class_registry.get_class(self.fields[k].nested)
-                else:
-                    nested_schema = self.fields[k].nested
-                nested_schema = nested_schema(
-                    only=self.fields[k].only,
-                    exclude=self.fields[k].exclude
-                )
-                d.update(nested_schema.schema_description)
             if k in self.related_fields + self.related_lists:
                 if links and 'related' in links and k in links['related']:
                     link = self.fields['links'].schema['related'][k]
@@ -264,7 +243,6 @@ class Criterion(CustomSchema):
             # TODO: improves_hotspots
         }
     })
-    category = ma.Nested('CriterionCategory', only=('id', 'name', 'category'))
 
     class Meta(CustomSchema.Meta):
         model = m.Criterion
@@ -273,7 +251,6 @@ class Criterion(CustomSchema):
 class CriterionCategory(CustomSchema):
     # id, name
     # refs: criteria, subcategories, category
-    category = ma.Nested('CriterionCategory', only=('id', 'name'))
 
     class Meta(CustomSchema.Meta):
         model = m.Criterion
@@ -312,26 +289,33 @@ class Label(CustomSchema):
                 'api.resourcelist', {'type': 'retailers'}, external=True, attribute='retailers')
         }
     })
-    meets_criteria = ma.Nested('LabelMeetsCriterion', many=True)
-    resources = ma.Nested('Resource', only=('id', 'links', 'name'), many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 
     def get_hotspots(self, m):
-        hs = Hotspot(only=('id', 'name', 'links'))
         hotspots = set()
         for mc in m.meets_criteria:
             for ih in mc.criterion.improves_hotspots:
                 hotspots.add(ih.hotspot)
-        return [hs.dump(h).data for h in hotspots]
+        return [h.id for h in hotspots]
 
     @property
     def schema_description(self):
         """Replace method field in schema description."""
         doc = super().schema_description
-        hs = Hotspot(only=('id', 'name', 'links'))
-        doc['fields']['hotspots']['type'] = 'nested'
-        doc['fields']['hotspots'].update(hs.schema_description)
+        doc['fields']['hotspots']['type'] = 'related'
+        doc['fields']['hotspots']['list'] = True
         return doc
+
+    @post_dump
+    def add_hotspots_link(self, data):
+        if 'links' in data:
+            hotspots_link = None
+            if data['hotspots']:
+                hotspots = {'id:in': ','.join(map(str, data['hotspots']))}
+                hotspots_link = url_for(
+                    'api.resourcelist', type='hotspots', **hotspots, _external=True)
+            data['links']['related']['hotspots'] = hotspots_link
+        return data
 
     class Meta(CustomSchema.Meta):
         model = m.Label
@@ -341,7 +325,6 @@ class LabelMeetsCriterion(CustomSchema):
     # primary key: label_id + criterion_id
     # score, explanation
     # refs: criterion, label
-    criterion = ma.Nested(Criterion, only=('id', 'links', 'category', 'name', 'details'))
 
     class Meta(CustomSchema.Meta):
         model = m.LabelMeetsCriterion
