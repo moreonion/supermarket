@@ -1,7 +1,7 @@
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
-from marshmallow import post_load, validates_schema, ValidationError
+from marshmallow import class_registry, post_load, validates_schema, ValidationError
 from marshmallow_sqlalchemy import fields as masqla_fields
 
 import supermarket.model as m
@@ -102,6 +102,14 @@ class CustomSchema(ma.ModelSchema):
     """Config and validation that all our schemas share"""
 
     @property
+    def nested_fields(self):
+        fields = []
+        for key, field in self.fields.items():
+            if isinstance(field, ma.Nested):
+                fields.append(key)
+        return fields
+
+    @property
     def related_fields(self):
         fields = []
         for key, field in self.fields.items():
@@ -122,6 +130,7 @@ class CustomSchema(ma.ModelSchema):
     def schema_description(self):
         """Document the schema."""
         fields = {}
+        links = self.fields['links'].schema if 'links' in self.fields else None
         for k, v in self.fields.items():
             type = v.container if isinstance(v, ma.List) else v
             d = {
@@ -130,12 +139,26 @@ class CustomSchema(ma.ModelSchema):
                 'read-only': v.dump_only,
                 'list': isinstance(v, ma.List)
             }
+            if k in self.nested_fields:
+                if isinstance(self.fields[k].nested, str):
+                    nested_schema = class_registry.get_class(self.fields[k].nested)
+                else:
+                    nested_schema = self.fields[k].nested
+                nested_schema = nested_schema(
+                    only=self.fields[k].only,
+                    exclude=self.fields[k].exclude
+                )
+                d.update(nested_schema.schema_description)
             if k in self.related_fields + self.related_lists:
-                link = self.fields['links'].schema['related'][k]
-                d['doc'] = url_for('api.resourcedoc', _external=True, **link.params)
+                if links and 'related' in links and k in links['related']:
+                    link = self.fields['links'].schema['related'][k]
+                    d['doc'] = url_for('api.resourcedoc', _external=True, **link.params)
+                else:
+                    d['doc'] = False
             fields[k] = d
-        list = self.fields['links'].schema['list']
-        list_url = url_for(list.endpoint, **list.params)
+        list_url = False
+        if links and 'list' in links:
+            list_url = url_for(links['list'].endpoint, **links['list'].params)
         return {'fields': fields, 'link': list_url}
 
     @validates_schema(pass_original=True)
@@ -185,12 +208,12 @@ class Brand(CustomSchema):
     # id, name
     # refs: retailer, products, stores
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='brands', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='brands', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='brands', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='brands', _external=True),
         'related': {
             'retailer': HyperlinkRelated(
-                'api.resource', {'type': 'retailers'}, external=True, attribute='retailer'),
+                'api.resourceitem', {'type': 'retailers'}, external=True, attribute='retailer'),
             'stores': HyperlinkRelatedList(
                 'api.resourcelist', {'type': 'stores'}, external=True, attribute='stores',
                 url_key='brand_id'),
@@ -208,7 +231,7 @@ class Category(CustomSchema):
     # id, name
     # refs: products
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='categories', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='categories', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='categories', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='categories', _external=True),
         'related': {
@@ -226,13 +249,23 @@ class Criterion(CustomSchema):
     # id, name, type (label, retailer), code, details (JSONB)
     # refs: improves_hotspots
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='criteria', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='criteria', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='criteria', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='criteria', _external=True),
         'related': {
             # TODO: improves_hotspots
         }
     })
+    category = ma.Nested('CriterionCategory', only=('id', 'name', 'category'))
+
+    class Meta(CustomSchema.Meta):
+        model = m.Criterion
+
+
+class CriterionCategory(CustomSchema):
+    # id, name
+    # refs: criteria, subcategories, category
+    category = ma.Nested('CriterionCategory', only=('id', 'name'))
 
     class Meta(CustomSchema.Meta):
         model = m.Criterion
@@ -242,7 +275,7 @@ class Hotspot(CustomSchema):
     # id, name, description
     # refs: scores
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='hotspots', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='hotspots', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='hotspots', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='hotspots', _external=True),
         'related': {
@@ -258,7 +291,7 @@ class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='labels', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='labels', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='labels', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='lables', _external=True),
         'related': {
@@ -271,16 +304,46 @@ class Label(CustomSchema):
                 'api.resourcelist', {'type': 'retailers'}, external=True, attribute='retailers')
         }
     })
+    meets_criteria = ma.Nested('LabelMeetsCriterion', many=True)
+    resources = ma.Nested('Resource', only=('id', 'links', 'name'), many=True)
+    hotspots = ma.Method('get_hotspots', dump_only=True)
+
+    def get_hotspots(self, m):
+        hs = Hotspot(only=('id', 'name', 'links'))
+        hotspots = set()
+        for mc in m.meets_criteria:
+            for ih in mc.criterion.improves_hotspots:
+                hotspots.add(ih.hotspot)
+        return [hs.dump(h).data for h in hotspots]
+
+    @property
+    def schema_description(self):
+        """Replace method field in schema description."""
+        doc = super().schema_description
+        hs = Hotspot(only=('id', 'name', 'links'))
+        doc['fields']['hotspots']['type'] = 'nested'
+        doc['fields']['hotspots'].update(hs.schema_description)
+        return doc
 
     class Meta(CustomSchema.Meta):
         model = m.Label
+
+
+class LabelMeetsCriterion(CustomSchema):
+    # primary key: label_id + criterion_id
+    # score, explanation
+    # refs: criterion, label
+    criterion = ma.Nested(Criterion, only=('id', 'links', 'category', 'name', 'details'))
+
+    class Meta(CustomSchema.Meta):
+        model = m.LabelMeetsCriterion
 
 
 class Origin(CustomSchema):
     # id, name, code
     # refs: ingredients, supplies
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='origins', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='origins', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='origins', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='origins', _external=True),
         'related': {
@@ -298,7 +361,7 @@ class Producer(CustomSchema):
     # id, name
     # refs: products
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='producers', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='producers', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='producers', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='producers', _external=True),
         'related': {
@@ -316,16 +379,16 @@ class Product(CustomSchema):
     # id, name, details (JSONB), gtin
     # refs: brand, category, prodcuer, ingredients, labels, stores
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='products', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='products', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='products', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='products', _external=True),
         'related': {
             'brand': HyperlinkRelated(
-                'api.resource', {'type': 'brands'}, external=True, attribute='brand'),
+                'api.resourceitem', {'type': 'brands'}, external=True, attribute='brand'),
             'category': HyperlinkRelated(
-                'api.resource', {'type': 'categories'}, external=True, attribute='category'),
+                'api.resourceitem', {'type': 'categories'}, external=True, attribute='category'),
             'producer': HyperlinkRelated(
-                'api.resource', {'type': 'producers'}, external=True, attribute='producer'),
+                'api.resourceitem', {'type': 'producers'}, external=True, attribute='producer'),
             'labels': HyperlinkRelatedList(
                 'api.resourcelist', {'type': 'labels'}, external=True, attribute='labels'),
             'stores': HyperlinkRelatedList(
@@ -342,7 +405,7 @@ class Resource(CustomSchema):
     # id, name
     # refs: ingredients, labels, supplies
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='resources', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='resources', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='resources', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='resources', _external=True),
         'related': {
@@ -363,7 +426,7 @@ class Retailer(CustomSchema):
     # id, name
     # refs: meets_criteria, brands, stores, labels
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='retailers', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='retailers', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='retailers', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='retailers', _external=True),
         'related': {
@@ -387,12 +450,12 @@ class Store(CustomSchema):
     # id, name
     # refs: retailer, brands, products
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='stores', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='stores', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='stores', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='stores', _external=True),
         'related': {
             'retailer': HyperlinkRelated(
-                'api.resource', {'type': 'retailers'}, external=True, attribute='retailer'),
+                'api.resourceitem', {'type': 'retailers'}, external=True, attribute='retailer'),
             'brands': HyperlinkRelatedList(
                 'api.resourcelist', {'type': 'brands'}, external=True, attribute='brands'),
             'products': HyperlinkRelatedList(
@@ -408,7 +471,7 @@ class Supplier(CustomSchema):
     # id, name
     # refs: ingredients, supplies
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='suppliers', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='suppliers', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='suppliers', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='suppliers', _external=True),
         'related': {
@@ -427,16 +490,16 @@ class Supply(CustomSchema):
     # id
     # refs: resource, origin, supplier, scores
     links = Hyperlinks({
-        'self': ma.URLFor('api.resource', type='supplies', id='<id>', _external=True),
+        'self': ma.URLFor('api.resourceitem', type='supplies', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='supplies', _external=True),
         'doc': ma.URLFor('api.resourcedoc', type='supplies', _external=True),
         'related': {
             'resource': HyperlinkRelated(
-                'api.resource', {'type': 'resources'}, external=True, attribute='resource'),
+                'api.resourceitem', {'type': 'resources'}, external=True, attribute='resource'),
             'origin': HyperlinkRelated(
-                'api.resource', {'type': 'origins'}, external=True, attribute='origin'),
+                'api.resourceitem', {'type': 'origins'}, external=True, attribute='origin'),
             'supplier': HyperlinkRelated(
-                'api.resource', {'type': 'suppliers'}, external=True, attribute='supplier')
+                'api.resourceitem', {'type': 'suppliers'}, external=True, attribute='supplier')
             # TODO: scores
         }
     })

@@ -9,10 +9,12 @@ from supermarket.model import (
     db,
     Brand,
     Criterion,
+    CriterionCategory,
     CriterionImprovesHotspot,
     Hotspot,
     Ingredient,
     Label,
+    LabelCountry,
     LabelMeetsCriterion,
     Origin,
     Product,
@@ -41,14 +43,15 @@ def import_example_data():
 
     # Labels and general scoring
     labels = {}
+    label_countries = [LabelCountry(code='*')]  # all labels are international for now
     score_map = {
-        'red': 0,
-        'no evaluation*': None,
-        'red/yellow': 0,
-        'red/yellow mix': 0,
-        'green/yellow': 1,
-        'yellow': 1,
-        'green': 2,
+        'red': 1,
+        'no evaluation*': 1,
+        'red/yellow': 1,
+        'red/yellow mix': 1,
+        'green/yellow': 2,
+        'yellow': 2,
+        'green': 3,
     }
     with open(os.path.dirname(__file__) + '/csvs/Label-Info.csv') as csv_file:
         ltype = 'retailer'
@@ -67,6 +70,7 @@ def import_example_data():
                 type=ltype,
                 name=name,
                 description=description,
+                countries=label_countries,
                 details=dict(score=dict(
                     credibility=score_map[credibility],
                     environment=score_map[environment],
@@ -79,36 +83,45 @@ def import_example_data():
 
     # Criteria and label scores
     criteria = {}
-    for p in ['credibility', 'environment', 'social']:
-        with open(os.path.dirname(__file__) + '/csvs/criteria-' + p + '.csv') as csv_file:
-            reader = csv.reader(csv_file)
-            next(reader)
-            label_codes = next(reader)[7:7+19]
-            explanations = None
-            for row in reader:
-                # Intermediate heading
-                if not row[0]:
+    with open(os.path.dirname(__file__) + '/csvs/criteria-labels.csv') as csv_file:
+        reader = csv.reader(csv_file)
+        label_codes = next(reader)[13:]
+        for row in reader:
+            if row[11]:  # exclude from scoring
+                continue
+            (category_name, subcategory_name, criterion_name) = (row[1], row[3], row[5])
+            criterion = Criterion.query.filter_by(name=criterion_name).first()
+            if criterion is None:
+                subcategory = CriterionCategory.query.filter_by(name=subcategory_name).first()
+                if subcategory is None:
+                    category = CriterionCategory.query.filter_by(name=category_name).first()
+                    if category is None:
+                        category = CriterionCategory(name=category_name)
+                        db.session.add(category)
+                    subcategory = CriterionCategory(name=subcategory_name, category=category)
+                    db.session.add(subcategory)
+                criterion = Criterion(
+                    name=criterion_name,
+                    category=subcategory,
+                    details={'question': row[6], 'measures': {}}
+                )
+                db.session.add(criterion)
+                criteria[row[4]] = criterion
+            details = deepcopy(criterion.details)
+            details['measures'][int(row[9])] = row[8]
+            criterion.details = details
+            db.session.add(criterion)
+
+            for label_code, s in zip(label_codes, row[13:]):
+                label = labels[label_code.strip()]
+                if not s or int(s) <= 0:
                     continue
-                if row[1]:
-                    # Criterion metadata
-                    c = Criterion(code=row[0], name=row[1], details=dict(
-                        question=row[2],
-                        explanation=row[4],
-                        measures=dict(),
-                    ))
-                    criteria[c.code] = c
-                    db.session.add(c)
-                    explanations = row[7:7+19]
-                else:
-                    c = criteria[c.code]
-                    for label_code, e, s in zip(label_codes, explanations, row[7:7+19]):
-                        l = labels[label_code]
-                        db.session.add(LabelMeetsCriterion(
-                            label=l,
-                            criterion=c,
-                            score=s or None,
-                            explanation=e,
-                        ))
+                db.session.add(LabelMeetsCriterion(
+                    label=label,
+                    criterion=criterion,
+                    score=s,
+                    explanation=row[8],
+                ))
     db.session.commit()
 
     # Criteria and Criteria-Hotspot mapping
@@ -120,10 +133,6 @@ def import_example_data():
                 print("Unknown criterion: {}".format(row['ID']))
                 continue
             c = criteria[row['ID']]
-            measure = row['Measures']
-            details = deepcopy(c.details)
-            details['measures'][int(row['Score'])] = measure
-            c.details = details
             for h in hotspots:
                 if row[h.name] and not CriterionImprovesHotspot.query.get((c.id, h.id)):
                     db.session.add(CriterionImprovesHotspot(criterion=c, hotspot=h))
@@ -160,10 +169,21 @@ def import_example_data():
         db.session.add(Origin(code=code, name=name))
     db.session.commit()
 
-    # Resources
-    for name in ['Cocoa', 'Palm Oil']:
-        db.session.add(Resource(name=name))
-    db.session.commit()
+    # Resources and Resource label mapping
+    resources = {}
+    with open(os.path.dirname(__file__) + '/csvs/labels-resources.csv') as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader)
+        next(reader)
+        for row in reader:
+            l, rs = row[0].strip(), row[1]
+            if rs == 'n.a.' or rs.startswith('all '):
+                continue
+            label = labels[l]
+            for r in (r.strip() for r in rs.split(',')):
+                if r not in resources:
+                    resources[r] = Resource(name=r)
+                label.resources.append(resources[r])
 
     # Products - Brands - Retailers
     products = dict()
@@ -231,9 +251,11 @@ def import_example_data():
             for label in row[5:]:
                 if label:
                     if label.startswith('EU Biosiegel'):
-                        label = 'EU organic'
+                        label = 'EU Organic'
                     label = label.replace('UTZ Certified', 'UTZ')
+                    label = label.replace('UTZ Kakao', 'UTZ Cacao')
                     label = label.replace('FAIRTRADE', 'Fairtrade')
+                    label = label.replace('RSPO', 'Roundtable on Sustainable Palm Oil (RSPO)')
                     if label not in labels:
                         print("Unknown label '{}'".format(label))
                         continue
