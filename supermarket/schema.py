@@ -87,10 +87,9 @@ class Hyperlinks(ma.Hyperlinks):
 
         def _url_val(val, key, obj, **kwargs):
             val.parent = self.parent
-            if isinstance(val, ma.URLFor) or isinstance(val, HyperlinkRelated):
+            if isinstance(val, (ma.URLFor, HyperlinkRelated)):
                 return val.serialize(key, obj, **kwargs)
-            else:
-                return val
+            return val
 
         return ma_rapply(self.schema, _url_val, key=attr, obj=obj)
 
