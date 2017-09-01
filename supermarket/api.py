@@ -89,7 +89,8 @@ class GenericResource:
         elif field in self.schema().related_fields:
             field = '{}_id'.format(field)
 
-        if field in self.schema().related_fields + self.schema().related_lists:
+        if (field in self.schema().nested_fields +
+                self.schema().related_fields + self.schema().related_lists):
             relation = getattr(model, field)
             field = keys.pop(0) if keys else 'id'
             model = relation.property.mapper.class_
