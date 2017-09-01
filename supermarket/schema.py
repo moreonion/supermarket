@@ -66,7 +66,7 @@ class HyperlinkRelatedList(HyperlinkRelated):
         if not keys:
             return None  # Can’t build URL without keys
 
-        kwargs = {self.url_key: ','.join(map(str, keys))}
+        kwargs = {'{}:in'.format(self.url_key): ','.join(map(str, keys))}
         kwargs.update(self.params)
         return url_for(self.endpoint, _external=self.external, **kwargs)
 
