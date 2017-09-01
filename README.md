@@ -24,9 +24,14 @@ sudo apt-get install postgresql libpq-dev
 createdb supermarket
 createdb supermarket_test
 
+# Fill database with example data
+python manager.py fixture-example-data
+
 # Interactive shell in app context
 python manager.py shell
 ```
+
+Coding style should follow flake8 guidelines as configured in `.flake8` file.
 
 ## Run
 
@@ -38,10 +43,7 @@ python manager.py runserver
 
 For production you should use some real HTTP server like gunicorn or uWSGI.
 
-
 ## Tests
-
-With server running:
 
 ```bash
 py.test
