@@ -1,5 +1,6 @@
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import CheckConstraint
 
 
 db = SQLAlchemy()
@@ -127,7 +128,7 @@ class Label(db.Model):
     __tablename__ = 'labels'
     id = db.Column(db.Integer(), primary_key=True)
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
-    name = db.Column(db.String(64))
+    name = db.Column(db.String(64), CheckConstraint('LENGTH(name)>0'), nullable=False)
     description = db.Column(db.Text)
     details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(db.String(256))
