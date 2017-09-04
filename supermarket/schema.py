@@ -11,6 +11,23 @@ ma = Marshmallow()
 
 # Custom (overridden) fields
 
+class Nested(ma.Nested):
+
+    """Nested field that keeps the session when loading nested data.
+
+    Fixes https://github.com/marshmallow-code/marshmallow-sqlalchemy/issues/67.
+    """
+
+    def _deserialize(self, value, attr, data):
+        if self.many and not utils.is_collection(value):
+            self.fail('type', input=value, type=value.__class__.__name__)
+        session = self.parent.session
+        data, errors = self.schema.load(value, session=session)
+        if errors:
+            raise ValidationError(errors, data=data)
+        return data
+
+
 class HyperlinkRelated(ma.HyperlinkRelated):
 
     """Field that generates hyperlinks to indicate references between models.
@@ -107,7 +124,7 @@ class CustomSchema(ma.ModelSchema):
         """
         fields = []
         for key, field in self.fields.items():
-            if isinstance(field, ma.Nested):
+            if isinstance(field, Nested):
                 fields.append(key)
         return fields
 
@@ -267,7 +284,7 @@ class Criterion(CustomSchema):
             # TODO: improves_hotspots
         }
     })
-    category = ma.Nested('CriterionCategory', only=('id', 'name', 'category'))
+    category = Nested('CriterionCategory', only=('id', 'name', 'category'))
 
     class Meta(CustomSchema.Meta):
         model = m.Criterion
@@ -276,7 +293,7 @@ class Criterion(CustomSchema):
 class CriterionCategory(CustomSchema):
     # id, name
     # refs: criteria, subcategories, category
-    category = ma.Nested('CriterionCategory', only=('id', 'name'))
+    category = Nested('CriterionCategory', only=('id', 'name'))
 
     class Meta(CustomSchema.Meta):
         model = m.Criterion
@@ -315,8 +332,8 @@ class Label(CustomSchema):
                 'api.resourcelist', {'type': 'retailers'}, external=True, attribute='retailers')
         }
     })
-    meets_criteria = ma.Nested('LabelMeetsCriterion', many=True)
-    resources = ma.Nested('Resource', only=('id', 'links', 'name'), many=True)
+    meets_criteria = Nested('LabelMeetsCriterion', many=True)
+    resources = Nested('Resource', only=('id', 'links', 'name'), many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 
     def get_hotspots(self, m):
@@ -344,7 +361,7 @@ class LabelMeetsCriterion(CustomSchema):
     # primary key: label_id + criterion_id
     # score, explanation
     # refs: criterion, label
-    criterion = ma.Nested(Criterion, only=('id', 'links', 'category', 'name', 'details'))
+    criterion = Nested(Criterion, only=('id', 'links', 'category', 'name', 'details'))
 
     class Meta(CustomSchema.Meta):
         model = m.LabelMeetsCriterion
