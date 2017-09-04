@@ -157,8 +157,8 @@ class Label(db.Model):
     """
     __tablename__ = 'labels'
     id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(64), CheckConstraint('LENGTH(name)>0'), nullable=False, unique=True)
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
-    name = db.Column(db.String(64), CheckConstraint('LENGTH(name)>0'), nullable=False)
     description = db.Column(db.Text)
     details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(db.String(256))
