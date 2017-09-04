@@ -4,6 +4,7 @@ import operator
 from flask import Blueprint, request
 from flask_restful import Api, Resource as BaseResource
 from werkzeug.exceptions import HTTPException
+from sqlalchemy.inspection import inspect
 
 import supermarket.model as m
 import supermarket.schema as s
@@ -207,7 +208,7 @@ class GenericResource:
     def patch_item(self, id):
         """Update an existing item with new data."""
         r = self.model.query.get_or_404(id)
-        data = self.schema().load(request.get_json(),
+        data = self.schema().load(request.get_json(), partial=True,
                                   session=m.db.session, instance=r)
         if data.errors:
             raise ValidationFailed(data.errors)
@@ -220,7 +221,7 @@ class GenericResource:
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
-        r.id = id
+        setattr(r, inspect(self.model).primary_key[0].name, id)
         m.db.session.merge(r)
         m.db.session.commit()
         return self.schema().dump(r).data, 201
