@@ -1,7 +1,7 @@
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
-from marshmallow import class_registry, post_load, validates_schema, ValidationError
+from marshmallow import class_registry, post_load, utils, validates_schema, ValidationError
 from marshmallow_sqlalchemy import fields as masqla_fields
 
 import supermarket.model as m
@@ -172,6 +172,10 @@ class CustomSchema(ma.ModelSchema):
     @validates_schema(pass_original=True)
     def check_unknown_fields(self, data, original_data):
         """Do not accept (and silently ignore) fields that do not exist."""
+        if self.many and utils.is_collection(original_data):
+            for od in original_data:
+                self.check_unknown_fields(data, od)
+            return
         unknown = set(original_data) - set(self.fields)
         if unknown:
             raise ValidationError('Unknown field.', unknown)
