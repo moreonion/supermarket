@@ -87,10 +87,9 @@ class Hyperlinks(ma.Hyperlinks):
 
         def _url_val(val, key, obj, **kwargs):
             val.parent = self.parent
-            if isinstance(val, ma.URLFor) or isinstance(val, HyperlinkRelated):
+            if isinstance(val, (ma.URLFor, HyperlinkRelated)):
                 return val.serialize(key, obj, **kwargs)
-            else:
-                return val
+            return val
 
         return ma_rapply(self.schema, _url_val, key=attr, obj=obj)
 
@@ -103,6 +102,9 @@ class CustomSchema(ma.ModelSchema):
 
     @property
     def nested_fields(self):
+        """
+        Goes through the supplied items and stores the key for all fields of type Nested.
+        """
         fields = []
         for key, field in self.fields.items():
             if isinstance(field, ma.Nested):
@@ -111,6 +113,9 @@ class CustomSchema(ma.ModelSchema):
 
     @property
     def related_fields(self):
+        """
+        Goes through the supplied items and stores the keys for all fields of type Related.
+        """
         fields = []
         for key, field in self.fields.items():
             if isinstance(field, masqla_fields.Related):
@@ -119,6 +124,9 @@ class CustomSchema(ma.ModelSchema):
 
     @property
     def related_lists(self):
+        """
+        Goes through the supplied items and stores the keys for all list fields of type Related.
+        """
         lists = []
         for key, field in self.fields.items():
             if (isinstance(field, ma.List) and
