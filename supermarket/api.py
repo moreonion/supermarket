@@ -1,9 +1,10 @@
 import re
 import operator
 
-from flask import Blueprint, request
+from flask import Blueprint, abort, request
 from flask_restful import Api, Resource as BaseResource
 from werkzeug.exceptions import HTTPException
+from sqlalchemy.inspection import inspect
 
 import supermarket.model as m
 import supermarket.schema as s
@@ -198,40 +199,46 @@ class GenericResource:
         }
         return pages
 
-    def get_item(self, id):
+    def get_item(self, id, id2=None):
         """Get an item of ‘type’ by ‘ID’."""
+        id = (id, id2) if id2 else id
         r = self.model.query.get_or_404(id)
         return self.schema().dump(r).data, 200
 
-    def patch_item(self, id):
+    def patch_item(self, id, id2=None):
         """Update an existing item with new data."""
+        id = (id, id2) if id2 else id
         r = self.model.query.get_or_404(id)
-        data = self.schema().load(request.get_json(),
+        data = self.schema().load(request.get_json(), partial=True,
                                   session=m.db.session, instance=r)
         if data.errors:
             raise ValidationFailed(data.errors)
         m.db.session.commit()
         return self.schema().dump(r).data, 201
 
-    def put_item(self, id):
+    def put_item(self, id, id2=None):
         """Add a new item if the ID doesn’t exist, or replace the existing one."""
+        id = (id, id2) if id2 else id
         data = self.schema().load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
-        r.id = id
+        primary_key = [key.name for key in inspect(self.model).primary_key]
+        for p, k in zip(primary_key, id if id2 else [id]):
+            setattr(r, p, k)
         m.db.session.merge(r)
         m.db.session.commit()
         return self.schema().dump(r).data, 201
 
-    def delete_item(self, id):
+    def delete_item(self, id, id2=None):
         """Delete an item of ‘type’ by its ID."""
+        id = (id, id2) if id2 else id
         r = self.model.query.get_or_404(id)
         m.db.session.delete(r)
         m.db.session.commit()
         return '', 204
 
-    def get_list(self):
+    def get_list(self, **kwargs):
         """Get a paged list containing all items of type ‘type’.
         It's possible to amend the list with query parameters:
         - limit: maximum number of items per page (default 20)
@@ -244,6 +251,7 @@ class GenericResource:
         """
         # get arguments from query parameters
         args = request.args.copy()
+        args.update(kwargs)
         page = int(args.pop('page', 1))
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', 'name')
@@ -367,3 +375,87 @@ class ResourceDoc(BaseResource):
 
     def get(self, type):
         return resources[type].get_doc()
+
+
+compound_resources = {
+    ('criteria', 'hotspots'): GenericResource(m.CriterionImprovesHotspot,
+                                              s.CriterionImprovesHotspot),
+    ('products', 'ingredients'): GenericResource(m.Ingredient, s.Ingredient),
+    ('labels', 'criteria'): GenericResource(m.LabelMeetsCriterion, s.LabelMeetsCriterion),
+    ('retailers', 'criteria'): GenericResource(m.RetailerMeetsCriterion, s.RetailerMeetsCriterion),
+    ('supplies', 'hotspots'): GenericResource(m.Score, s.Score)
+}
+
+
+@api.resource('/<type>/<int:id>/<type2>/<int:id2>')
+class CompoundResourceItem(BaseResource):
+
+    """A resource item of type ‘(type, type2)’, identified by its IDs."""
+
+    def get(self, type, id, type2, id2):
+        if (type, type2) in compound_resources:
+            return compound_resources[(type, type2)].get_item(id, id2)
+        if (type2, type) in compound_resources:
+            return compound_resources[(type2, type)].get_item(id2, id)
+        abort(404)
+
+    def patch(self, type, id, type2, id2):
+        if (type, type2) in compound_resources:
+            return compound_resources[(type, type2)].patch_item(id, id2)
+        if (type2, type) in compound_resources:
+            return compound_resources[(type2, type)].patch_item(id2, id)
+        abort(404)
+
+    def put(self, type, id, type2, id2):
+        if (type, type2) in compound_resources:
+            return compound_resources[(type, type2)].put_item(id, id2)
+        if (type2, type) in compound_resources:
+            return compound_resources[(type2, type)].put_item(id2, id)
+        abort(404)
+
+    def delete(self, type, id, type2, id2):
+        if (type, type2) in compound_resources:
+            return compound_resources[(type, type2)].delete_item(id, id2)
+        if (type2, type) in compound_resources:
+            return compound_resources[(type2, type)].delete_item(id2, id)
+        abort(404)
+
+
+@api.resource('/<type>/<int:id>/<type2>')
+class CompoundResourceList(BaseResource):
+
+    """A list of resources of type ‘(type, type2)’, filtered by `type.id`."""
+
+    map_compound_key = {
+        'criteria': 'criterion_id',
+        'hotspots': 'hotspot_id',
+        'labels': 'label_id',
+        'retailers': 'retailer_id',
+        'supplies': 'supply_id'
+    }
+
+    def get(self, type, type2, id=None):
+        params = {}
+        if (type, type2) not in compound_resources:
+            if (type2, type) in compound_resources:
+                (type, type2) = (type2, type)
+            else:
+                abort(404)
+        if id:
+            params[self.map_compound_key[type]] = id
+        if type2 == 'ingredients':
+            params['sort'] = '-weight'
+        return compound_resources[(type, type2)].get_list(**params)
+
+
+@api.resource('/doc/<type>/<type2>')
+class CompoundResourceDoc(BaseResource):
+
+    """API documentation for resources of type ‘(type, type2)’."""
+
+    def get(self, type, type2):
+        if (type, type2) in compound_resources:
+            return compound_resources[(type, type2)].get_doc()
+        if (type2, type) in compound_resources:
+            return compound_resources[(type2, type)].get_doc()
+        abort(404)

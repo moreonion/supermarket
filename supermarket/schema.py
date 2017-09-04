@@ -256,6 +256,15 @@ class CriterionCategory(CustomSchema):
         model = m.Criterion
 
 
+class CriterionImprovesHotspot(CustomSchema):
+    # primary key: criterion_id + hotspot_id
+    # weight, explanation
+    # refs: criterion, hotspot
+
+    class Meta(CustomSchema.Meta):
+        model = m.CriterionImprovesHotspot
+
+
 class Hotspot(CustomSchema):
     # id, name, description
     # refs: scores
@@ -270,6 +279,15 @@ class Hotspot(CustomSchema):
 
     class Meta(CustomSchema.Meta):
         model = m.Hotspot
+
+
+class Ingredient(CustomSchema):
+    # primary key: product_id + weight
+    # weight, name, percentage
+    # refs: product, resource, origin, supplier
+
+    class Meta(CustomSchema.Meta):
+        model = m.Ingredient
 
 
 class Label(CustomSchema):
@@ -435,6 +453,24 @@ class Retailer(CustomSchema):
 
     class Meta(CustomSchema.Meta):
         model = m.Retailer
+
+
+class RetailerMeetsCriterion(CustomSchema):
+    # primary key: retailer_id + criterion_id
+    # satisfied, explanation
+    # refs: criterion
+
+    class Meta(CustomSchema.Meta):
+        model = m.RetailerMeetsCriterion
+
+
+class Score(CustomSchema):
+    # primary key: hotspot_id, supply_id
+    # score, explanation
+    # refs: hotspot, supply
+
+    class Meta(CustomSchema.Meta):
+        model = m.Score
 
 
 class Store(CustomSchema):

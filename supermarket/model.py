@@ -296,8 +296,8 @@ class Score(db.Model):
     Supplies receive a score on how well they contribute to a hotspot area.
     """
     __tablename__ = 'scores'
-    hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
     supply_id = db.Column(db.ForeignKey('supplies.id'), primary_key=True)
+    hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
     score = db.Column(db.SmallInteger, nullable=False)
     explanation = db.Column(db.Text)
     hotspot = db.relationship(

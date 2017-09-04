@@ -153,6 +153,51 @@ class TestProductApiRelations:
 
 
 @pytest.mark.usefixtures('client_class', 'db')
+class TestCompoundRelations:
+    def test_post_compound_relation(self):
+        self.client.post(
+            url_for(api.ResourceList, type='hotspots'),
+            data=json.dumps({
+                'name': 'A hotspot',
+            }),
+            content_type='application/json')
+        res = self.client.post(
+            url_for(api.ResourceList, type='criteria'),
+            data=json.dumps({
+                'name': 'A criterion',
+                'improves_hotspots': [{
+                    'hotspot_id': 1,
+                    'explanation': 'That’s why.'
+                }]
+            }),
+            content_type='application/json')
+        assert res.status_code == 201
+        assert res.json['id'] == 1
+        assert res.json['name'] == 'A criterion'
+        assert res.json['improves_hotspots'][0]['hotspot_id'] == 1
+
+    def test_get_compound_relation(self):
+        res = self.client.get(url_for(
+            api.CompoundResourceItem, type='criteria', id=1, type2='hotspots', id2=1))
+        assert res.status_code == 200
+        assert res.json['criterion'] == 1
+        assert res.json['hotspot'] == 1
+        assert res.json['explanation'] == 'That’s why.'
+
+        res_inverted = self.client.get(url_for(
+            api.CompoundResourceItem, type='hotspots', id=1, type2='criteria', id2=1))
+        assert res.json == res_inverted.json
+
+    def test_get_compound_relation_list(self):
+        res = self.client.get(url_for(
+            api.CompoundResourceList, type='criteria', id=1, type2='hotspots'))
+        assert res.status_code == 200
+        assert res.json['items'][0]['criterion'] == 1
+        assert res.json['items'][0]['hotspot'] == 1
+        assert res.json['items'][0]['explanation'] == 'That’s why.'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
 class TestProductApiValidation:
     @classmethod
     def assert_validation_failed(cls, res):
