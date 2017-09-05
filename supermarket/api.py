@@ -254,7 +254,7 @@ class GenericResource:
         m.db.session.commit()
         return '', 204
 
-    def get_list(self, include={}):
+    def get_list(self):
         """Get a paged list containing all items of type ‘type’.
         It's possible to amend the list with query parameters:
         - limit: maximum number of items per page (default 20)
