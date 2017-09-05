@@ -189,10 +189,10 @@ class CustomSchema(ma.ModelSchema):
         try:
             for name, v in self.context['include'].items():
                 m = v['resource'].model
-                if 'all' not in v['only']:
-                    s = v['resource'].schema(only=v['only'])
-                else:
+                if 'all' in v['only']:
                     s = v['resource'].schema()
+                else:
+                    s = v['resource'].schema(only=v['only'])
 
                 resources = [m.query.get_or_404(i) for i in data[name]]
                 dump = [s.dump(r).data for r in resources]
