@@ -200,10 +200,12 @@ class GenericResource:
         }
         return pages
 
-    def get_item(self, id):
+    def get_item(self, id, nested={}):
         """Get an item of ‘type’ by ‘ID’."""
         r = self.model.query.get_or_404(id)
-        return self.schema().dump(r).data, 200
+        schema = self.schema()
+        schema.context['nested'] = nested
+        return schema.dump(r).data, 200
 
     def patch_item(self, id):
         """Update an existing item with new data."""
@@ -338,7 +340,12 @@ class ResourceItem(BaseResource):
     """A resource item of type ‘type’, identified by its ID."""
 
     def get(self, type, id):
-        return resources[type].get_item(id)
+        nested_arg = request.args.get('nested', '')
+        try:
+            nested = {nested_arg: resources[nested_arg]}
+        except KeyError:
+            nested = {}
+        return resources[type].get_item(id, nested)
 
     def patch(self, type, id):
         return resources[type].patch_item(id)

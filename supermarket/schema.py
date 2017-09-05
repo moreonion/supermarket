@@ -1,7 +1,8 @@
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
-from marshmallow import class_registry, post_load, utils, validates_schema, ValidationError
+from marshmallow import class_registry, utils, validates_schema, ValidationError
+from marshmallow import post_dump, post_load
 from marshmallow_sqlalchemy import fields as masqla_fields
 
 import supermarket.model as m
@@ -97,6 +98,7 @@ class Hyperlinks(ma.Hyperlinks):
 # Custom (overriden) base schema
 
 class CustomSchema(ma.ModelSchema):
+    __query_nested__ = []
 
     """Config and validation that all our schemas share"""
 
@@ -178,6 +180,15 @@ class CustomSchema(ma.ModelSchema):
         unknown = set(original_data) - set(self.fields)
         if unknown:
             raise ValidationError('Unknown field.', unknown)
+
+    @post_dump
+    def load_queried_nested_fields(self, data):
+        try:
+            for name, resource in self.context['nested'].items():
+                dump = [resource.get_item(i) for i in data[name]]
+                data[name] = dump
+        except KeyError:
+            pass
 
     @post_load
     def check_related_fields(self, data):
