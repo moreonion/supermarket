@@ -200,11 +200,30 @@ class GenericResource:
         }
         return pages
 
-    def get_item(self, id, include={}):
+    def _parse_include_params(self, request):
+        """ Retrieves the fields from the URL parameters that should be displayed as a nested field
+        :params request The incoming GET request
+        :returns A dictionary containing the according Resource and the queried fields.
+        """
+        include_raw = request.args.get('include', '').split(',')
+        include_raw = [i.split('.') for i in include_raw if i != '']
+        if len(include_raw) < 1:
+            return {}
+
+        # Extract the resource names from the given values
+        include = {f[0]: {'resource': resources[f[0].strip()], 'only': []}
+                   for f in include_raw}
+        # Add the fields requested for each resource
+        for f in include_raw:
+            include[f[0]]['only'].append(f[1])
+
+        return include
+
+    def get_item(self, id):
         """Get an item of ‘type’ by ‘ID’."""
         r = self.model.query.get_or_404(id)
         schema = self.schema()
-        schema.context['include'] = include
+        schema.context['include'] = self._parse_include_params(request)
         return schema.dump(r).data, 200
 
     def patch_item(self, id):
@@ -235,7 +254,7 @@ class GenericResource:
         m.db.session.commit()
         return '', 204
 
-    def get_list(self):
+    def get_list(self, include={}):
         """Get a paged list containing all items of type ‘type’.
         It's possible to amend the list with query parameters:
         - limit: maximum number of items per page (default 20)
@@ -259,9 +278,11 @@ class GenericResource:
         query = self._sort(query, sort, errors)
         query = self._filter(query, args, errors)
         page = query.paginate(page=page, per_page=limit)
+        schema = self.schema(many=True, only=only)
+        schema.context['include'] = self._parse_include_params(request)
 
         return {
-            'items': self.schema(many=True, only=only).dump(page.items).data,
+            'items': schema.dump(page.items).data,
             'pages': self._pagination_info(page),
             'errors': errors
         }, 200
@@ -360,8 +381,7 @@ class ResourceItem(BaseResource):
         return include
 
     def get(self, type, id):
-        include = ResourceItem.parse_include_params(request)
-        return resources[type].get_item(id, include)
+        return resources[type].get_item(id)
 
     def patch(self, type, id):
         return resources[type].patch_item(id)
