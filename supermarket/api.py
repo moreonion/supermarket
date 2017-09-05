@@ -345,12 +345,13 @@ class ResourceItem(BaseResource):
         :params request The incoming GET request
         :returns A dictionary containing the according Resource and the queried fields.
         """
-        include_raw = [i.split('.') for i in request.args.get('include', '').split(',')]
+        include_raw = request.args.get('include', '').split(',')
+        include_raw = [i.split('.') for i in include_raw if i != '']
         if len(include_raw) < 1:
             return {}
 
         # Extract the resource names from the given values
-        include = {f[0]: {'resource': resources[f[0]], 'only': []}
+        include = {f[0]: {'resource': resources[f[0].strip()], 'only': []}
                    for f in include_raw}
         # Add the fields requested for each resource
         for f in include_raw:

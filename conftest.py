@@ -2,6 +2,7 @@ import pytest
 
 from supermarket import App
 from supermarket.model import db as _db
+from supermarket.model import Brand, Retailer, Product, Category
 
 
 @pytest.fixture(scope='session')
@@ -30,3 +31,22 @@ def db(request, app):
     setup()
     request.addfinalizer(teardown)
     return _db
+
+
+@pytest.fixture(scope='class')
+def example_data_brands(request, app, db):
+    def setup():
+        with app.app_context():
+            print('\nSetting up testdata for {} {}'.format(id(db), db))
+            retailer = Retailer(name='Rewe')
+            category = Category(name='Cookies')
+            p1 = Product(name='Chocolate chip cookies', category=category)
+            p2 = Product(name='Triple chocolate bombs', category=category)
+            brand = Brand(name='Clever', retailer=retailer, products=[p1, p2])
+            db.session.add(brand)
+            # p1.brand = brand
+            # p2.brand = brand
+            # db.session.add_all([brand, p1, p2])
+            db.session.commit()
+
+    setup()
