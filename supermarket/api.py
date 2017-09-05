@@ -200,11 +200,11 @@ class GenericResource:
         }
         return pages
 
-    def get_item(self, id, nested={}):
+    def get_item(self, id, include={}):
         """Get an item of ‘type’ by ‘ID’."""
         r = self.model.query.get_or_404(id)
         schema = self.schema()
-        schema.context['nested'] = nested
+        schema.context['include'] = include
         return schema.dump(r).data, 200
 
     def patch_item(self, id):
@@ -339,13 +339,28 @@ class ResourceItem(BaseResource):
 
     """A resource item of type ‘type’, identified by its ID."""
 
+    @classmethod
+    def parse_include_params(cls, request):
+        """ Retrieves the fields from the URL parameters that should be displayed as a nested field
+        :params request The incoming GET request
+        :returns A dictionary containing the according Resource and the queried fields.
+        """
+        include_raw = [i.split('.') for i in request.args.get('include', '').split(',')]
+        if len(include_raw) < 1:
+            return {}
+
+        # Extract the resource names from the given values
+        include = {f[0]: {'resource': resources[f[0]], 'only': []}
+                   for f in include_raw}
+        # Add the fields requested for each resource
+        for f in include_raw:
+            include[f[0]]['only'].append(f[1])
+
+        return include
+
     def get(self, type, id):
-        nested_arg = request.args.get('nested', '')
-        try:
-            nested = {nested_arg: resources[nested_arg]}
-        except KeyError:
-            nested = {}
-        return resources[type].get_item(id, nested)
+        include = ResourceItem.parse_include_params(request)
+        return resources[type].get_item(id, include)
 
     def patch(self, type, id):
         return resources[type].patch_item(id)

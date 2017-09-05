@@ -183,9 +183,16 @@ class CustomSchema(ma.ModelSchema):
 
     @post_dump
     def load_queried_nested_fields(self, data):
+        """Injects the fields requested in 'nested' into the JSON dump.
+        Expects 'nested' to contain valid values (e.g. only valid field names).
+        """
         try:
-            for name, resource in self.context['nested'].items():
-                dump = [resource.get_item(i) for i in data[name]]
+            for name, v in self.context['include'].items():
+                m = v['resource'].model
+                s = v['resource'].schema(only=v['only'])
+
+                resources = [m.query.get_or_404(i) for i in data[name]]
+                dump = [s.dump(r).data for r in resources]
                 data[name] = dump
         except KeyError:
             pass
