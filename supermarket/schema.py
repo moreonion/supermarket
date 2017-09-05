@@ -227,8 +227,7 @@ class Brand(CustomSchema):
             'retailer': HyperlinkRelated(
                 'api.resourceitem', {'type': 'retailers'}, external=True, attribute='retailer'),
             'stores': HyperlinkRelatedList(
-                'api.resourcelist', {'type': 'stores'}, external=True, attribute='stores',
-                url_key='brand_id'),
+                'api.resourcelist', {'type': 'stores'}, external=True, attribute='stores'),
             'products': HyperlinkRelatedList(
                 'api.resourcelist', {'type': 'products'}, external=True, attribute='products',
                 url_key='brand_id')
