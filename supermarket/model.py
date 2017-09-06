@@ -48,11 +48,14 @@ retailers_labels = db.Table(
 # main tables
 
 class Brand(db.Model):
-    """
-    The brand of a product.
+
+    """The brand of a product.
+
     Contains information about the brands name, the retailer, the products that are part of
     this brand and the stores where those products are sold.
+
     """
+
     __tablename__ = 'brands'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
@@ -66,9 +69,13 @@ class Brand(db.Model):
 
 
 class Category(db.Model):
+
+    """A category a product belongs to.
+
+    Looking into using GS1 standards for food and beverages.
+
     """
-    A category a product can be rated against.
-    """
+
     __tablename__ = 'categories'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
@@ -76,9 +83,14 @@ class Category(db.Model):
 
 
 class Criterion(db.Model):
+
+    """A criterion a label or a retailer policy can fulfill.
+
+    Criteria are bundled in categories and specify which measures need to be taken
+    to improve the overall rating by a certain score.
+
     """
-    A criterion a label or a retailer can fulfill.
-    """
+
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
     type = db.Column(db.Enum('label', 'retailer', name='criterion_type'))
@@ -91,6 +103,14 @@ class Criterion(db.Model):
 
 
 class CriterionCategory(db.Model):
+
+    """Category for criteria.
+
+    Criteria are bundled in categories and those categories are grouped together
+    in higher categories.
+
+    """
+
     __tablename__ = 'criterion_category'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(128))
@@ -103,9 +123,13 @@ class CriterionCategory(db.Model):
 
 
 class CriterionImprovesHotspot(db.Model):
+
+    """Maps criteria to hotspots.
+
+    Specifies in what way and with how much impact a criterion improves a certain hotspot score.
+
     """
-    Specifies in what way and with how much impact a criterion improves a certain hotspot.
-    """
+
     __tablename__ = 'criteria_hotspots'
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
     hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
@@ -116,9 +140,9 @@ class CriterionImprovesHotspot(db.Model):
 
 
 class Hotspot(db.Model):
-    """
-    A hotspot is an area of concern (e.g. Climate Risk).
-    """
+
+    """A hotspot or issue is an area of concern (e.g. Climate Risk)."""
+
     __tablename__ = 'hotspots'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
@@ -127,12 +151,14 @@ class Hotspot(db.Model):
 
 
 class Ingredient(db.Model):
+
+    """An ingredient of a product.
+
+    Contains information about the resource the ingredient stems from, its origin or supplier
+    if known, and the order (weight) of items on the product’s ingredients list.
+
     """
-    An ingredient of a product stemming from a certain resource.
-    Contains information about the associated product, the weight of
-    the ingredient, its origin, supplier and name. As well as the percentage
-    of the product it takes up and the resource the ingredient stems from.
-    """
+
     __tablename__ = 'ingredients'
     product_id = db.Column(db.ForeignKey('products.id'), primary_key=True)
     weight = db.Column(db.Integer(), primary_key=True)
@@ -148,13 +174,15 @@ class Ingredient(db.Model):
 
 
 class Label(db.Model):
-    """
-    A label a product or a retailer can receive.
+
+    """A label ensures that a product or retailer fulfills certain criteria.
+
     Contains information about the type of the label (i.e. is it for products
-    or is it for retailers), a description of the label and its logo.
-    Additionally contains relationships to which criteria the label fulfills
-    and in which countries the label is active.
+    or is it for retailers), a description and logo, the countries where
+    it is in use and the criteria that have to be complied to.
+
     """
+
     __tablename__ = 'labels'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64), CheckConstraint('LENGTH(name)>0'), nullable=False, unique=True)
@@ -176,19 +204,23 @@ class Label(db.Model):
 
 
 class LabelCountry(db.Model):
-    """
-    Maps labels to country codes.
-    """
+
+    """Country where a label is in use, represented by its 2 letter ISO code."""
+
     __tablename__ = 'label_countries'
     code = db.Column(db.String(2), primary_key=True)
     # labels – backref from Label
 
 
 class LabelMeetsCriterion(db.Model):
+
+    """Maps labels to their criteria.
+
+    Describes how well a label meets a certain criterion by assigning a score
+    and an explanation.
+
     """
-    How well a label meets a certain criterion: this is defined by a score
-    being assigned to a label for a certain criterion.
-    """
+
     __tablename__ = 'labels_criteria'
     label_id = db.Column(db.ForeignKey('labels.id'), primary_key=True)
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
@@ -199,9 +231,9 @@ class LabelMeetsCriterion(db.Model):
 
 
 class Origin(db.Model):
-    """
-    The origin of an ingredient, i.e. the country it stems from.
-    """
+
+    """The origin of a resource (a country or a FAO Major Fishing Area)."""
+
     __tablename__ = 'origins'
     id = db.Column(db.Integer(), primary_key=True)
     code = db.Column(db.String(2))
@@ -211,9 +243,9 @@ class Origin(db.Model):
 
 
 class Producer(db.Model):
-    """
-    A producer producing certain products.
-    """
+
+    """A producer producing certain products."""
+
     __tablename__ = 'producers'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
@@ -221,12 +253,15 @@ class Producer(db.Model):
 
 
 class Product(db.Model):
-    """
-    Represents a product.
+
+    """Represents a product.
+
     Contains information about the product name, details (image, weight, ...), its Global Trade
     Item Number, the brand it belongs to, which category it falls in and the responsible producer.
     Also the labels the product received and the stores that it is sold in.
+
     """
+
     __tablename__ = 'products'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
@@ -250,9 +285,9 @@ class Product(db.Model):
 
 
 class Resource(db.Model):
-    """
-    A resource an ingredient can stem from.
-    """
+
+    """A resource (“Rohstoff”), independent of its origin or use in products."""
+
     __tablename__ = 'resources'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
@@ -262,12 +297,15 @@ class Resource(db.Model):
 
 
 class Retailer(db.Model):
-    """
-    Represents a retailer.
-    Contains information about the retailer's name, associated brands and stores,
+
+    """Represents a retailer.
+
+    Contains information about the retailer’s name, associated brands and stores,
     whether the retailer fulfills certain criteria and the labels the retailer
     received.
+
     """
+
     __tablename__ = 'retailers'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
@@ -281,9 +319,14 @@ class Retailer(db.Model):
 
 
 class RetailerMeetsCriterion(db.Model):
+
+    """Maps retailer policies to their criteria.
+
+    Describes how well a policy meets a certain criterion by assigning a score
+    and an explanation.
+
     """
-    Whether or not a retailer fulfills a certain criterion.
-    """
+
     __tablename__ = 'retailer_criteria'
     retailer_id = db.Column(db.ForeignKey('retailers.id'), primary_key=True)
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
@@ -293,9 +336,9 @@ class RetailerMeetsCriterion(db.Model):
 
 
 class Score(db.Model):
-    """
-    Supplies receive a score on how well they contribute to a hotspot area.
-    """
+
+    """Maps the influence that a supply has on a hotspot area."""
+
     __tablename__ = 'scores'
     hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
     supply_id = db.Column(db.ForeignKey('supplies.id'), primary_key=True)
@@ -308,9 +351,9 @@ class Score(db.Model):
 
 
 class Store(db.Model):
-    """
-    A store belonging to a certain retailer.
-    """
+
+    """A store belonging to a certain retailer."""
+
     __tablename__ = 'stores'
     id = db.Column(db.Integer(), primary_key=True)
     retailer_id = db.Column(db.ForeignKey('retailers.id'))
@@ -321,9 +364,9 @@ class Store(db.Model):
 
 
 class Supplier(db.Model):
-    """
-    A supplier of certain products.
-    """
+
+    """A supplier of a resource."""
+
     __tablename__ = 'suppliers'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
@@ -332,10 +375,9 @@ class Supplier(db.Model):
 
 
 class Supply(db.Model):
-    """
-    The supply of a certain resource coming from a certain origin and/or
-    supplier.
-    """
+
+    """A resource coming from an origin or supplier."""
+
     __tablename__ = 'supplies'
     id = db.Column(db.Integer(), primary_key=True)
     resource_id = db.Column(db.ForeignKey('resources.id'))

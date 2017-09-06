@@ -17,6 +17,7 @@ class Nested(ma.Nested):
     """Nested field that keeps the session when loading nested data.
 
     Fixes https://github.com/marshmallow-code/marshmallow-sqlalchemy/issues/67.
+
     """
 
     def _deserialize(self, value, attr, data):
@@ -105,6 +106,7 @@ class Hyperlinks(ma.Hyperlinks):
     :param dict schema    A dict that maps names to
                           :class:`~flask_marshmallow.fields.URLFor` or
                           :class:¸~supermarket.schema.HyperlinkRelated` fields.
+
     """
 
     def _serialize(self, value, attr, obj):
@@ -122,13 +124,11 @@ class Hyperlinks(ma.Hyperlinks):
 
 class CustomSchema(ma.ModelSchema):
 
-    """Config and validation that all our schemas share"""
+    """Config and validation that all our schemas share."""
 
     @property
     def nested_fields(self):
-        """
-        Goes through the supplied items and stores the key for all fields of type Nested.
-        """
+        """Get the keys of all fields of type `Nested`."""
         fields = []
         for key, field in self.fields.items():
             if isinstance(field, Nested):
@@ -137,9 +137,7 @@ class CustomSchema(ma.ModelSchema):
 
     @property
     def related_fields(self):
-        """
-        Goes through the supplied items and stores the keys for all fields of type Related.
-        """
+        """Get the keys of all fields of type `Related`."""
         fields = []
         for key, field in self.fields.items():
             if isinstance(field, masqla_fields.Related):
@@ -148,9 +146,7 @@ class CustomSchema(ma.ModelSchema):
 
     @property
     def related_lists(self):
-        """
-        Goes through the supplied items and stores the keys for all list fields of type Related.
-        """
+        """Get the keys of all fields with a list of type `Related`."""
         lists = []
         for key, field in self.fields.items():
             if (isinstance(field, ma.List) and

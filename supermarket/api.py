@@ -18,10 +18,13 @@ api = Api(app)
 class ValidationFailed(HTTPException):
 
     """Raised when schema validation fails.
+
     All ValidationErrors are put in a consistent error message format
     for a ‘400 Bad request’ response.
+
     :param dict errors       Errors dict as returned by Marshmellow schema_load().
     :param str description   Error message, defaults to "Validation Error".
+
     """
 
     code = 400
@@ -36,8 +39,11 @@ class ValidationFailed(HTTPException):
 
 
 class ParamException(Exception):
+
     """Raised when an URL parameter cannot be applied.
+
     :param str message      Error message to display.
+
     """
 
     def __init__(self, message, *args, **kwargs):
@@ -46,9 +52,12 @@ class ParamException(Exception):
 
 
 class FilterOperatorException(ParamException):
+
     """Raised when a field cannot be filtered because the operator doesn't make sense.
+
     :param str op           Name of the operator that triggered the exception.
     :param list accepted    List of accepted operators.
+
     """
 
     def __init__(self, op, accepted, *args, **kwargs):
@@ -61,9 +70,11 @@ class FilterOperatorException(ParamException):
 class GenericResource:
 
     """Bundles generic behaviour for all resources.
+
     Attributes:
         model       The :class:`~flask_sqlalchemy.Model` to query and save to.
         schema      The :class:`~supermarket.schema.CustomSchema` associated with the model.
+
     """
 
     def __init__(self, model, schema):
@@ -300,6 +311,7 @@ class GenericResource:
 
     def get_list(self):
         """Get a paged list containing all items of type ‘type’.
+
         It's possible to amend the list with query parameters:
         - limit: maximum number of items per page (default 20)
         - page: which page to display (default 1)
@@ -309,6 +321,7 @@ class GenericResource:
         - <fieldname>: filter by the given value (using equal),
         - <fieldname>:<operator>: filter using the given operator,
                                   accepts 'lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in' and 'like'
+
         """
         # get arguments from query parameters
         args = request.args.copy()
