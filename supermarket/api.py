@@ -200,12 +200,18 @@ class GenericResource:
         }
         return pages
 
+    def _fetch_resource(self, field):
+        # Check whether the supplied field exists in our model and fetch the according resource
+        prop = getattr(self.model, field).property
+        resource = next(filter(lambda v: v.model.__table__ == prop.target, resources.values()))
+
+        return resource
+
     def _parse_include_params(self, arg, query, errors):
-        """ Retrieves the fields from the URL parameters that should be displayed as a nested field.
-        Expects that the requested field is the name of a Resource!
-        :params arg The raw parameter value.
-        :returns A dictionary containing the according Resource and the queried fields.
-        """
+        # Retrieves the fields from the URL parameters that should be displayed as a nested field.
+        # Expects that the requested field is the name of a Resource!
+        # :params arg The raw parameter value.
+        # :returns A dictionary containing the according Resource and the queried fields.
         include_raw = arg.split(',')
         include_raw = [i.strip().split('.') for i in include_raw if i != '']
         included = {}
@@ -214,7 +220,7 @@ class GenericResource:
         for f in include_raw:
             try:
                 resource_name, field = f  # throws IndexError
-                resource = resources[resource_name]  # throws KeyError
+                resource = self._fetch_resource(resource_name)  # throws AttributeError
 
                 if field != 'all':
                     self._field_to_attr('.'.join(f), query)  # throws ParamException
@@ -228,7 +234,7 @@ class GenericResource:
                     'value': '.'.join(f),
                     'message': e.message
                 })
-            except KeyError:
+            except AttributeError:
                 not_included.append({
                     'value': resource_name,
                     'message': 'No such resource.'

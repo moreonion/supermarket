@@ -42,11 +42,9 @@ def example_data_brands(request, app, db):
             category = Category(name='Cookies')
             p1 = Product(name='Chocolate chip cookies', category=category)
             p2 = Product(name='Triple chocolate bombs', category=category)
-            brand = Brand(name='Clever', retailer=retailer, products=[p1, p2])
+            brand = Brand(name='Clever', retailer=retailer, products=[p1])
+            db.session.add(p2)
             db.session.add(brand)
-            # p1.brand = brand
-            # p2.brand = brand
-            # db.session.add_all([brand, p1, p2])
             db.session.commit()
 
     setup()

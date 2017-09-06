@@ -98,7 +98,6 @@ class Hyperlinks(ma.Hyperlinks):
 # Custom (overriden) base schema
 
 class CustomSchema(ma.ModelSchema):
-    __query_nested__ = []
 
     """Config and validation that all our schemas share"""
 
@@ -191,13 +190,17 @@ class CustomSchema(ma.ModelSchema):
             for name, v in self.context['include'].items():
                 m = list(filter(lambda x: getattr(x, 'id') == data['id'], query))[0]
                 resources = getattr(m, name)
-                if 'all' in v['only']:
-                    s = v['resource'].schema()
-                else:
-                    s = v['resource'].schema(only=v['only'])
 
-                dump = [s.dump(r).data for r in resources]
-                data[name] = dump
+                if resources is not None:
+                    many = isinstance(resources, list)
+
+                    if 'all' in v['only']:
+                        s = v['resource'].schema(many=many)
+                    else:
+                        s = v['resource'].schema(many=many, only=v['only'])
+
+                    dump = s.dump(resources).data
+                    data[name] = dump
         except KeyError:
             pass
 

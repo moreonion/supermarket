@@ -43,14 +43,14 @@ class TestQueryInclude:
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert '\'id\': 1' in str(res.json['item']['products'])
+        assert '\'id\': 2' in str(res.json['item']['products'])
         assert 'Chocolate chip cookies' in str(res.json['item']['products'])
 
         url = url_for(api.ResourceList, type='brands', include='products.name,products.id')
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert '\'id\': 1' in str(res.json['items'][0]['products'])
+        assert '\'id\': 2' in str(res.json['items'][0]['products'])
         assert 'Chocolate chip cookies' in str(res.json['items'][0]['products'])
 
     def test_all_fields(self):
@@ -59,14 +59,14 @@ class TestQueryInclude:
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert '\'id\': 1' in str(res.json['item']['products'])
+        assert '\'id\': 2' in str(res.json['item']['products'])
         assert 'Chocolate chip cookies' in str(res.json['item']['products'])
 
         url = url_for(api.ResourceList, type='brands', include='products.all')
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert '\'id\': 1' in str(res.json['items'][0]['products'])
+        assert '\'id\': 2' in str(res.json['items'][0]['products'])
         assert 'Chocolate chip cookies' in str(res.json['items'][0]['products'])
 
     def test_empty(self):
@@ -87,14 +87,14 @@ class TestQueryInclude:
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert '\'id\': 1' in str(res.json['item']['products'])
+        assert '\'id\': 2' in str(res.json['item']['products'])
         assert 'Chocolate chip cookies' not in str(res.json['item']['products'])
 
         url = url_for(api.ResourceList, type='brands', include='products.adsf, products.id')
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert '\'id\': 1' in str(res.json['items'][0]['products'])
+        assert '\'id\': 2' in str(res.json['items'][0]['products'])
         assert 'Chocolate chip cookies' not in str(res.json['items'][0]['products'])
 
     def test_invalid_args(self):
@@ -104,7 +104,7 @@ class TestQueryInclude:
 
         assert res.status_code == 200
         assert 'Unknown field `adsf`' in str(res.json['errors'])
-        assert '\'id\': 1' in str(res.json['item']['products'])
+        assert '\'id\': 2' in str(res.json['item']['products'])
         assert 'Chocolate chip cookies' not in str(res.json['item']['products'])
 
         url = url_for(api.ResourceList, type='brands', include='products.adsf, products.id')
@@ -112,5 +112,13 @@ class TestQueryInclude:
 
         assert res.status_code == 200
         assert 'Unknown field `adsf`' in str(res.json['errors'])
-        assert '\'id\': 1' in str(res.json['items'][0]['products'])
+        assert '\'id\': 2' in str(res.json['items'][0]['products'])
         assert 'Chocolate chip cookies' not in str(res.json['items'][0]['products'])
+
+    def test_null_value(self):
+        """ Check whether we can handle a NULL value in the Related Field. """
+        url = url_for(api.ResourceItem, type='products', id=1, include='brand.name')
+        res = self.client.get(url)
+
+        assert res.status_code == 200
+        assert res.json['item']['brand'] is None
