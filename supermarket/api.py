@@ -314,7 +314,7 @@ class GenericResource:
         args = request.args.copy()
         page = int(args.pop('page', 1))
         limit = int(args.pop('limit', 20))
-        sort = args.pop('sort', 'name')
+        sort = args.pop('sort', None)
         include = args.pop('include', '')
         only = self._sanitize_only(args.pop('only', None))
         errors = []

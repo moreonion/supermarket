@@ -153,6 +153,31 @@ class TestProductApiRelations:
 
 
 @pytest.mark.usefixtures('client_class', 'db')
+class TestLabelApiRelations:
+    def test_post_nested_relation(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'name': 'A label',
+                'meets_criteria': [{
+                    'criterion': {'name': 'A criterion'},
+                    'score': '2'
+                }]
+            }),
+            content_type='application/json')
+        assert res.status_code == 201
+        assert res.json['id'] == 1
+        assert res.json['name'] == 'A label'
+        assert res.json['meets_criteria'][0]['criterion'] == 1
+        assert res.json['meets_criteria'][0]['score'] == 2
+
+        related_criterion = self.client.get(
+            url_for(api.ResourceItem, type='criteria',
+                    id=res.json['meets_criteria'][0]['criterion']))
+        assert related_criterion.json['name'] == 'A criterion'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
 class TestProductApiValidation:
     @classmethod
     def assert_validation_failed(cls, res):
