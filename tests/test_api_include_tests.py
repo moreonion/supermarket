@@ -6,8 +6,11 @@ url_for = api.api.url_for
 
 @pytest.mark.usefixtures('client_class', 'db', 'example_data_brands')
 class TestQueryInclude:
+
+    """ Tests for the ?include=field1,field2,... GET parameter. """
+
     def test_general(self):
-        """ Check if we broke standard requests. """
+        """ Check if we broke requests without any parameters. """
         url = url_for(api.ResourceItem, type='brands', id=1)
         res = self.client.get(url)
 

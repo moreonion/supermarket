@@ -213,12 +213,11 @@ class GenericResource:
 
         for f in include_raw:
             try:
-                resource_name = f[0]
-                field = f[1]
-                resource = resources[resource_name]
+                resource_name, field = f  # throws IndexError
+                resource = resources[resource_name]  # throws KeyError
 
                 if field != 'all':
-                    self._field_to_attr('.'.join(f), query)
+                    self._field_to_attr('.'.join(f), query)  # throws ParamException
 
                 try:
                     included[resource_name]['only'].append(field)
