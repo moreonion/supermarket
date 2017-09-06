@@ -257,6 +257,7 @@ class GenericResource:
 
         schema = self.schema()
         schema.context['include'] = self._parse_include_params(include, query, errors)
+        schema.context['query'] = query
 
         return {
             'item': schema.dump(r).data,
@@ -319,6 +320,7 @@ class GenericResource:
         page = query.paginate(page=page, per_page=limit)
         schema = self.schema(many=True, only=only)
         schema.context['include'] = self._parse_include_params(include, query, errors)
+        schema.context['query'] = page.items
 
         return {
             'items': schema.dump(page.items).data,
@@ -398,26 +400,6 @@ resources = {
 class ResourceItem(BaseResource):
 
     """A resource item of type ‘type’, identified by its ID."""
-
-    @classmethod
-    def parse_include_params(cls, request):
-        """ Retrieves the fields from the URL parameters that should be displayed as a nested field
-        :params request The incoming GET request
-        :returns A dictionary containing the according Resource and the queried fields.
-        """
-        include_raw = request.args.get('include', '').split(',')
-        include_raw = [i.split('.') for i in include_raw if i != '']
-        if len(include_raw) < 1:
-            return {}
-
-        # Extract the resource names from the given values
-        include = {f[0]: {'resource': resources[f[0].strip()], 'only': []}
-                   for f in include_raw}
-        # Add the fields requested for each resource
-        for f in include_raw:
-            include[f[0]]['only'].append(f[1])
-
-        return include
 
     def get(self, type, id):
         return resources[type].get_item(id)

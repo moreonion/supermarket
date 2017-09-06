@@ -181,20 +181,21 @@ class CustomSchema(ma.ModelSchema):
         if unknown:
             raise ValidationError('Unknown field.', unknown)
 
-    @post_dump
+    @post_dump()
     def load_queried_nested_fields(self, data):
         """Injects the fields requested in 'include' into the JSON dump.
         Expects 'include' to contain valid values (e.g. only valid field names).
         """
         try:
+            query = self.context['query']
             for name, v in self.context['include'].items():
-                m = v['resource'].model
+                m = list(filter(lambda x: getattr(x, 'id') == data['id'], query))[0]
+                resources = getattr(m, name)
                 if 'all' in v['only']:
                     s = v['resource'].schema()
                 else:
                     s = v['resource'].schema(only=v['only'])
 
-                resources = [m.query.get_or_404(i) for i in data[name]]
                 dump = [s.dump(r).data for r in resources]
                 data[name] = dump
         except KeyError:
