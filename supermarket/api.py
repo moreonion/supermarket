@@ -200,10 +200,75 @@ class GenericResource:
         }
         return pages
 
+    def _fetch_resource(self, field):
+        # Check whether the supplied field exists in our model and fetch the according resource
+        prop = getattr(self.model, field).property
+        resource = next(filter(lambda v: v.model.__table__ == prop.target, resources.values()))
+
+        return resource
+
+    def _parse_include_params(self, arg, query, errors):
+        # Retrieves the fields from the URL parameters that should be displayed as a nested field.
+        # Expects that the requested field is the name of a Resource!
+        # :params arg The raw parameter value.
+        # :returns A dictionary containing the according Resource and the queried fields.
+        include_raw = arg.split(',')
+        include_raw = [i.strip().split('.') for i in include_raw if i != '']
+        included = {}
+        not_included = []
+
+        for f in include_raw:
+            try:
+                resource_name, field = f  # throws IndexError
+                resource = self._fetch_resource(resource_name)  # throws AttributeError
+
+                if field != 'all':
+                    self._field_to_attr('.'.join(f), query)  # throws ParamException
+
+                try:
+                    included[resource_name]['only'].append(field)
+                except KeyError:
+                    included[resource_name] = {'resource': resource, 'only': [field]}
+            except ParamException as e:
+                not_included.append({
+                    'value': '.'.join(f),
+                    'message': e.message
+                })
+            except AttributeError:
+                not_included.append({
+                    'value': resource_name,
+                    'message': 'No such resource.'
+                })
+            except IndexError:
+                not_included.append({
+                    'value': '.'.join(f),
+                    'message': 'Invalid format.'
+                })
+
+        if not_included:
+            errors.append({
+                'errors': not_included,
+                'message': 'Some values have been not been included.'
+            })
+
+        return included
+
     def get_item(self, id):
         """Get an item of ‘type’ by ‘ID’."""
         r = self.model.query.get_or_404(id)
-        return self.schema().dump(r).data, 200
+        errors = []
+        query = self.model.query
+        args = request.args.copy()
+        include = args.pop('include', '')
+
+        schema = self.schema()
+        schema.context['include'] = self._parse_include_params(include, query, errors)
+        schema.context['query'] = query
+
+        return {
+            'item': schema.dump(r).data,
+            'errors': errors
+        }, 200
 
     def patch_item(self, id):
         """Update an existing item with new data."""
@@ -240,6 +305,7 @@ class GenericResource:
         - page: which page to display (default 1)
         - only: comma seperated field names to return in the result (includes all fields if empty).
         - sort: comma seperated field names to sort by, preceed by '-' to sort descending.
+        - include: comma seperated nested field names prepended by field name that includes IDs.
         - <fieldname>: filter by the given value (using equal),
         - <fieldname>:<operator>: filter using the given operator,
                                   accepts 'lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in' and 'like'
@@ -249,6 +315,7 @@ class GenericResource:
         page = int(args.pop('page', 1))
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', None)
+        include = args.pop('include', '')
         only = self._sanitize_only(args.pop('only', None))
         errors = []
 
@@ -257,9 +324,12 @@ class GenericResource:
         query = self._sort(query, sort, errors)
         query = self._filter(query, args, errors)
         page = query.paginate(page=page, per_page=limit)
+        schema = self.schema(many=True, only=only)
+        schema.context['include'] = self._parse_include_params(include, query, errors)
+        schema.context['query'] = page.items
 
         return {
-            'items': self.schema(many=True, only=only).dump(page.items).data,
+            'items': schema.dump(page.items).data,
             'pages': self._pagination_info(page),
             'errors': errors
         }, 200

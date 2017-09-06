@@ -67,10 +67,10 @@ class TestProductApi:
         res = self.client.get(url_for(api.ResourceItem, type='products', id=1))
         assert res.status_code == 200
         assert res.mimetype == 'application/json'
-        assert res.json['id'] == 1
-        assert res.json['name'] == 'Organic cookies'
-        assert res.json['gtin'] == '99999999999999'
-        assert res.json['details']['currency'] == 'Euro'
+        assert res.json['item']['id'] == 1
+        assert res.json['item']['name'] == 'Organic cookies'
+        assert res.json['item']['gtin'] == '99999999999999'
+        assert res.json['item']['details']['currency'] == 'Euro'
 
     def test_get_all(self):
         res = self.client.get(url_for(api.ResourceList, type='products'))
@@ -115,8 +115,8 @@ class TestProductApiRelations:
 
         related_brand = self.client.get(
             url_for(api.ResourceItem, type='brands', id=res.json['brand']))
-        assert related_brand.json['name'] == 'Spar'
-        assert related_brand.json['products'][0] == 1
+        assert related_brand.json['item']['name'] == 'Spar'
+        assert related_brand.json['item']['products'][0] == 1
 
     def test_post_relation_as_id(self):
         res = self.client.post(
@@ -132,8 +132,8 @@ class TestProductApiRelations:
 
         related_brand = self.client.get(
             url_for(api.ResourceItem, type='brands', id=res.json['brand']))
-        assert 1 in related_brand.json['products']
-        assert 2 in related_brand.json['products']
+        assert 1 in related_brand.json['item']['products']
+        assert 2 in related_brand.json['item']['products']
 
     def test_post_relation_with_id(self):
         res = self.client.post(
@@ -149,7 +149,7 @@ class TestProductApiRelations:
 
         related_brand = self.client.get(
             url_for(api.ResourceItem, type='brands', id=res.json['brand']))
-        assert 3 in related_brand.json['products']
+        assert 3 in related_brand.json['item']['products']
 
 
 @pytest.mark.usefixtures('client_class', 'db')
