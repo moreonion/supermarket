@@ -5,7 +5,7 @@ url_for = api.api.url_for
 
 
 @pytest.mark.usefixtures('client_class', 'db', 'example_data_brands')
-class TestQueryInclude:
+class TestBrandQueryInclude:
 
     """ Tests for the ?include=field1,field2,... GET parameter. """
 
@@ -117,8 +117,60 @@ class TestQueryInclude:
 
     def test_null_value(self):
         """ Check whether we can handle a NULL value in the Related Field. """
+        url = url_for(api.ResourceItem, type='products', id=1)
+        res = self.client.get(url)
+
+        assert res.json['item']['brand'] is None
+
         url = url_for(api.ResourceItem, type='products', id=1, include='brand.name')
         res = self.client.get(url)
 
         assert res.status_code == 200
         assert res.json['item']['brand'] is None
+
+
+@pytest.mark.usefixtures('client_class', 'db', 'example_data_labels')
+class TestLabelQueryInclude:
+    def test_include_resources_in_list(self):
+        url = url_for(api.ResourceList, type='labels', sort='resources.id',
+                      include='resources.name,resources.id')
+        res = self.client.get(url)
+
+        assert res.status_code == 200
+        assert res.json['items'][0]['resources'][0]['name'] == 'Testresource #1'
+        assert res.json['items'][0]['resources'][1]['name'] == 'Testresource #2'
+
+    def test_include_resources(self):
+        url = url_for(api.ResourceItem, type='labels', id=1, only='name,resources',
+                      include='resources.name,resources.id')
+        res = self.client.get(url)
+
+        assert res.status_code == 200
+        assert len(res.json['item']['resources']) == 2
+        assert {'id': 1, 'name': 'Testresource #1'} in res.json['item']['resources']
+        assert {'id': 2, 'name': 'Testresource #2'} in res.json['item']['resources']
+
+    def test_include_hotspots(self):
+        url = url_for(api.ResourceItem, type='labels', id=1, include='hotspots.name')
+        res = self.client.get(url)
+
+        assert res.status_code == 200
+        assert res.json['item']['hotspots'][0]['name'] == 'Quality Assurance'
+
+    def test_include_criteria(self):
+        url = url_for(
+            api.ResourceItem, type='labels', id=1, include='meets_criteria.criterion.name')
+        res = self.client.get(url)
+
+        assert res.status_code == 200
+        assert (res.json['item']['meets_criteria'][0]['criterion']['name'] ==
+                'The test improvement criterion')
+
+    def test_include_criteria_in_list(self):
+        url = url_for(
+            api.ResourceList, type='labels', include='meets_criteria.criterion.name')
+        res = self.client.get(url)
+
+        assert res.status_code == 200
+        assert (res.json['items'][0]['meets_criteria'][0]['criterion']['name'] ==
+                'The test improvement criterion')

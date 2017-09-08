@@ -4,6 +4,7 @@ import operator
 from flask import Blueprint, request
 from flask_restful import Api, Resource as BaseResource
 from werkzeug.exceptions import HTTPException
+from werkzeug.datastructures import MultiDict
 from sqlalchemy.inspection import inspect
 
 import supermarket.model as m
@@ -82,21 +83,38 @@ class GenericResource:
         self.schema = schema
 
     def _field_to_attr(self, field, query):
+        # Get the attribute of a model class by field name and update the query if necessary.
+        #
+        # Returns a :class:`~sqlalchemy.orm.attributes.InstrumentedAttribute` matching
+        # the field name and the query joined with the table that contains the attribute.
+        # Raises a :class:`~supermarket.api.ParamException` if the field can’t be matched.
+        #
+        # :param str field  Field name, may include subfield names joined with ‘.’ for
+        #                   JSON fields or one level of nested and related fields.
+        # :param obj query  Query of type :class:`~flask_sqlalchemy.BaseQuery` to update.
+        #
         field = field.strip()
         model = self.model
+        schema = self.schema
         relation = None
         keys = []
         if '.' in field:
             keys = field.split('.')
             field = keys.pop(0)
-        elif field in self.schema().related_fields:
+        elif field in schema().related_fields:
             field = '{}_id'.format(field)
 
-        if (field in self.schema().nested_fields +
-                self.schema().related_fields + self.schema().related_lists):
+        if field in schema().nested_fields:
+            schema = schema().fields[field].nested
+            if isinstance(schema, str):
+                schema = s.class_registry.get_class(schema)
+            model = getattr(model, field).property.mapper.class_
+            field = keys.pop(0) if keys else inspect(model).primary_key[0].name
+
+        if field in schema().related_fields + schema().related_lists:
             relation = getattr(model, field)
-            field = keys.pop(0) if keys else 'id'
             model = relation.property.mapper.class_
+            field = keys.pop(0) if keys else inspect(model).primary_key[0].name
 
         attr = getattr(model, field, None)
         if not hasattr(attr, 'type'):  # not a proper column
@@ -248,57 +266,76 @@ class GenericResource:
         }
         return pages
 
-    def _fetch_resource(self, field):
-        # Check whether the supplied field exists in our model and fetch the according resource
-        prop = getattr(self.model, field).property
-        resource = next(filter(lambda v: v.model.__table__ == prop.target, resources.values()))
-
-        return resource
-
-    def _parse_include_params(self, arg, query, errors):
-        # Retrieves the fields from the URL parameters that should be displayed as a nested field.
-        # Expects that the requested field is the name of a Resource!
-        # :params arg The raw parameter value.
-        # :returns A dictionary containing the according Resource and the queried fields.
-        include_raw = arg.split(',')
-        include_raw = [i.strip().split('.') for i in include_raw if i != '']
+    def _parse_include_params(self, query, include_fields, errors):
+        # Go through `include_fields` (fields that should be nested) and retrieve their schema.
+        #
+        # :params str include_fields   The raw parameter value: a comma seperated list of fields
+        #                              to nest, in the form <field>.<attr> or <field>.all
+        # :returns   A dictionary containing the schema and fields.
+        #
+        include_raw = include_fields.split(',')
+        include = MultiDict()
         included = {}
         not_included = []
 
-        for f in include_raw:
-            try:
-                resource_name, field = f  # throws IndexError
-                resource = self._fetch_resource(resource_name)  # throws AttributeError
-
-                if field != 'all':
-                    self._field_to_attr('.'.join(f), query)  # throws ParamException
-
-                try:
-                    included[resource_name]['only'].append(field)
-                except KeyError:
-                    included[resource_name] = {'resource': resource, 'only': [field]}
-            except ParamException as e:
+        # check valid format and collect fields in MultiDict
+        for i in [i.strip().rsplit('.', maxsplit=1) for i in include_raw]:
+            if len(i) == 2:
+                include.add(*i)
+            else:
                 not_included.append({
-                    'value': '.'.join(f),
-                    'message': e.message
-                })
-            except AttributeError:
-                not_included.append({
-                    'value': resource_name,
-                    'message': 'No such resource.'
-                })
-            except IndexError:
-                not_included.append({
-                    'value': '.'.join(f),
+                    'value': '.'.join(i),
                     'message': 'Invalid format.'
                 })
+
+        # loop through fields
+        for relation, fields in include.lists():
+            # check for superfluous fields
+            if 'all' in fields:
+                fields.remove('all')
+                for f in fields:
+                    not_included.append({
+                        'value': '.'.join([relation, f]),
+                        'message': 'Ignored because `{}.all` makes it obsolete.'.format(relation)
+                    })
+                fields = ['all']
+            # get attr of related field
+            related_field = relation
+            if relation in self.schema().related_fields:
+                related_field = relation + inspect(self.model).primary_key[0].name
+            try:
+                attr = self._field_to_attr(related_field, query)[0]  # no need to update the query
+            except ParamException as e:
+                for f in fields:
+                    not_included.append({
+                        'value': '.'.join([relation, f]),
+                        'message': e.message
+                    })
+                continue
+            # find the matching resource
+            resource = next(filter(lambda v: v.model.__table__ == attr.table, resources.values()))
+            # make sure all fields in `only` are valid and only ‘all’ becomes an empty list.
+            only = []
+            if fields != ['all']:
+                for f in fields:
+                    if f in resource.schema().fields:
+                        only.append(f)
+                    else:
+                        not_included.append({
+                            'value': '.'.join([relation, f]),
+                            'message': 'Unknown field `{}` for `{}`.'.format(
+                                f, resource.model.__tablename__)
+                        })
+                if not only:
+                    continue
+            # everything seems fine, add field to `ìncluded`
+            included[relation] = {'resource': resource, 'only': only}
 
         if not_included:
             errors.append({
                 'errors': not_included,
                 'message': 'Some values have been not been included.'
             })
-
         return included
 
     def get_item(self, id):
@@ -307,11 +344,11 @@ class GenericResource:
         errors = []
         query = self.model.query
         args = request.args.copy()
+        only = self._sanitize_only(args.pop('only', None))
         include = args.pop('include', '')
-
-        schema = self.schema()
-        schema.context['include'] = self._parse_include_params(include, query, errors)
-        schema.context['query'] = query
+        schema = self.schema(only=only)
+        if include:
+            schema.context['include'] = self._parse_include_params(query, include, errors)
 
         return {
             'item': schema.dump(r).data,
@@ -375,8 +412,8 @@ class GenericResource:
         query = self._filter(query, args, errors)
         page = query.paginate(page=page, per_page=limit)
         schema = self.schema(many=True, only=only)
-        schema.context['include'] = self._parse_include_params(include, query, errors)
-        schema.context['query'] = page.items
+        if include:
+            schema.context['include'] = self._parse_include_params(query, include, errors)
 
         return {
             'items': schema.dump(page.items).data,

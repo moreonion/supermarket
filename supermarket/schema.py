@@ -4,6 +4,7 @@ from flask_marshmallow.fields import _rapply as ma_rapply
 from marshmallow_sqlalchemy import fields as masqla_fields
 from marshmallow import (class_registry, post_dump, post_load, utils,
                          validates_schema, ValidationError)
+from sqlalchemy.inspection import inspect
 
 import supermarket.model as m
 
@@ -200,29 +201,30 @@ class CustomSchema(ma.ModelSchema):
         if unknown:
             raise ValidationError('Unknown field.', unknown)
 
-    @post_dump()
+    @post_dump(pass_many=False)
     def load_queried_nested_fields(self, data):
-        """Injects the fields requested in 'include' into the JSON dump.
-        Expects 'include' to contain valid values (e.g. only valid field names).
+        """Injects nested fields requested in `include` into the JSON dump.
+
+        Expects `include` in self.context, containing only valid values.
+
         """
-        try:
-            query = self.context['query']
-            for name, v in self.context['include'].items():
-                m = list(filter(lambda x: getattr(x, 'id') == data['id'], query))[0]
-                resources = getattr(m, name)
-
-                if resources is not None:
-                    many = isinstance(resources, list)
-
-                    if 'all' in v['only']:
-                        s = v['resource'].schema(many=many)
-                    else:
-                        s = v['resource'].schema(many=many, only=v['only'])
-
-                    dump = s.dump(resources).data
-                    data[name] = dump
-        except KeyError:
-            pass
+        if 'include' not in self.context:
+            return data
+        include = self.context['include']
+        for name, v in include.items():
+            key = name.rpartition('.')[2]
+            if key not in data or not data[key]:
+                continue
+            model = v['resource'].model
+            if isinstance(data[key], list):
+                primary_key = inspect(model).primary_key[0].name
+                query = model.query.filter(getattr(model, primary_key).in_(data[key])).all()
+                many = True
+            else:
+                query = model.query.get(data[key])
+                many = False
+            s = v['resource'].schema(many=many, only=v['only'])
+            data[key] = s.dump(query).data
 
     @post_load
     def check_related_fields(self, data):

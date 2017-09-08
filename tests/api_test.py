@@ -174,7 +174,7 @@ class TestLabelApiRelations:
         related_criterion = self.client.get(
             url_for(api.ResourceItem, type='criteria',
                     id=res.json['meets_criteria'][0]['criterion']))
-        assert related_criterion.json['name'] == 'A criterion'
+        assert related_criterion.json['item']['name'] == 'A criterion'
 
 
 @pytest.mark.usefixtures('client_class', 'db')
