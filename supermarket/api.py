@@ -115,9 +115,26 @@ class GenericResource:
         return (attr, query)
 
     def _find_filter(self, field):
+        # Defines which filter method should be used for `field`.
+        #
+        # Allows child classes to add their own filters.
+        #
+        # :param str field      Name of the field to filter.
+        #
         return self._default_filter
 
     def _default_filter(self, query, field, op, value):
+        # Default filter method, filters `field` by `value` using `op`.
+        #
+        # Returns the filtered query.
+        # Raises a :class:`~supermarket.api.ParamException` if the filter can’t be applied.
+        #
+        # :param obj query      Query of type :class:`~flask_sqlalchemy.BaseQuery` to filter.
+        # :param str field      Name of the field to filter, may be formated as ‘field.subfield’.
+        # :param str op         Operator to use for filtering,
+        #                       accepts ‘lt’, ‘le’, ‘eq’, ‘ne’, ‘ge’, ‘gt’, ‘in’, ‘like’.
+        # :param str value      Value to filter by.
+        #
         accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
         (attr, query) = self._field_to_attr(field, query)
         if op not in accepted_operators:
@@ -137,6 +154,15 @@ class GenericResource:
         return query
 
     def _filter(self, query, filter_fields, errors):
+        # Go through `filter_fields` and apply a matching filter to the `query`.
+        #
+        # Adds any errors to `errors` and returns the filtered query.
+        #
+        # :param obj query            Query of type :class:`~flask_sqlalchemy.BaseQuery` to filter.
+        # :param dict filter_fields   A :class:`~werkzeug.datastructures.MultiDict` containing
+        #                             request parameters to be regarded as filters.
+        # :param dict errors          Collection where caught errors should be added.
+        #
         not_filtered = []
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
@@ -156,6 +182,15 @@ class GenericResource:
         return query
 
     def _sort(self, query, sort_fields, errors):
+        # Go through `sort_fields` and sort the `query` accordingly.
+        #
+        # Adds any errors to `errors` and returns the sorted query.
+        #
+        # :param obj query           Query of type :class:`~flask_sqlalchemy.BaseQuery` to filter.
+        # :param str sort_fields     The field name, or multiple field names seperated by ‘,’,
+        #                            to sort by, may be preceeded by ‘-’ to sort decending.
+        # :param dict errors         Collection where caught errors should be added.
+        #
         if not sort_fields:
             return query
         fields = []
@@ -181,6 +216,7 @@ class GenericResource:
         return query.order_by(*fields)
 
     def _sanitize_only(self, only_fields):
+        # Converts a string of field names to a list of valid existing field names.
         if not only_fields:
             return only_fields
         sanitized = []
@@ -191,6 +227,7 @@ class GenericResource:
         return sanitized
 
     def _pagination_info(self, page):
+        # Get information from a :class:`~flask_sqlalchemy.Pagination` for later use as JSON.
         prev_url = re.sub(
             'page=\d+', 'page={}'.format(page.prev_num), request.url) if page.has_prev else False
         next_url = False

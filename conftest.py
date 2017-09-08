@@ -3,6 +3,7 @@ import pytest
 import supermarket.model as m
 from supermarket import App
 
+
 @pytest.fixture(scope='session')
 def app():
     '''Return a test application'''
