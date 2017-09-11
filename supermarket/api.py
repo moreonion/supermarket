@@ -329,7 +329,7 @@ class GenericResource:
                 if not only:
                     continue
             # everything seems fine, add field to `ìncluded`
-            included[relation] = {'resource': resource, 'only': only}
+            included[relation.rpartition('.')[2]] = {'resource': resource, 'only': only}
 
         if not_included:
             errors.append({
@@ -438,7 +438,7 @@ class GenericResource:
 
 class LabelResource(GenericResource):
 
-    """Has additional label specifc filters."""
+    """Has additional label specifc filters and include options."""
 
     def _find_filter(self, field):
         if field == 'hotspots':
@@ -470,6 +470,55 @@ class LabelResource(GenericResource):
         countries.append('*')  # include international labels
         query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
         return query
+
+    def _parse_include_params(self, query, include_fields, errors):
+        # include hotspots, too
+        include_raw = include_fields.split(',')
+        hotspot_fields = []
+        super_fields = []
+        not_included = []
+        for raw in include_raw:
+            if raw.startswith('hotspots.') and len(raw.split('.')) == 2:
+                hotspot_fields.append(raw.rpartition('.')[2])
+            else:
+                super_fields.append(raw)
+
+        resource = resources['hotspots']
+        only = []
+        if 'all' in hotspot_fields:
+            hotspot_fields.remove('all')
+            for f in hotspot_fields:
+                not_included.append({
+                    'value': '.'.join(['hotspots', f]),
+                    'message': 'Ignored because `hotspots.all` makes it obsolete.'
+                })
+        else:
+            for f in hotspot_fields:
+                if f in resource.schema().fields:
+                    only.append(f)
+                else:
+                    not_included.append({
+                        'value': '.'.join(['hotspots', f]),
+                        'message': 'Unknown field `{}` for `hotspots`.'.format(f)
+                    })
+            if not only:
+                only = None
+
+        included = super()._parse_include_params(query, ','.join(super_fields), errors)
+        if only is not None:
+            included['hotspots'] = {'resource': resource, 'only': only}
+
+        if not_included:
+            include_error = next((e for e in errors if e.message ==
+                                  'Some values have been not been included.'), None)
+            if include_error:
+                include_error.errors.update(not_included)
+            else:
+                errors.append({
+                    'errors': not_included,
+                    'message': 'Some values have been not been included.'
+                })
+        return included
 
 
 resources = {

@@ -211,8 +211,7 @@ class CustomSchema(ma.ModelSchema):
         if 'include' not in self.context:
             return data
         include = self.context['include']
-        for name, v in include.items():
-            key = name.rpartition('.')[2]
+        for key, v in include.items():
             if key not in data or not data[key]:
                 continue
             model = v['resource'].model
