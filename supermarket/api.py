@@ -98,9 +98,6 @@ class GenericResource:
         keys = field.strip().split('.')
         field = keys.pop(0)
 
-        if not keys and field in schema.related_fields:
-            field = '{}_id'.format(field)
-
         if field in schema.nested_fields:
             schema = schema.fields[field].nested
             if isinstance(schema, str):
@@ -297,11 +294,8 @@ class GenericResource:
                     })
                 fields = ['all']
             # get attr of related field
-            related_field = relation
-            if relation in self.schema().related_fields:
-                related_field = relation + inspect(self.model).primary_key[0].name
             try:
-                attr = self._field_to_attr(related_field, query)[0]  # no need to update the query
+                attr = self._field_to_attr(relation, query)[0]  # no need to update the query
             except ParamException as e:
                 for f in fields:
                     not_included.append({
