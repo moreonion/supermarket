@@ -93,26 +93,25 @@ class GenericResource:
         #                   JSON fields or one level of nested and related fields.
         # :param obj query  Query of type :class:`~flask_sqlalchemy.BaseQuery` to update.
         #
-        field = field.strip()
         model = self.model
-        schema = self.schema
-        relation = None
-        keys = []
-        if '.' in field:
-            keys = field.split('.')
-            field = keys.pop(0)
-        elif field in schema().related_fields:
+        schema = self.schema()
+        keys = field.strip().split('.')
+        field = keys.pop(0)
+
+        if not keys and field in schema.related_fields:
             field = '{}_id'.format(field)
 
-        if field in schema().nested_fields:
-            schema = schema().fields[field].nested
+        if field in schema.nested_fields:
+            schema = schema.fields[field].nested
             if isinstance(schema, str):
                 schema = s.class_registry.get_class(schema)
             model = getattr(model, field).property.mapper.class_
             field = keys.pop(0) if keys else inspect(model).primary_key[0].name
+            schema = schema()
 
-        if field in schema().related_fields + schema().related_lists:
+        if field in schema.related_fields + schema.related_lists:
             relation = getattr(model, field)
+            query = query.outerjoin(relation)
             model = relation.property.mapper.class_
             field = keys.pop(0) if keys else inspect(model).primary_key[0].name
 
@@ -120,15 +119,13 @@ class GenericResource:
         if not hasattr(attr, 'type'):  # not a proper column
             attr = None
         elif isinstance(attr.type, m.JSONB) and keys:
-            attr = attr[[k for k in keys]].astext
+            attr = attr[keys].astext
         elif keys:  # not a perfect match after all
             attr = None
 
         if attr is None:
             raise ParamException(
                 'Unknown field `{}` for `{}`.'.format(field, model.__tablename__))
-        if relation:
-            query = query.outerjoin(relation)
 
         return (attr, query)
 
@@ -164,7 +161,7 @@ class GenericResource:
             value = '%{}%'.format(value)
             query = query.filter(attr.ilike(value))
         elif op == 'in':
-            values = [v.strip() for v in value.split(',')] if ',' in value else [value]
+            values = [v.strip() for v in value.split(',')]
             query = query.filter(attr.in_(values))
         else:
             op = getattr(operator, op)
@@ -453,7 +450,7 @@ class LabelResource(GenericResource):
         accepted_operators = ['eq', 'in']
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
-        hotspots = [v.strip() for v in value.split(',')] if ',' in value else [value]
+        hotspots = [v.strip() for v in value.split(',')]
         query = query.filter(self.model.id.in_(
             m.db.session.query(m.LabelMeetsCriterion.label_id)
             .join(m.LabelMeetsCriterion.criterion)
@@ -466,7 +463,7 @@ class LabelResource(GenericResource):
         accepted_operators = ['eq', 'in']
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
-        countries = [v.strip() for v in value.split(',')] if ',' in value else [value]
+        countries = [v.strip() for v in value.split(',')]
         countries.append('*')  # include international labels
         query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
         return query
