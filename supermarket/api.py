@@ -566,3 +566,20 @@ class ResourceDoc(BaseResource):
 
     def get(self, type):
         return resources[type].get_doc()
+
+
+@api.resource('/'.format(', '.join(resources)))
+class RootDoc(BaseResource):
+
+    """API overview of all resources to help getting started."""
+
+    def get(self):
+        doc = {}
+        for name, resource in resources.items():
+            links = resource.schema().fields['links'].schema
+            doc[name] = {
+                'list': links['list']._serialize(None, None, None),
+                'doc': links['doc']._serialize(None, None, None),
+                'description': resource.model.__doc__.strip().replace('\n', '').replace('   ', '')
+            }
+        return doc, 200

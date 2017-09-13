@@ -455,3 +455,21 @@ class TestLabelApiPagination:
         assert 'page=1' in prev_url
         assert 'limit=1' in prev_url
         assert self.client.get(prev_url).status_code == 200
+
+
+@pytest.mark.usefixtures('client_class', 'db')
+class TestApiDoc:
+    def test_get_root_doc(self):
+        res = self.client.get(url_for(api.RootDoc))
+        assert res.status_code == 200
+        assert res.mimetype == 'application/json'
+        assert 'labels' in res.json
+        assert 'products' in res.json
+        assert self.client.get(res.json['labels']['list']).status_code == 200
+        assert self.client.get(res.json['labels']['doc']).status_code == 200
+
+    def test_get_label_doc(self):
+        res = self.client.get(url_for(api.ResourceDoc, type='labels'))
+        assert res.status_code == 200
+        assert res.mimetype == 'application/json'
+        assert len(res.json['fields']) == 13

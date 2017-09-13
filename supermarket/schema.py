@@ -392,7 +392,7 @@ class Label(CustomSchema):
     links = Hyperlinks({
         'self': ma.URLFor('api.resourceitem', type='labels', id='<id>', _external=True),
         'list': ma.URLFor('api.resourcelist', type='labels', _external=True),
-        'doc': ma.URLFor('api.resourcedoc', type='lables', _external=True),
+        'doc': ma.URLFor('api.resourcedoc', type='labels', _external=True),
         'related': {
             'products': HyperlinkRelatedList(
                 'api.resourcelist', {'type': 'products'}, external=True, attribute='products'),
