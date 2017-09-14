@@ -112,11 +112,13 @@ def import_example_data():
     criteria = {}
     with open(os.path.dirname(__file__) + '/csvs/criteria-labels.csv') as csv_file:
         reader = csv.reader(csv_file)
-        label_codes = next(reader)[13:]
+        label_codes = next(reader)[13:32]  # ignore unknown, unscored labels for now
         for row in reader:
-            if row[11]:  # exclude from scoring
-                continue
+            # if row[11]:  # exclude from scoring
+            #     continue
             (category_name, subcategory_name, criterion_name) = (row[1], row[3], row[5])
+            if criterion_name == 'Consumer communication: label':
+                continue  # criterion data in csv is incomplete
             criterion = Criterion.query.filter_by(name=criterion_name).first()
             if criterion is None:
                 subcategory = CriterionCategory.query.filter_by(name=subcategory_name).first()
@@ -139,7 +141,7 @@ def import_example_data():
             criterion.details = details
             db.session.add(criterion)
 
-            for label_code, s in zip(label_codes, row[13:]):
+            for label_code, s in zip(label_codes, row[13:32]):
                 label = labels[label_code.strip()]
                 if not s or int(s) <= 0:
                     continue
