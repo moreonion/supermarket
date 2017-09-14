@@ -53,6 +53,32 @@ def import_example_data():
         'yellow': 2,
         'green': 3,
     }
+    logo_map = {
+        'GSCP': 'https://ucarecdn.com/3fcc6856-4df5-4c89-862d-8f749685b922/',
+        'Fairtrade Cacao': 'https://ucarecdn.com/d789afc3-34e8-44ba-b487-55bcce8d387e/',
+        'Fairtrade': 'https://ucarecdn.com/b3f8f378-54bf-420c-ab38-a71fbf5d6b91/',
+        'RSPO': 'https://ucarecdn.com/31666604-b624-46f5-8ab3-b977df957f82/',
+        'FSC': 'https://ucarecdn.com/8c12e2c7-c021-40a8-8cb1-d1446d8bd108/',
+        'SGF': 'https://ucarecdn.com/4fd8ed9b-c0e5-40fe-b0db-de05920352a9/',
+        'GRI': 'https://ucarecdn.com/5fc14fed-4472-42be-b4d2-230b1bdd396f/',
+        'Rainforest Alliance': 'https://ucarecdn.com/8111e8bb-2ce9-4d57-af34-272e20acb16c/',
+        'FLA': 'https://ucarecdn.com/61b47438-2ca1-4975-aaa6-b7bd8e3f1853/',
+        'Global Coffee Platform (4C)':
+        'https://ucarecdn.com/e1511730-18e1-4343-abe8-86474733e43f/',
+        'GLOBALG.A.P': 'https://ucarecdn.com/4ca37337-ac7f-4f5f-9bc5-a898e6129f74/',
+        'BEPI': 'https://ucarecdn.com/80ea63e2-2b2e-40b3-948d-5ff4d06c9a8b/',
+        'ETI': 'https://ucarecdn.com/67549bb3-cb42-43e3-b42f-f5172abaad2f/',
+        'UTZ Cacao': 'https://ucarecdn.com/f64d0875-3de2-4dff-a46e-ea0bc0d4bd31/',  # same as UTZ
+        'UTZ': 'https://ucarecdn.com/f64d0875-3de2-4dff-a46e-ea0bc0d4bd31/',
+        'MSC': 'https://ucarecdn.com/4fb9ce37-9c0e-437b-a124-fb4da09da29f/',
+        'FFL': 'https://ucarecdn.com/394fdb30-bf12-4b49-b4ff-6de88eac25bf/',
+        'SAI Platform': 'https://ucarecdn.com/4e5f6129-fe89-44e3-8ee0-b2dc232cd9a8/',
+        'EU organic': 'https://ucarecdn.com/3aff3937-0062-4c89-b224-08afe40388f3/',
+        'BSCI': 'https://ucarecdn.com/23e18353-9638-4d89-aee3-e9b2bf58be50/',
+        'SA 8000': 'https://ucarecdn.com/35951758-eb0f-452f-8cdf-23886a0cb1a3/',
+        'DLG': 'https://ucarecdn.com/24d486ca-eb04-4c42-bd4d-99a2a4a7573c/',
+        'ohne GEN': 'https://ucarecdn.com/63907583-054a-4744-840c-a1a696b39e0a/'
+    }
     with open(os.path.dirname(__file__) + '/csvs/Label-Info.csv') as csv_file:
         ltype = 'retailer'
         reader = csv.reader(csv_file)
@@ -76,6 +102,7 @@ def import_example_data():
                     environment=score_map[environment],
                     social=score_map[social],
                 )),
+                logo=logo_map[acronym]
             )
             labels[acronym] = l
             db.session.add(l)
