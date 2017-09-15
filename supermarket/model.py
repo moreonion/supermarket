@@ -1,6 +1,6 @@
+import enum
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy import CheckConstraint
 
 
 db = SQLAlchemy()
@@ -173,6 +173,53 @@ class Ingredient(db.Model):
     percentage = db.Column(db.SmallInteger)
 
 
+class Language(enum.Enum):
+    de = 'de'
+    en = 'en'
+
+
+class Translation(db.Model):
+
+    """Provides a translation_id for translations and the corresponding
+    field to reference. This table is necessary to abstract translations
+    from the different models (e.g. TranslateAbleString does not need a
+    foreign key for labels.id, which would mean creating a TranslateAbleString
+    table for each Model that needs translation)."""
+
+    __tablename__ = 'translations'
+    id = db.Column(db.Integer(), primary_key=True)
+    strings = db.relationship("TranslateAbleString")
+    texts = db.relationship("TranslateAbleText")
+
+
+class TranslateAbleString(db.Model):
+
+    """Stores translations for Strings in the database.
+    """
+
+    __tablename__ = 'translateable_strings'
+    id = db.Column(db.Integer(), primary_key=True)
+    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
+    translation = db.relationship('Translation')
+    language = db.Column(db.Enum(Language))
+    value = db.Column(db.String(255))
+    field = db.Column(db.String(255))
+
+
+class TranslateAbleText(db.Model):
+
+    """Stores translations for Texts in the database.
+    """
+
+    __tablename__ = 'translateable_texts'
+    id = db.Column(db.Integer(), primary_key=True)
+    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
+    translation = db.relationship('Translation')
+    language = db.Column(db.Enum(Language))
+    value = db.Column(db.Text())
+    field = db.Column(db.String(255))
+
+
 class Label(db.Model):
 
     """A label ensures that a product or retailer fulfills certain criteria.
@@ -185,9 +232,17 @@ class Label(db.Model):
 
     __tablename__ = 'labels'
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(64), CheckConstraint('LENGTH(name)>0'), nullable=False, unique=True)
+    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
+    translation = db.relationship('Translation')
+    name = db.relationship('TranslateAbleString', primaryjoin=db.and_(
+        translation_id == db.foreign(TranslateAbleString.translation_id),
+        db.foreign(TranslateAbleString.field) == 'name'
+    ))
+    description = db.relationship('TranslateAbleText', primaryjoin=db.and_(
+        translation_id == db.foreign(TranslateAbleText.translation_id),
+        db.foreign(TranslateAbleText.field) == 'description'
+    ))
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
-    description = db.Column(db.Text)
     details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(db.String(256))
     meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True)

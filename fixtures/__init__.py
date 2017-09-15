@@ -20,6 +20,9 @@ from supermarket.model import (
     Product,
     Resource,
     Retailer,
+    Translation,
+    TranslateAbleString,
+    TranslateAbleText
 )
 
 criteria_code_pattern = re.compile('^\d\.\d\.\d$')
@@ -66,10 +69,11 @@ def import_example_data():
                 continue
             acronym, name, description = row[0], row[1], row[2]
             credibility, environment, social = row[18], row[19], row[20]
+            t = Translation()
+
             l = Label(
+                translation=t,
                 type=ltype,
-                name=name,
-                description=description,
                 countries=label_countries,
                 details=dict(score=dict(
                     credibility=score_map[credibility],
@@ -77,6 +81,16 @@ def import_example_data():
                     social=score_map[social],
                 )),
             )
+            name = TranslateAbleString(
+                value=name, language='en', field='name',
+                translation=t
+            )
+            description = TranslateAbleText(
+                value=description, language='en', field='description',
+                translation=t
+            )
+            l.name = [name]
+            l.description = [description]
             labels[acronym] = l
             db.session.add(l)
     db.session.commit()
@@ -236,29 +250,30 @@ def import_example_data():
                 db.session.add(i)
                 weight += 1
 
+    # @TODO: Fix this for translated names
     # Product labels
-    labels = {l.name: l for l in Label.query.all()}
-    print(list(labels.keys()))
-    with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
-        next(csv_file)  # Skip header line.
-        for row in csv.reader(csv_file):
-            if not row[0] in products:
-                print("Label for unknown product: {}".format(row[0]))
-                continue
+    # labels = {l.name: l for l in Label.query.all()}
+    # print(list(labels.keys()))
+    # with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
+    #     next(csv_file)  # Skip header line.
+    #     for row in csv.reader(csv_file):
+    #         if not row[0] in products:
+    #             print("Label for unknown product: {}".format(row[0]))
+    #             continue
 
-            p = products[row[0]]
-            plabels = []
-            for label in row[5:]:
-                if label:
-                    if label.startswith('EU Biosiegel'):
-                        label = 'EU Organic'
-                    label = label.replace('UTZ Certified', 'UTZ')
-                    label = label.replace('UTZ Kakao', 'UTZ Cacao')
-                    label = label.replace('FAIRTRADE', 'Fairtrade')
-                    label = label.replace('RSPO', 'Roundtable on Sustainable Palm Oil (RSPO)')
-                    if label not in labels:
-                        print("Unknown label '{}'".format(label))
-                        continue
-                    plabels.append(labels[label])
-            p.labels = plabels
+    #         p = products[row[0]]
+    #         plabels = []
+    #         for label in row[5:]:
+    #             if label:
+    #                 if label.startswith('EU Biosiegel'):
+    #                     label = 'EU Organic'
+    #                 label = label.replace('UTZ Certified', 'UTZ')
+    #                 label = label.replace('UTZ Kakao', 'UTZ Cacao')
+    #                 label = label.replace('FAIRTRADE', 'Fairtrade')
+    #                 label = label.replace('RSPO', 'Roundtable on Sustainable Palm Oil (RSPO)')
+    #                 if label not in labels:
+    #                     print("Unknown label '{}'".format(label))
+    #                     continue
+    #                 plabels.append(labels[label])
+    #         p.labels = plabels
     db.session.commit()

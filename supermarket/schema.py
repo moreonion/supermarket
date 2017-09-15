@@ -1,8 +1,9 @@
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
+from flask_marshmallow.fields import fields as ma_fields
 from marshmallow_sqlalchemy import fields as masqla_fields
-from marshmallow import (class_registry, post_dump, post_load, utils,
+from marshmallow import (class_registry, pre_load, post_dump, post_load, utils,
                          validates_schema, ValidationError)
 from sqlalchemy.inspection import inspect
 
@@ -383,11 +384,86 @@ class Ingredient(CustomSchema):
         model = m.Ingredient
 
 
+class TranslateAbleField(ma_fields.Field):
+    @property
+    def model(self):
+        schema = self.parent
+        return schema.opts.model
+
+    @property
+    def related_model(self):
+        cls = getattr(self.model, self.attribute or self.name).property.mapper.class_
+        return cls
+
+    @property
+    def session(self):
+        schema = self.parent
+        return schema.session
+
+    def _get_language(self):
+        try:
+            lang = self.parent.context['lang']
+        except KeyError:
+            lang = 'en'
+        return lang
+
+    def _serialize(self, value, attr, obj):
+        lang = self._get_language()
+        translation = list(filter(lambda t: t.language.value == lang, value))
+        return None if len(translation) == 0 else translation[0].value
+
+    def _deserialize(self, value, attr, data):
+        lang = self._get_language()
+        if 'id' not in self.context:
+            return [self.related_model(
+                language=lang,
+                value=value,
+                field=attr,
+            )]
+        else:
+            query = self.session.query
+            result = query(self.model).filter_by(id=self.context['id']).one()
+            # @TODO: maybe we have no translation because of empty name
+            # @TODO: check for invalid language
+            existing_strings = query(self.related_model).filter_by(
+                translation_id=result.translation_id,
+                field=attr
+            ).all()
+
+            translation_index = [i for i, t in enumerate(existing_strings)
+                                 if t.language.value == lang]
+            if len(translation_index) > 0:
+                existing_strings[translation_index[0]].value = value
+            else:
+                existing_strings.append(self.related_model(
+                    language=lang,
+                    translation_id=result.translation_id,
+                    field=attr,
+                    value=value
+                ))
+
+            return existing_strings
+
+
 class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
+    name = TranslateAbleField(attribute='name')
+    description = TranslateAbleField(attribute='description')
     meets_criteria = Nested('LabelMeetsCriterion', exclude=['label'], many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
+
+    @pre_load(pass_many=False)
+    def setup_translation_object(self, data):
+        if 'id' not in self.context:
+            self.context['translation'] = m.Translation()
+        return data
+
+    @post_load(pass_many=False)
+    def add_translation_object(self, data):
+        if 'id' not in self.context:
+            data['translation'] = self.context['translation']
+        return data
 
     links = Hyperlinks({
         'self': ma.URLFor('api.resourceitem', type='labels', id='<id>', _external=True),

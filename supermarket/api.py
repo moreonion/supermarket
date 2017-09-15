@@ -77,6 +77,7 @@ class GenericResource:
         schema      The :class:`~supermarket.schema.CustomSchema` associated with the model.
 
     """
+    _default_language = 'en'
 
     def __init__(self, model, schema):
         self.model = model
@@ -337,9 +338,12 @@ class GenericResource:
         args = request.args.copy()
         only = self._sanitize_only(args.pop('only', None))
         include = args.pop('include', '')
+        lang = args.pop('language', GenericResource._default_language)
         schema = self.schema(only=only)
         if include:
             schema.context['include'] = self._parse_include_params(query, include, errors)
+        if lang:
+            schema.context['lang'] = lang
 
         return {
             'item': schema.dump(r).data,
@@ -349,8 +353,16 @@ class GenericResource:
     def patch_item(self, id):
         """Update an existing item with new data."""
         r = self.model.query.get_or_404(id)
-        data = self.schema().load(request.get_json(), partial=True,
-                                  session=m.db.session, instance=r)
+        args = request.args.copy()
+        lang = args.pop('language', GenericResource._default_language)
+
+        schema = self.schema()
+        schema.context['id'] = id
+        if lang:
+            schema.context['lang'] = lang
+
+        data = schema.load(request.get_json(), partial=True,
+                           session=m.db.session, instance=r)
         if data.errors:
             raise ValidationFailed(data.errors)
         m.db.session.commit()
@@ -358,7 +370,15 @@ class GenericResource:
 
     def put_item(self, id):
         """Add a new item if the ID doesn’t exist, or replace the existing one."""
-        data = self.schema().load(request.get_json(), session=m.db.session)
+        args = request.args.copy()
+        lang = args.pop('language', GenericResource._default_language)
+
+        schema = self.schema()
+        schema.context['id'] = id
+        if lang:
+            schema.context['lang'] = lang
+
+        data = schema.load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
@@ -394,6 +414,7 @@ class GenericResource:
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', None)
         include = args.pop('include', '')
+        lang = args.pop('language', GenericResource._default_language)
         only = self._sanitize_only(args.pop('only', None))
         errors = []
 
@@ -405,6 +426,8 @@ class GenericResource:
         schema = self.schema(many=True, only=only)
         if include:
             schema.context['include'] = self._parse_include_params(query, include, errors)
+        if lang:
+            schema.context['lang'] = lang
 
         return {
             'items': schema.dump(page.items).data,
@@ -414,7 +437,14 @@ class GenericResource:
 
     def post_to_list(self):
         """Add a new item of type ‘type’."""
-        data = self.schema().load(request.get_json(), session=m.db.session)
+        args = request.args.copy()
+        lang = args.pop('language', GenericResource._default_language)
+
+        schema = self.schema()
+        if lang:
+            schema.context['lang'] = lang
+
+        data = schema.load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
