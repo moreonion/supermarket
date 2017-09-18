@@ -6,12 +6,14 @@ from flask_restful import Api, Resource as BaseResource
 from werkzeug.exceptions import HTTPException
 from werkzeug.datastructures import MultiDict
 from sqlalchemy.inspection import inspect
+from supermarket.authentication import Auth0
 
 import supermarket.model as m
 import supermarket.schema as s
 
 app = Blueprint('api', __name__)
 api = Api(app)
+auth0 = Auth0()
 
 
 # Custom errors
@@ -537,12 +539,15 @@ class ResourceItem(BaseResource):
     def get(self, type, id):
         return resources[type].get_item(id)
 
+    @auth0.requires_auth
     def patch(self, type, id):
         return resources[type].patch_item(id)
 
+    @auth0.requires_auth
     def put(self, type, id):
         return resources[type].put_item(id)
 
+    @auth0.requires_auth
     def delete(self, type, id):
         return resources[type].delete_item(id)
 
@@ -555,6 +560,7 @@ class ResourceList(BaseResource):
     def get(self, type):
         return resources[type].get_list()
 
+    @auth0.requires_auth
     def post(self, type):
         return resources[type].post_to_list()
 
