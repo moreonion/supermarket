@@ -121,24 +121,9 @@ class Hyperlinks(ma.Hyperlinks):
         return ma_rapply(self.schema, _url_val, key=attr, obj=obj)
 
 
-class TranslateAbleField(ma.Field):
+class TranslateAbleField(masqla_fields.Related):
 
     """Multi language field."""
-
-    @property
-    def model(self):
-        schema = self.parent
-        return schema.opts.model
-
-    @property
-    def related_model(self):
-        cls = getattr(self.model, self.attribute or self.name).property.mapper.class_
-        return cls
-
-    @property
-    def session(self):
-        schema = self.parent
-        return schema.session
 
     def _get_language(self):
         try:
@@ -154,32 +139,22 @@ class TranslateAbleField(ma.Field):
 
     def _deserialize(self, value, attr, data):
         lang = self._get_language()
+        new_translation = self.related_model(language=lang, value=value, field=attr)
         parent_instance = self.parent.instance or self.parent.get_instance(data)
-        if not parent_instance:
-            return [self.related_model(
-                language=lang,
-                value=value,
-                field=attr,
-            )]
 
-        # @TODO: maybe we have no translation because of empty name
-        # @TODO: check for invalid language
+        if not parent_instance or not parent_instance.translation_id:
+            return [new_translation]
+
         existing_strings = self.related_model.query.filter_by(
-            translation_id=parent_instance.translation_id,
-            field=attr
-        ).all()
+            translation_id=parent_instance.translation_id, field=attr).all()
 
-        translation_index = [i for i, t in enumerate(existing_strings)
-                             if t.language.value == lang]
-        if len(translation_index) > 0:
-            existing_strings[translation_index[0]].value = value
+        translation_index = next((i for i, t in enumerate(existing_strings)
+                                 if t.language.value == lang), -1)
+        if translation_index >= 0:
+            existing_strings[translation_index].value = value
         else:
-            existing_strings.append(self.related_model(
-                language=lang,
-                translation_id=parent_instance.translation_id,
-                field=attr,
-                value=value
-            ))
+            new_translation.translation_id = parent_instance.translation_id
+            existing_strings.append(new_translation)
 
         return existing_strings
 
