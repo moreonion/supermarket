@@ -364,7 +364,7 @@ class GenericResource:
         if data.errors:
             raise ValidationFailed(data.errors)
         m.db.session.commit()
-        return self.schema().dump(r).data, 201
+        return schema.dump(r).data, 201
 
     def put_item(self, id):
         """Add a new item if the ID doesn’t exist, or replace the existing one."""
@@ -381,7 +381,7 @@ class GenericResource:
         setattr(r, inspect(self.model).primary_key[0].name, id)
         m.db.session.merge(r)
         m.db.session.commit()
-        return self.schema().dump(r).data, 201
+        return schema.dump(r).data, 201
 
     def delete_item(self, id):
         """Delete an item of ‘type’ by its ID."""
@@ -445,7 +445,7 @@ class GenericResource:
         r = data.data
         m.db.session.add(r)
         m.db.session.commit()
-        return self.schema().dump(r).data, 201
+        return schema.dump(r).data, 201
 
     def get_doc(self):
         """Get documentation for type ‘type’."""
