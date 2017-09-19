@@ -356,7 +356,6 @@ class GenericResource:
         lang = request.args.get('language', self._default_language)
 
         schema = self.schema()
-        schema.context['id'] = id
         if lang:
             schema.context['lang'] = lang
 
@@ -372,7 +371,6 @@ class GenericResource:
         lang = request.args.get('language', self._default_language)
 
         schema = self.schema()
-        schema.context['id'] = id
         if lang:
             schema.context['lang'] = lang
 

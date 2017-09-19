@@ -154,35 +154,34 @@ class TranslateAbleField(ma.Field):
 
     def _deserialize(self, value, attr, data):
         lang = self._get_language()
-        if 'id' not in self.context:
+        parent_instance = self.parent.instance or self.parent.get_instance(data)
+        if not parent_instance:
             return [self.related_model(
                 language=lang,
                 value=value,
                 field=attr,
             )]
+
+        # @TODO: maybe we have no translation because of empty name
+        # @TODO: check for invalid language
+        existing_strings = self.related_model.query.filter_by(
+            translation_id=parent_instance.translation_id,
+            field=attr
+        ).all()
+
+        translation_index = [i for i, t in enumerate(existing_strings)
+                             if t.language.value == lang]
+        if len(translation_index) > 0:
+            existing_strings[translation_index[0]].value = value
         else:
-            query = self.session.query
-            result = query(self.model).filter_by(id=self.context['id']).one()
-            # @TODO: maybe we have no translation because of empty name
-            # @TODO: check for invalid language
-            existing_strings = query(self.related_model).filter_by(
-                translation_id=result.translation_id,
-                field=attr
-            ).all()
+            existing_strings.append(self.related_model(
+                language=lang,
+                translation_id=parent_instance.translation_id,
+                field=attr,
+                value=value
+            ))
 
-            translation_index = [i for i, t in enumerate(existing_strings)
-                                 if t.language.value == lang]
-            if len(translation_index) > 0:
-                existing_strings[translation_index[0]].value = value
-            else:
-                existing_strings.append(self.related_model(
-                    language=lang,
-                    translation_id=result.translation_id,
-                    field=attr,
-                    value=value
-                ))
-
-            return existing_strings
+        return existing_strings
 
 
 # Custom (overriden) base schema
@@ -455,17 +454,12 @@ class Label(CustomSchema):
     meets_criteria = Nested('LabelMeetsCriterion', exclude=['label'], many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 
-    @pre_load(pass_many=False)
-    def setup_translation_object(self, data):
-        if 'id' not in self.context:
-            self.context['translation'] = m.Translation()
-        return data
-
-    @post_load(pass_many=False)
-    def add_translation_object(self, data):
-        if 'id' not in self.context:
-            data['translation'] = self.context['translation']
-        return data
+    @post_load
+    def make_instance(self, data):
+        instance = super().make_instance(data)
+        if not instance.translation:
+            instance.translation = m.Translation()
+        return instance
 
     links = Hyperlinks({
         'self': ma.URLFor('api.resourceitem', type='labels', id='<id>', _external=True),
