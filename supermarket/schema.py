@@ -125,20 +125,13 @@ class TranslateAbleField(masqla_fields.Related):
 
     """Multi language field."""
 
-    def _get_language(self):
-        try:
-            lang = self.parent.context['lang']
-        except KeyError:
-            lang = 'en'
-        return lang
-
     def _serialize(self, value, attr, obj):
-        lang = self._get_language()
+        lang = self.parent.language
         translation = list(filter(lambda t: t.language.value == lang, value))
         return None if len(translation) == 0 else translation[0].value
 
     def _deserialize(self, value, attr, data):
-        lang = self._get_language()
+        lang = self.parent.language
         new_translation = self.related_model(language=lang, value=value, field=attr)
         parent_instance = self.parent.instance or self.parent.get_instance(data)
 
@@ -164,6 +157,13 @@ class TranslateAbleField(masqla_fields.Related):
 class CustomSchema(ma.ModelSchema):
 
     """Config and validation that all our schemas share."""
+
+    language = 'en'  # default language
+
+    def __init__(self, lang=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if lang:
+            self.language = lang
 
     @property
     def nested_fields(self):
@@ -226,6 +226,8 @@ class CustomSchema(ma.ModelSchema):
         list_url = False
         if links and 'list' in links:
             list_url = url_for(links['list'].endpoint, **links['list'].params)
+        fields['language'] = {
+            'type': 'string', 'required': False, 'read-only': True, 'list': False}
         return {'fields': fields, 'link': list_url}
 
     @validates_schema(pass_original=True)
@@ -262,6 +264,18 @@ class CustomSchema(ma.ModelSchema):
                 many = False
             s = v['resource'].schema(many=many, only=v['only'])
             data[key] = s.dump(query).data
+
+    @post_dump(pass_many=False)
+    def add_language(self, data):
+        """Add information about the languge of the output."""
+        data['language'] = self.language
+        return data
+
+    @pre_load
+    def set_language(self, data):
+        """Let a language in data override the language for the schema instance."""
+        self.language = data.pop('language', self.language)
+        return data
 
     @post_load
     def check_related_fields(self, data):

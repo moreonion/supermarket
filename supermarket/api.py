@@ -77,7 +77,6 @@ class GenericResource:
         schema      The :class:`~supermarket.schema.CustomSchema` associated with the model.
 
     """
-    _default_language = 'en'
 
     def __init__(self, model, schema):
         self.model = model
@@ -338,12 +337,10 @@ class GenericResource:
         args = request.args.copy()
         only = self._sanitize_only(args.pop('only', None))
         include = args.pop('include', '')
-        lang = args.pop('language', self._default_language)
-        schema = self.schema(only=only)
+        lang = args.pop('lang', None)
+        schema = self.schema(lang=lang, only=only)
         if include:
             schema.context['include'] = self._parse_include_params(query, include, errors)
-        if lang:
-            schema.context['lang'] = lang
 
         return {
             'item': schema.dump(r).data,
@@ -353,11 +350,8 @@ class GenericResource:
     def patch_item(self, id):
         """Update an existing item with new data."""
         r = self.model.query.get_or_404(id)
-        lang = request.args.get('language', self._default_language)
-
-        schema = self.schema()
-        if lang:
-            schema.context['lang'] = lang
+        lang = request.args.get('lang', None)
+        schema = self.schema(lang=lang)
 
         data = schema.load(request.get_json(), partial=True,
                            session=m.db.session, instance=r)
@@ -368,11 +362,8 @@ class GenericResource:
 
     def put_item(self, id):
         """Add a new item if the ID doesn’t exist, or replace the existing one."""
-        lang = request.args.get('language', self._default_language)
-
-        schema = self.schema()
-        if lang:
-            schema.context['lang'] = lang
+        lang = request.args.get('lang', None)
+        schema = self.schema(lang=lang)
 
         data = schema.load(request.get_json(), session=m.db.session)
         if data.errors:
@@ -394,6 +385,7 @@ class GenericResource:
         """Get a paged list containing all items of type ‘type’.
 
         It's possible to amend the list with query parameters:
+        - lang: language for translated content (default 'en')
         - limit: maximum number of items per page (default 20)
         - page: which page to display (default 1)
         - only: comma seperated field names to return in the result (includes all fields if empty).
@@ -410,7 +402,7 @@ class GenericResource:
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', None)
         include = args.pop('include', '')
-        lang = args.pop('language', self._default_language)
+        lang = args.pop('lang', None)
         only = self._sanitize_only(args.pop('only', None))
         errors = []
 
@@ -419,11 +411,9 @@ class GenericResource:
         query = self._sort(query, sort, errors)
         query = self._filter(query, args, errors)
         page = query.paginate(page=page, per_page=limit)
-        schema = self.schema(many=True, only=only)
+        schema = self.schema(many=True, lang=lang, only=only)
         if include:
             schema.context['include'] = self._parse_include_params(query, include, errors)
-        if lang:
-            schema.context['lang'] = lang
 
         return {
             'items': schema.dump(page.items).data,
@@ -433,11 +423,8 @@ class GenericResource:
 
     def post_to_list(self):
         """Add a new item of type ‘type’."""
-        lang = request.args.get('language', self._default_language)
-
-        schema = self.schema()
-        if lang:
-            schema.context['lang'] = lang
+        lang = request.args.get('lang', None)
+        schema = self.schema(lang=lang)
 
         data = schema.load(request.get_json(), session=m.db.session)
         if data.errors:

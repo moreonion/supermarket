@@ -380,6 +380,63 @@ class TestLabelApiFilteringAndSorting:
 
 
 @pytest.mark.usefixtures('client_class', 'db')
+class TestLabelApiLanguages:
+    def test_post_labels(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'type': 'product',
+                'name': 'English',
+            }),
+            content_type='application/json'
+        )
+        assert res.status_code == 201
+        assert res.json['name'] == 'English'
+        assert res.json['language'] == 'en'
+
+    def test_patch_labels_en(self):
+        res = self.client.patch(
+            url_for(api.ResourceItem, type='labels', id=1),
+            data=json.dumps({
+                'name': 'Updated English',
+                'language': 'en'
+            }),
+            content_type='application/json'
+        )
+        assert res.status_code == 201
+        assert res.json['name'] == 'Updated English'
+        assert res.json['language'] == 'en'
+
+    def test_patch_labels_de(self):
+        res = self.client.patch(
+            url_for(api.ResourceItem, type='labels', id=1),
+            data=json.dumps({
+                'name': 'Deutsch',
+                'language': 'de'
+            }),
+            content_type='application/json'
+        )
+        assert res.status_code == 201
+        assert res.json['name'] == 'Deutsch'
+        assert res.json['language'] == 'de'
+
+    def test_get_labels(self):
+        res = self.client.get(
+            url_for(api.ResourceItem, type='labels', id=1, lang='en')
+        )
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'Updated English'
+        assert res.json['item']['language'] == 'en'
+
+        res = self.client.get(
+            url_for(api.ResourceItem, type='labels', id=1, lang='de')
+        )
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'Deutsch'
+        assert res.json['item']['language'] == 'de'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
 class TestLabelApiPagination:
     def test_post_labels(self):
         res = self.client.post(
@@ -472,4 +529,4 @@ class TestApiDoc:
         res = self.client.get(url_for(api.ResourceDoc, type='labels'))
         assert res.status_code == 200
         assert res.mimetype == 'application/json'
-        assert len(res.json['fields']) == 13
+        assert len(res.json['fields']) == 14
