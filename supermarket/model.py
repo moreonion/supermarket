@@ -45,6 +45,57 @@ retailers_labels = db.Table(
 )
 
 
+# translation stuff
+
+class Language(enum.Enum):
+    de = 'de'
+    en = 'en'
+
+
+class Translation(db.Model):
+
+    """Map objects to the translations of their fields.
+
+    Provides a translation_id for translations and the corresponding
+    field to reference. This table is necessary to abstract translations
+    from the different models (e.g. TranslateAbleString does not need a
+    foreign key for labels.id, which would mean creating a TranslateAbleString
+    table for each Model that needs translation).
+
+    """
+
+    __tablename__ = 'translations'
+    id = db.Column(db.Integer(), primary_key=True)
+    strings = db.relationship("TranslateAbleString")
+    texts = db.relationship("TranslateAbleText")
+
+
+class TranslateAbleString(db.Model):
+
+    """Stores translations for Strings in the database."""
+
+    __tablename__ = 'translateable_strings'
+    id = db.Column(db.Integer(), primary_key=True)
+    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
+    translation = db.relationship('Translation')
+    language = db.Column(db.Enum(Language))
+    value = db.Column(db.String(255))
+    field = db.Column(db.String(255))
+
+
+class TranslateAbleText(db.Model):
+
+    """Stores translations for Texts in the database."""
+
+    __tablename__ = 'translateable_texts'
+    id = db.Column(db.Integer(), primary_key=True)
+    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
+    translation = db.relationship('Translation')
+    language = db.Column(db.Enum(Language))
+    value = db.Column(db.Text())
+    field = db.Column(db.String(255))
+
+
 # main tables
 
 class Brand(db.Model):
@@ -171,53 +222,6 @@ class Ingredient(db.Model):
     supplier = db.relationship('Supplier', lazy=True, backref=db.backref('ingredients', lazy=True))
     name = db.Column(db.String(256))
     percentage = db.Column(db.SmallInteger)
-
-
-class Language(enum.Enum):
-    de = 'de'
-    en = 'en'
-
-
-class Translation(db.Model):
-
-    """Provides a translation_id for translations and the corresponding
-    field to reference. This table is necessary to abstract translations
-    from the different models (e.g. TranslateAbleString does not need a
-    foreign key for labels.id, which would mean creating a TranslateAbleString
-    table for each Model that needs translation)."""
-
-    __tablename__ = 'translations'
-    id = db.Column(db.Integer(), primary_key=True)
-    strings = db.relationship("TranslateAbleString")
-    texts = db.relationship("TranslateAbleText")
-
-
-class TranslateAbleString(db.Model):
-
-    """Stores translations for Strings in the database.
-    """
-
-    __tablename__ = 'translateable_strings'
-    id = db.Column(db.Integer(), primary_key=True)
-    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
-    translation = db.relationship('Translation')
-    language = db.Column(db.Enum(Language))
-    value = db.Column(db.String(255))
-    field = db.Column(db.String(255))
-
-
-class TranslateAbleText(db.Model):
-
-    """Stores translations for Texts in the database.
-    """
-
-    __tablename__ = 'translateable_texts'
-    id = db.Column(db.Integer(), primary_key=True)
-    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
-    translation = db.relationship('Translation')
-    language = db.Column(db.Enum(Language))
-    value = db.Column(db.Text())
-    field = db.Column(db.String(255))
 
 
 class Label(db.Model):

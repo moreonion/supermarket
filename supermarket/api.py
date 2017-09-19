@@ -338,7 +338,7 @@ class GenericResource:
         args = request.args.copy()
         only = self._sanitize_only(args.pop('only', None))
         include = args.pop('include', '')
-        lang = args.pop('language', GenericResource._default_language)
+        lang = args.pop('language', self._default_language)
         schema = self.schema(only=only)
         if include:
             schema.context['include'] = self._parse_include_params(query, include, errors)
@@ -353,8 +353,7 @@ class GenericResource:
     def patch_item(self, id):
         """Update an existing item with new data."""
         r = self.model.query.get_or_404(id)
-        args = request.args.copy()
-        lang = args.pop('language', GenericResource._default_language)
+        lang = request.args.get('language', self._default_language)
 
         schema = self.schema()
         schema.context['id'] = id
@@ -370,8 +369,7 @@ class GenericResource:
 
     def put_item(self, id):
         """Add a new item if the ID doesn’t exist, or replace the existing one."""
-        args = request.args.copy()
-        lang = args.pop('language', GenericResource._default_language)
+        lang = request.args.get('language', self._default_language)
 
         schema = self.schema()
         schema.context['id'] = id
@@ -414,7 +412,7 @@ class GenericResource:
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', None)
         include = args.pop('include', '')
-        lang = args.pop('language', GenericResource._default_language)
+        lang = args.pop('language', self._default_language)
         only = self._sanitize_only(args.pop('only', None))
         errors = []
 
@@ -437,8 +435,7 @@ class GenericResource:
 
     def post_to_list(self):
         """Add a new item of type ‘type’."""
-        args = request.args.copy()
-        lang = args.pop('language', GenericResource._default_language)
+        lang = request.args.get('language', self._default_language)
 
         schema = self.schema()
         if lang:
