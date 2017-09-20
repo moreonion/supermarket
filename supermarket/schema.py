@@ -175,11 +175,20 @@ class CustomSchema(ma.ModelSchema):
         return fields
 
     @property
+    def translated_fields(self):
+        """Get the keys of all fields that have a translation."""
+        fields = []
+        for key, field in self.fields.items():
+            if isinstance(field, TranslateAbleField):
+                fields.append(key)
+        return fields
+
+    @property
     def related_fields(self):
         """Get the keys of all fields of type `Related`."""
         fields = []
         for key, field in self.fields.items():
-            if isinstance(field, masqla_fields.Related):
+            if isinstance(field, masqla_fields.Related) and key not in self.translated_fields:
                 fields.append(key)
         return fields
 
@@ -309,6 +318,7 @@ class CustomSchema(ma.ModelSchema):
 
     class Meta:
         dump_only = ['id', 'links']  # read-only properties, will be ignored when loading
+        exclude = ['translation']
 
 
 # Supermarket schemas

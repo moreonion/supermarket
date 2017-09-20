@@ -106,11 +106,14 @@ class GenericResource:
             field = keys.pop(0) if keys else inspect(model).primary_key[0].name
             schema = schema()
 
-        if field in schema.related_fields + schema.related_lists:
+        if field in schema.related_fields + schema.related_lists + schema.translated_fields:
             relation = getattr(model, field)
             query = query.outerjoin(relation)
             model = relation.property.mapper.class_
-            field = keys.pop(0) if keys else inspect(model).primary_key[0].name
+            if field in schema.translated_fields:
+                field = 'value'
+            else:
+                field = keys.pop(0) if keys else inspect(model).primary_key[0].name
 
         attr = getattr(model, field, None)
         if not hasattr(attr, 'type'):  # not a proper column
@@ -126,14 +129,21 @@ class GenericResource:
 
         return (attr, query)
 
-    def _find_filter(self, field):
+    def _find_filter(self, query, field, op, value, lang):
         # Defines which filter method should be used for `field`.
         #
         # Allows child classes to add their own filters.
         #
         # :param str field      Name of the field to filter.
         #
-        return self._default_filter
+        if field in self.schema().translated_fields:
+            return self._translation_filter(query, field, op, value, lang)
+        return self._default_filter(query, field, op, value)
+
+    def _translation_filter(self, query, field, op, value, lang):
+        model = getattr(self.model, field).property.mapper.class_
+        query = query.filter(getattr(model, 'language') == lang)
+        return self._default_filter(query, field, op, value)
 
     def _default_filter(self, query, field, op, value):
         # Default filter method, filters `field` by `value` using `op`.
@@ -165,7 +175,7 @@ class GenericResource:
             query = query.filter(op(attr, value))
         return query
 
-    def _filter(self, query, filter_fields, errors):
+    def _filter(self, query, filter_fields, language, errors):
         # Go through `filter_fields` and apply a matching filter to the `query`.
         #
         # Adds any errors to `errors` and returns the filtered query.
@@ -178,9 +188,8 @@ class GenericResource:
         not_filtered = []
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
-            filter = self._find_filter(field)
             try:
-                query = filter(query, field, op, value)
+                query = self._find_filter(query, field, op, value, language)
             except ParamException as pe:
                 not_filtered.append({
                     'param': key,
@@ -260,7 +269,7 @@ class GenericResource:
         }
         return pages
 
-    def _parse_include_params(self, query, include_fields, errors):
+    def _parse_include_params(self, include_fields, errors):
         # Go through `include_fields` (fields that should be nested) and retrieve their schema.
         #
         # :params str include_fields   The raw parameter value: a comma seperated list of fields
@@ -295,7 +304,8 @@ class GenericResource:
                 fields = ['all']
             # get attr of related field
             try:
-                attr = self._field_to_attr(relation, query)[0]  # no need to update the query
+                # query isn’t needed, using dummy query to get at attr
+                attr = self._field_to_attr(relation, self.model.query)[0]
             except ParamException as e:
                 for f in fields:
                     not_included.append({
@@ -340,7 +350,7 @@ class GenericResource:
         lang = args.pop('lang', None)
         schema = self.schema(lang=lang, only=only)
         if include:
-            schema.context['include'] = self._parse_include_params(query, include, errors)
+            schema.context['include'] = self._parse_include_params(include, errors)
 
         return {
             'item': schema.dump(r).data,
@@ -406,14 +416,16 @@ class GenericResource:
         only = self._sanitize_only(args.pop('only', None))
         errors = []
 
+        # make schema
+        schema = self.schema(many=True, lang=lang, only=only)
+        if include:
+            schema.context['include'] = self._parse_include_params(include, errors)
+
         # get data from model
         query = self.model.query
         query = self._sort(query, sort, errors)
-        query = self._filter(query, args, errors)
+        query = self._filter(query, args, schema.language, errors)
         page = query.paginate(page=page, per_page=limit)
-        schema = self.schema(many=True, lang=lang, only=only)
-        if include:
-            schema.context['include'] = self._parse_include_params(query, include, errors)
 
         return {
             'items': schema.dump(page.items).data,
@@ -443,13 +455,13 @@ class LabelResource(GenericResource):
 
     """Has additional label specifc filters and include options."""
 
-    def _find_filter(self, field):
+    def _find_filter(self, query, field, op, value, lang):
         if field == 'hotspots':
-            filter = self._hotspot_filter
+            filter = self._hotspot_filter(query, field, op, value)
         elif field == 'countries':
-            filter = self._country_filter
+            filter = self._country_filter(query, field, op, value)
         else:
-            filter = super()._find_filter(field)
+            filter = super()._find_filter(query, field, op, value, lang)
         return filter
 
     def _hotspot_filter(self, query, field, op, value):
