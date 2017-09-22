@@ -21,8 +21,8 @@ from supermarket.model import (
     Resource,
     Retailer,
     Translation,
-    TranslateAbleString,
-    TranslateAbleText
+    TranslatedString,
+    TranslatedText
 )
 
 criteria_code_pattern = re.compile('^\d\.\d\.\d$')
@@ -81,11 +81,11 @@ def import_example_data():
                     social=score_map[social],
                 )),
             )
-            name = TranslateAbleString(
+            name = TranslatedString(
                 value=name, language='en', field='name',
                 translation=t
             )
-            description = TranslateAbleText(
+            description = TranslatedText(
                 value=description, language='en', field='description',
                 translation=t
             )

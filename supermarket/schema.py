@@ -121,7 +121,7 @@ class Hyperlinks(ma.Hyperlinks):
         return ma_rapply(self.schema, _url_val, key=attr, obj=obj)
 
 
-class TranslateAbleField(masqla_fields.Related):
+class Translated(masqla_fields.Related):
 
     """Multi language field."""
 
@@ -179,7 +179,7 @@ class CustomSchema(ma.ModelSchema):
         """Get the keys of all fields that have a translation."""
         fields = []
         for key, field in self.fields.items():
-            if isinstance(field, TranslateAbleField):
+            if isinstance(field, Translated):
                 fields.append(key)
         return fields
 
@@ -448,8 +448,8 @@ class Ingredient(CustomSchema):
 class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
-    name = TranslateAbleField(attribute='name')
-    description = TranslateAbleField(attribute='description')
+    name = Translated(attribute='name')
+    description = Translated(attribute='description')
     meets_criteria = Nested('LabelMeetsCriterion', exclude=['label'], many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 

@@ -58,19 +58,19 @@ class Translation(db.Model):
 
     Provides a translation_id for translations and the corresponding
     field to reference. This table is necessary to abstract translations
-    from the different models (e.g. TranslateAbleString does not need a
-    foreign key for labels.id, which would mean creating a TranslateAbleString
+    from the different models (e.g. TranslatedString does not need a
+    foreign key for labels.id, which would mean creating a TranslatedString
     table for each Model that needs translation).
 
     """
 
     __tablename__ = 'translations'
     id = db.Column(db.Integer(), primary_key=True)
-    strings = db.relationship("TranslateAbleString", cascade='all, delete, delete-orphan')
-    texts = db.relationship("TranslateAbleText", cascade='all, delete, delete-orphan')
+    strings = db.relationship("TranslatedString", cascade='all, delete, delete-orphan')
+    texts = db.relationship("TranslatedText", cascade='all, delete, delete-orphan')
 
 
-class TranslateAbleString(db.Model):
+class TranslatedString(db.Model):
 
     """Stores translations for Strings in the database."""
 
@@ -83,7 +83,7 @@ class TranslateAbleString(db.Model):
     field = db.Column(db.String(255))
 
 
-class TranslateAbleText(db.Model):
+class TranslatedText(db.Model):
 
     """Stores translations for Texts in the database."""
 
@@ -238,13 +238,13 @@ class Label(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
     translation = db.relationship('Translation', cascade='all, delete')
-    name = db.relationship('TranslateAbleString', primaryjoin=db.and_(
-        translation_id == db.foreign(TranslateAbleString.translation_id),
-        db.foreign(TranslateAbleString.field) == 'name'
+    name = db.relationship('TranslatedString', primaryjoin=db.and_(
+        translation_id == db.foreign(TranslatedString.translation_id),
+        db.foreign(TranslatedString.field) == 'name'
     ))
-    description = db.relationship('TranslateAbleText', primaryjoin=db.and_(
-        translation_id == db.foreign(TranslateAbleText.translation_id),
-        db.foreign(TranslateAbleText.field) == 'description'
+    description = db.relationship('TranslatedText', primaryjoin=db.and_(
+        translation_id == db.foreign(TranslatedText.translation_id),
+        db.foreign(TranslatedText.field) == 'description'
     ))
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
     details = db.Column(JSONB)  # Holds overall score

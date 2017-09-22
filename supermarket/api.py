@@ -343,7 +343,6 @@ class GenericResource:
         """Get an item of ‘type’ by ‘ID’."""
         r = self.model.query.get_or_404(id)
         errors = []
-        query = self.model.query
         args = request.args.copy()
         only = self._sanitize_only(args.pop('only', None))
         include = args.pop('include', '')
