@@ -25,16 +25,16 @@ createdb supermarket
 createdb supermarket_test
 
 # Fill database with example data
-export FLASK_APP=api.py
+export FLASK_APP=app.py
 flask fixture_example_data
 
 # Interactive shell in app context
-export FLASK_APP=api.py
+export FLASK_APP=app.py
 flask shell
 ```
 
 When using a virtual python environment, it's easiest to add
-`export FLASK_APP=api.py` to the `activate` script.
+`export FLASK_APP=app.py` to the `activate` script.
 
 Coding style should follow flake8 guidelines as configured in `.flake8` file.
 
@@ -43,7 +43,7 @@ Coding style should follow flake8 guidelines as configured in `.flake8` file.
 For development you can use:
 
 ```bash
-export FLASK_APP=api.py
+export FLASK_APP=app.py
 flask run
 ```
 
