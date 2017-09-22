@@ -47,6 +47,14 @@ retailers_labels = db.Table(
 
 # translation stuff
 
+def set_translation(type, translation_id, name):
+    """Connect model attributes to their translations."""
+    return db.relationship(type, primaryjoin=db.and_(
+        translation_id == db.foreign(type.translation_id),
+        db.foreign(type.field) == name)
+    )
+
+
 class Language(enum.Enum):
     de = 'de'
     en = 'en'
@@ -238,14 +246,8 @@ class Label(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
     translation = db.relationship('Translation', cascade='all, delete')
-    name = db.relationship('TranslatedString', primaryjoin=db.and_(
-        translation_id == db.foreign(TranslatedString.translation_id),
-        db.foreign(TranslatedString.field) == 'name'
-    ))
-    description = db.relationship('TranslatedText', primaryjoin=db.and_(
-        translation_id == db.foreign(TranslatedText.translation_id),
-        db.foreign(TranslatedText.field) == 'description'
-    ))
+    name = set_translation(TranslatedString, translation_id, 'name')
+    description = set_translation(TranslatedText, translation_id, 'description')
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
     details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(db.String(256))

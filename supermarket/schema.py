@@ -287,6 +287,14 @@ class CustomSchema(ma.ModelSchema):
         return data
 
     @post_load
+    def make_instance(self, data):
+        """Extend super.make_instance to add a new Translation if needed."""
+        instance = super().make_instance(data)
+        if hasattr(instance, 'translation') and not instance.translation:
+            instance.translation = m.Translation()
+        return instance
+
+    @post_load
     def check_related_fields(self, data):
         """Only except ids for related fields if an entry with this id exists in the database."""
         errors = {}
@@ -452,13 +460,6 @@ class Label(CustomSchema):
     description = Translated(attribute='description')
     meets_criteria = Nested('LabelMeetsCriterion', exclude=['label'], many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
-
-    @post_load
-    def make_instance(self, data):
-        instance = super().make_instance(data)
-        if not instance.translation:
-            instance.translation = m.Translation()
-        return instance
 
     links = Hyperlinks({
         'self': ma.URLFor('api.resourceitem', type='labels', id='<id>', _external=True),
