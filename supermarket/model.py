@@ -66,8 +66,8 @@ class Translation(db.Model):
 
     __tablename__ = 'translations'
     id = db.Column(db.Integer(), primary_key=True)
-    strings = db.relationship("TranslateAbleString")
-    texts = db.relationship("TranslateAbleText")
+    strings = db.relationship("TranslateAbleString", cascade='all, delete, delete-orphan')
+    texts = db.relationship("TranslateAbleText", cascade='all, delete, delete-orphan')
 
 
 class TranslateAbleString(db.Model):
@@ -237,7 +237,7 @@ class Label(db.Model):
     __tablename__ = 'labels'
     id = db.Column(db.Integer(), primary_key=True)
     translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
-    translation = db.relationship('Translation')
+    translation = db.relationship('Translation', cascade='all, delete')
     name = db.relationship('TranslateAbleString', primaryjoin=db.and_(
         translation_id == db.foreign(TranslateAbleString.translation_id),
         db.foreign(TranslateAbleString.field) == 'name'
