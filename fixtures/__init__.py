@@ -117,12 +117,12 @@ def import_example_data():
                 criterion = Criterion(
                     name=criterion_name,
                     category=subcategory,
-                    details={'question': row[6], 'measures': {}}
+                    details={'question': {'value': row[6], 'language': 'en'}, 'measures': {}}
                 )
                 db.session.add(criterion)
                 criteria[row[4]] = criterion
             details = deepcopy(criterion.details)
-            details['measures'][int(row[9])] = row[8]
+            details['measures'][int(row[9])] = {'value': row[8], 'language': 'en'}
             criterion.details = details
             db.session.add(criterion)
 

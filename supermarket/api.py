@@ -2,6 +2,7 @@ import re
 import operator
 
 from flask import Blueprint, request
+from flask_cors import CORS
 from flask_restful import Api, Resource as BaseResource
 from werkzeug.exceptions import HTTPException
 from werkzeug.datastructures import MultiDict
@@ -12,6 +13,7 @@ import supermarket.schema as s
 
 app = Blueprint('api', __name__)
 api = Api(app)
+CORS(app, origins=['localhost'])
 
 
 # Custom errors

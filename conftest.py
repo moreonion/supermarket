@@ -1,4 +1,5 @@
 import pytest
+import json
 
 import supermarket.model as m
 from supermarket import App
@@ -43,6 +44,59 @@ def example_data_brands(request, app, db):
         brand = m.Brand(name='Clever', retailer=retailer, products=[p1])
         db.session.add(p2)
         db.session.add(brand)
+        db.session.commit()
+
+
+@pytest.fixture(scope='class')
+def example_data_criteria(request, app, db):
+    with app.app_context():
+        print('\nSetting up criteria example data for {} {}'.format(id(db), db))
+        crit_en_only = m.Criterion(
+            type='label',
+            name='English only criterion',
+            details=json.dumps({
+                'question': [{'value': 'What is a question?',
+                              'lang': 'en'}],
+                'measures': {
+                    2: [{'value': 'A phrase with an answer.',
+                         'lang': 'en'}]
+                }
+            })
+        )
+
+        crit_de_only = m.Criterion(
+            type='label',
+            name='German only criterion',
+            details=json.dumps({
+                'question': [{'value': 'Was ist eine Frage?',
+                             'lang': 'de'}],
+                'measures': {
+                    2: [{'value': 'Ein Satz mit einer Antwort.',
+                         'lang': 'de'}]
+                }
+            })
+        )
+
+        crit_de_en = m.Criterion(
+            type='label',
+            name='German and English criterion',
+            details=json.dumps({
+                'question': [{'value': 'What is a question?',
+                              'lang': 'en'},
+                             {'value': 'Was ist eine Frage?',
+                              'lang': 'de'}],
+                'measures': {
+                    2: [{'value': 'A phrase with an answer.',
+                         'lang': 'en'},
+                        {'value': 'Ein Satz mit einer Antwort.',
+                         'lang': 'de'}]
+                }
+            })
+        )
+
+        db.session.add(crit_en_only)
+        db.session.add(crit_de_only)
+        db.session.add(crit_de_en)
         db.session.commit()
 
 

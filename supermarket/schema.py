@@ -7,6 +7,8 @@ from marshmallow import (class_registry, pre_load, post_dump, post_load, utils,
 from sqlalchemy.inspection import inspect
 
 import supermarket.model as m
+import json
+import collections
 
 ma = Marshmallow()
 
@@ -150,6 +152,84 @@ class Translated(masqla_fields.Related):
             existing_strings.append(new_translation)
 
         return existing_strings
+
+
+class TranslatedJSON(masqla_fields.Related):
+    def _select_fields_for_lang(self, fields, lang, default_lang='en'):
+        # Go through fields returning everything but values for fields
+        # in a different language (i.e. remove all translations to
+        # languages different from `lang`).
+        # The high amount of checks is necessary to cover the following:
+        #   * How do we know the field contains a translation?
+        #   * What if there is no translation in the default language?
+        selected = {}
+
+        if isinstance(fields, dict):
+            # If this is a dict, we go through all the keys
+            for k, v in fields.items():
+                selected[k] = self._select_fields_for_lang(v, lang)
+
+            return selected
+        elif isinstance(fields, list):
+            # If this is a list, it may contain translation items
+            if len(fields) > 0:
+                if isinstance(fields[0], dict):
+                    if 'lang' in fields[0].keys() and 'value' in fields[0].keys():
+                        # Found a translation list
+                        translation = fields[0]['value']  # Store first value found
+
+                        for elem in fields:
+                            if elem['lang'] == lang:
+                                # We found the wanted language, return it
+                                return elem['value']
+                            elif elem['lang'] == default_lang:
+                                # We found the default language, overwrite
+                                # first language found with this value
+                                translation = elem['value']
+
+                        return translation
+        return fields
+
+    def _update_translation_list(self, old, new):
+        # Update the translations in `old` with the values from `new`
+        old.extend(new)
+        unduplicate = {e['lang']: e['value'] for e in old}
+        updated = [{'lang': k, 'value': v} for k, v in unduplicate.items()]
+
+        return updated
+
+    def _recursive_update(self, old, new):
+        # Recursively updates the dictionary `old` with the values of
+        # dictionary `new`
+        for k, v in new.items():
+            if isinstance(v, collections.Mapping):
+                old[k] = self._recursive_update(old.get(k, {}), v)
+            elif isinstance(v, list):
+                if len(v) > 0 and isinstance(v[0], dict):
+                    if 'lang' in v[0].keys() and 'value' in v[0].keys():
+                        # We got a translation list
+                        old[k] = self._update_translation_list(old[k], new[k])
+            else:
+                old[k] = new[k]
+
+        return old
+
+    def _serialize(self, value, attr, obj):
+        lang = self.parent.language
+        selected = self._select_fields_for_lang(
+            json.loads(value), lang)
+
+        return selected
+
+    def _deserialize(self, value, attr, data):
+        parent_instance = self.parent.instance or self.parent.get_instance(data)
+        if parent_instance is not None:
+            stored_json = json.loads(getattr(parent_instance, attr))
+            stored_json = self._recursive_update(stored_json, value)
+        else:
+            stored_json = value
+
+        return json.dumps(stored_json)
 
 
 # Custom (overriden) base schema
@@ -375,6 +455,7 @@ class Criterion(CustomSchema):
     # id, name, type (label, retailer), code, details (JSONB)
     # refs: improves_hotspots
     category = Nested('CriterionCategory', only=('id', 'name', 'category'))
+    details = TranslatedJSON(attribute='details')
     improves_hotspots = Nested('CriterionImprovesHotspot', exclude=['criterion'], many=True)
 
     links = Hyperlinks({
