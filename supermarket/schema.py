@@ -2,6 +2,7 @@ from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
 from marshmallow_sqlalchemy import fields as masqla_fields
+from marshmallow import fields as ma_fields
 from marshmallow import (class_registry, pre_load, post_dump, post_load, utils,
                          validates_schema, ValidationError)
 from sqlalchemy.inspection import inspect
@@ -154,7 +155,7 @@ class Translated(masqla_fields.Related):
         return existing_strings
 
 
-class TranslatedJSON(masqla_fields.Related):
+class TranslatedJSON(ma_fields.Field):
     def _select_fields_for_lang(self, fields, lang, default_lang='en'):
         # Go through fields returning everything but values for fields
         # in a different language (i.e. remove all translations to
