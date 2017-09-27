@@ -130,7 +130,7 @@ class Translated(masqla_fields.Related):
 
     def _serialize(self, value, attr, obj):
         lang = self.parent.language
-        translation = list(filter(lambda t: t.language.value == lang, value))
+        translation = list(filter(lambda t: t.language == lang, value))
         return None if len(translation) == 0 else translation[0].value
 
     def _deserialize(self, value, attr, data):
@@ -145,7 +145,7 @@ class Translated(masqla_fields.Related):
             translation_id=parent_instance.translation_id, field=attr).all()
 
         translation_index = next((i for i, t in enumerate(existing_strings)
-                                 if t.language.value == lang), -1)
+                                 if t.language == lang), -1)
         if translation_index >= 0:
             existing_strings[translation_index].value = value
         else:

@@ -1,4 +1,3 @@
-import enum
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -55,11 +54,6 @@ def set_translation(type, translation_id, name):
     )
 
 
-class Language(enum.Enum):
-    de = 'de'
-    en = 'en'
-
-
 class Translation(db.Model):
 
     """Map objects to the translations of their fields.
@@ -86,7 +80,7 @@ class TranslatedString(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
     translation = db.relationship('Translation')
-    language = db.Column(db.Enum(Language))
+    language = db.Column(db.String(2))
     value = db.Column(db.String(255))
     field = db.Column(db.String(255))
 
@@ -99,7 +93,7 @@ class TranslatedText(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
     translation = db.relationship('Translation')
-    language = db.Column(db.Enum(Language))
+    language = db.Column(db.String(2))
     value = db.Column(db.Text())
     field = db.Column(db.String(255))
 
