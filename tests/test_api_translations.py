@@ -33,6 +33,18 @@ class TestLabelGuideUseCases:
             'language': 'de'
             } in res.json['items'][0]['meets_criteria']
 
+        res = self.client.get(url_for(api.ResourceList, type='labels',
+                              lang='it'))
+        assert res.status_code == 200
+        assert res.json['items'][0]['name'] == 'Testlabel'
+        assert res.json['items'][0]['description'] == 'For exceptional testing.'
+        assert {
+            'explanation': 'Does the label improve testing for all of us?',
+            'criterion': 4,
+            'score': 100,
+            'language': 'en'
+            } in res.json['items'][0]['meets_criteria']
+
     def test_label_get(self):
         """Test whether we can receive names and description in different languages
         for a single label."""
@@ -40,12 +52,31 @@ class TestLabelGuideUseCases:
         assert res.status_code == 200
         assert res.json['item']['name'] == 'Testlabel'
         assert res.json['item']['description'] == 'For exceptional testing.'
+        assert {
+            'explanation': 'Does the label improve testing for all of us?',
+            'criterion': 4,
+            'score': 100,
+            'language': 'en'
+            } in res.json['item']['meets_criteria']
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1,
                               lang='de'))
         assert res.status_code == 200
         assert res.json['item']['name'] == 'Testerfuellung'
         assert res.json['item']['description'] == 'Fuer grossartiges Testen.'
+        assert {
+            'explanation': 'Verbessert das Label testen fuer alle?',
+            'criterion': 4,
+            'score': 100,
+            'language': 'de'
+            } in res.json['item']['meets_criteria']
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=2,
+                              lang='de'))
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'German Name'
+        assert res.json['item']['description'] == 'Only English description.'
+        assert res.json['item']['language'] == 'mixed'
 
 
 @pytest.mark.usefixtures('client_class', 'db', 'example_data_criteria')

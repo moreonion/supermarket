@@ -135,6 +135,21 @@ class Translated(masqla_fields.Related):
     def _serialize(self, value, attr, obj):
         lang = self.parent.language
         translation = list(filter(lambda t: t.language == lang, value))
+
+        if len(translation) == 0:
+            default_lang = self.parent.default_language
+            translation = list(filter(lambda t: t.language == default_lang,
+                                      value))
+            if self.parent.output_language is not None:
+                self.parent.output_language = 'mixed'
+            else:
+                self.parent.output_language = default_lang
+        else:
+            if self.parent.output_language is not None:
+                self.parent.output_language = 'mixed'
+            else:
+                self.parent.output_language = lang
+
         return None if len(translation) == 0 else translation[0].value
 
     def _deserialize(self, value, attr, data):
@@ -246,12 +261,15 @@ class CustomSchema(ma.ModelSchema):
 
     """Config and validation that all our schemas share."""
 
-    language = 'en'  # default language
+    default_language = 'en'
 
     def __init__(self, lang=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.output_language = None
         if lang:
             self.language = lang
+        else:
+            self.language = self.default_language
 
     @property
     def nested_fields(self):
@@ -365,7 +383,7 @@ class CustomSchema(ma.ModelSchema):
     @post_dump(pass_many=False)
     def add_language(self, data):
         """Add information about the languge of the output."""
-        data['language'] = self.language
+        data['language'] = self.output_language
         return data
 
     @pre_load

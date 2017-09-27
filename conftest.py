@@ -171,6 +171,24 @@ def example_data_labels(request, app, db):
         )
 
         t = m.Translation()
+        name = m.TranslatedString(value='English Name', language='en',
+                                  field='name', translation=t)
+        name_de = m.TranslatedString(value='German Name', language='de',
+                                     field='name', translation=t)
+        description = m.TranslatedText(value='Only English description.',
+                                       language='en', field='description',
+                                       translation=t)
+        lbl2 = m.Label(
+            translation=t,
+            name=[name, name_de],
+            type='product',
+            description=[description],
+            logo='beautiful_logo.png',
+            resources=[r1, r2],
+            countries=[lbl_country],
+        )
+
+        t = m.Translation()
         explanation = m.TranslatedText(
             value='Does the label improve testing for all of us?',
             language='en', field='explanation', translation=t)
@@ -187,6 +205,7 @@ def example_data_labels(request, app, db):
         )
 
         db.session.add(lbl)
+        db.session.add(lbl2)
         db.session.add(lbl_criterion)
         db.session.add(crit_cat)
         db.session.commit()
