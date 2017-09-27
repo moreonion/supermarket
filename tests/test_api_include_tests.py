@@ -147,8 +147,10 @@ class TestLabelQueryInclude:
 
         assert res.status_code == 200
         assert len(res.json['item']['resources']) == 2
-        assert {'id': 1, 'name': 'Testresource #1', 'language': 'en'} in res.json['item']['resources']
-        assert {'id': 2, 'name': 'Testresource #2', 'language': 'en'} in res.json['item']['resources']
+        assert {'id': 1, 'name': 'Testresource #1',
+                'language': 'en'} in res.json['item']['resources']
+        assert {'id': 2, 'name': 'Testresource #2',
+                'language': 'en'} in res.json['item']['resources']
 
     def test_include_hotspots(self):
         url = url_for(api.ResourceItem, type='labels', id=1, include='hotspots.name')

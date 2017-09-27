@@ -46,7 +46,10 @@ def test_criterion_model(db):
         'possible_scores': [-1, 0, 1, 2]  # -1 means not applicable
     }
 
-    hotspot_assoc = m.CriterionImprovesHotspot(weight=2, explanation='Obvious.')
+    t = m.Translation()
+    explanation = m.TranslatedText(value='Obvious.', language='en',
+                                   field='explanation', translation=t)
+    hotspot_assoc = m.CriterionImprovesHotspot(weight=2, explanation=[explanation], translation=t)
     hotspot_assoc.hotspot = m.Hotspot(name='Saving the world')
     criterion.improves_hotspots.append(hotspot_assoc)
 
@@ -57,7 +60,7 @@ def test_criterion_model(db):
     assert criterion.details['possible_scores'][0] == -1
     assert len(criterion.improves_hotspots) == 1
     assert criterion.improves_hotspots[0].weight == 2
-    assert criterion.improves_hotspots[0].explanation == 'Obvious.'
+    assert criterion.improves_hotspots[0].explanation[0].value == 'Obvious.'
     assert criterion.improves_hotspots[0].hotspot.name == 'Saving the world'
 
 

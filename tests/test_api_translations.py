@@ -5,6 +5,49 @@ import supermarket.api as api
 url_for = api.api.url_for
 
 
+@pytest.mark.usefixtures('client_class', 'db', 'example_data_criteria', 'example_data_labels')
+class TestLabelGuideUseCases:
+    def test_labels_get(self):
+        """Test whether we can receive name and description for labels and criteria
+        in different languages."""
+        res = self.client.get(url_for(api.ResourceList, type='labels'))
+        assert res.status_code == 200
+        assert res.json['items'][0]['name'] == 'Testlabel'
+        assert res.json['items'][0]['description'] == 'For exceptional testing.'
+        assert {
+            'explanation': 'Does the label improve testing for all of us?',
+            'criterion': 4,
+            'score': 100,
+            'language': 'en'
+            } in res.json['items'][0]['meets_criteria']
+
+        res = self.client.get(url_for(api.ResourceList, type='labels',
+                              lang='de'))
+        assert res.status_code == 200
+        assert res.json['items'][0]['name'] == 'Testerfuellung'
+        assert res.json['items'][0]['description'] == 'Fuer grossartiges Testen.'
+        assert {
+            'explanation': 'Verbessert das Label testen fuer alle?',
+            'criterion': 4,
+            'score': 100,
+            'language': 'de'
+            } in res.json['items'][0]['meets_criteria']
+
+    def test_label_get(self):
+        """Test whether we can receive names and description in different languages
+        for a single label."""
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'Testlabel'
+        assert res.json['item']['description'] == 'For exceptional testing.'
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=1,
+                              lang='de'))
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'Testerfuellung'
+        assert res.json['item']['description'] == 'Fuer grossartiges Testen.'
+
+
 @pytest.mark.usefixtures('client_class', 'db', 'example_data_criteria')
 class TestTranslatedJSON:
     # Criterion ID 1: Only English

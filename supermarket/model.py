@@ -199,7 +199,9 @@ class CriterionImprovesHotspot(db.Model):
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
     hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
     weight = db.Column(db.SmallInteger)
-    explanation = db.Column(db.Text)
+    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
+    translation = db.relationship('Translation', cascade='all, delete')
+    explanation = set_translation(TranslatedText, translation_id, 'explanation')
     hotspot = db.relationship('Hotspot', lazy=True)
     # criterion – backref from Criterion
 
@@ -292,7 +294,9 @@ class LabelMeetsCriterion(db.Model):
     label_id = db.Column(db.ForeignKey('labels.id'), primary_key=True)
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
     score = db.Column(db.SmallInteger)
-    explanation = db.Column(db.Text)
+    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
+    translation = db.relationship('Translation', cascade='all, delete')
+    explanation = set_translation(TranslatedText, translation_id, 'explanation')
     criterion = db.relationship('Criterion')
     label = db.relationship('Label')
 

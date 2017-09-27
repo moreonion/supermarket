@@ -18,11 +18,15 @@ ma = Marshmallow()
 
 class Nested(ma.Nested):
 
-    """Nested field that keeps the session when loading nested data.
+    """Nested field that keeps the session and language when loading nested data.
 
     Fixes https://github.com/marshmallow-code/marshmallow-sqlalchemy/issues/67.
 
     """
+
+    def _serialize(self, value, attr, obj):
+        self.schema.language = self.parent.language
+        return super()._serialize(value, attr, obj)
 
     def _deserialize(self, value, attr, data):
         if self.many and not utils.is_collection(value):
@@ -491,6 +495,7 @@ class CriterionImprovesHotspot(CustomSchema):
     # primary key: criterion_id + hotspot_id
     # weight, explanation
     # refs: criterion, hotspot
+    explanation = Translated(attribute='explanation')
 
     @property
     def schema_description(self):
@@ -598,6 +603,7 @@ class LabelMeetsCriterion(CustomSchema):
     # primary key: label_id + criterion_id
     # score, explanation
     # refs: criterion, label
+    explanation = Translated(attribute='explanation')
 
     @property
     def schema_description(self):

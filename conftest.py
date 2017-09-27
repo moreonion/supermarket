@@ -126,9 +126,14 @@ def example_data_labels(request, app, db):
             description='To achieve a better world, we need good code.' +
             'And good code needs good QA.'
         )
+        t = m.Translation()
+        exp = m.TranslatedText(value='What better QA than solid test data?',
+                               language='en', field='explanation',
+                               translation=t)
         crit_hs = m.CriterionImprovesHotspot(
             weight=100,
-            explanation='What better QA than solid test data?',
+            translation=t,
+            explanation=[exp],
             hotspot=hotspot
         )
         t = m.Translation()
@@ -147,23 +152,38 @@ def example_data_labels(request, app, db):
         t = m.Translation()
         name = m.TranslatedString(value='Testlabel',
                                   language='en', field='name', translation=t)
+        name_de = m.TranslatedString(value='Testerfuellung',
+                                     language='de', field='name', translation=t)
         description = m.TranslatedText(value='For exceptional testing.',
                                        language='en', field='description',
                                        translation=t)
+        description_de = m.TranslatedText(value='Fuer grossartiges Testen.',
+                                          language='de', field='description',
+                                          translation=t)
         lbl = m.Label(
             translation=t,
-            name=[name],
+            name=[name, name_de],
             type='product',
-            description=[description],
+            description=[description, description_de],
             logo='beautiful_logo.png',
             resources=[r1, r2],
             countries=[lbl_country],
         )
+
+        t = m.Translation()
+        explanation = m.TranslatedText(
+            value='Does the label improve testing for all of us?',
+            language='en', field='explanation', translation=t)
+        explanation_de = m.TranslatedText(
+            value='Verbessert das Label testen fuer alle?',
+            language='de', field='explanation', translation=t)
+
         lbl_criterion = m.LabelMeetsCriterion(
             label=lbl,
             criterion=crit,
             score=100,
-            explanation='Does the label improve testing for all of us?'
+            translation=t,
+            explanation=[explanation, explanation_de]
         )
 
         db.session.add(lbl)
