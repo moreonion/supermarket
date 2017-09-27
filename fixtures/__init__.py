@@ -143,11 +143,14 @@ def import_example_data():
                 label = labels[label_code.strip()]
                 if not s or int(s) <= 0:
                     continue
+                t = Translation()
+                exp = TranslatedText(value=row[8], language='en',
+                                     field='explanation', translation=t)
                 db.session.add(LabelMeetsCriterion(
                     label=label,
                     criterion=criterion,
                     score=s,
-                    explanation=row[8],
+                    explanation=[exp],
                 ))
     db.session.commit()
 
@@ -263,30 +266,29 @@ def import_example_data():
                 db.session.add(i)
                 weight += 1
 
-    # @TODO: Fix this for translated names
-    # Product labels
-    # labels = {l.name: l for l in Label.query.all()}
-    # print(list(labels.keys()))
-    # with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
-    #     next(csv_file)  # Skip header line.
-    #     for row in csv.reader(csv_file):
-    #         if not row[0] in products:
-    #             print("Label for unknown product: {}".format(row[0]))
-    #             continue
+    # @TODO: Needs better solution for multiple languages
+    labels = {l.name[0].value: l for l in Label.query.all()}
+    print(list(labels.keys()))
+    with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
+        next(csv_file)  # Skip header line.
+        for row in csv.reader(csv_file):
+            if not row[0] in products:
+                print("Label for unknown product: {}".format(row[0]))
+                continue
 
-    #         p = products[row[0]]
-    #         plabels = []
-    #         for label in row[5:]:
-    #             if label:
-    #                 if label.startswith('EU Biosiegel'):
-    #                     label = 'EU Organic'
-    #                 label = label.replace('UTZ Certified', 'UTZ')
-    #                 label = label.replace('UTZ Kakao', 'UTZ Cacao')
-    #                 label = label.replace('FAIRTRADE', 'Fairtrade')
-    #                 label = label.replace('RSPO', 'Roundtable on Sustainable Palm Oil (RSPO)')
-    #                 if label not in labels:
-    #                     print("Unknown label '{}'".format(label))
-    #                     continue
-    #                 plabels.append(labels[label])
-    #         p.labels = plabels
+            p = products[row[0]]
+            plabels = []
+            for label in row[5:]:
+                if label:
+                    if label.startswith('EU Biosiegel'):
+                        label = 'EU Organic'
+                    label = label.replace('UTZ Certified', 'UTZ')
+                    label = label.replace('UTZ Kakao', 'UTZ Cacao')
+                    label = label.replace('FAIRTRADE', 'Fairtrade')
+                    label = label.replace('RSPO', 'Roundtable on Sustainable Palm Oil (RSPO)')
+                    if label not in labels:
+                        print("Unknown label '{}'".format(label))
+                        continue
+                    plabels.append(labels[label])
+            p.labels = plabels
     db.session.commit()
