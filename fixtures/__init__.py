@@ -4,6 +4,7 @@ import os.path
 import re
 
 import pycountry
+import sqlalchemy as sa
 
 from supermarket.model import (
     db,
@@ -104,7 +105,13 @@ def import_example_data():
             if row[11]:  # exclude from scoring
                 continue
             (category_name, subcategory_name, criterion_name) = (row[1], row[3], row[5])
-            criterion = Criterion.query.filter_by(name=criterion_name).first()
+            criterion = None
+            result = db.session.query(Criterion, Translation, TranslatedString).filter(
+                sa.and_(TranslatedString.translation_id == Criterion.translation_id,
+                        TranslatedString.value == criterion_name)).first()
+            if result is not None:
+                criterion = result[0]
+
             if criterion is None:
                 subcategory = CriterionCategory.query.filter_by(name=subcategory_name).first()
                 if subcategory is None:
@@ -114,11 +121,17 @@ def import_example_data():
                         db.session.add(category)
                     subcategory = CriterionCategory(name=subcategory_name, category=category)
                     db.session.add(subcategory)
+                t = Translation()
                 criterion = Criterion(
-                    name=criterion_name,
+                    translation=t,
                     category=subcategory,
                     details={'question': {'value': row[6], 'language': 'en'}, 'measures': {}}
                 )
+                name = TranslatedString(
+                    value=criterion_name, language='en', field='name',
+                    translation=t
+                )
+                criterion.name = [name]
                 db.session.add(criterion)
                 criteria[row[4]] = criterion
             details = deepcopy(criterion.details)

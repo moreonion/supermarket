@@ -455,6 +455,7 @@ class Category(CustomSchema):
 class Criterion(CustomSchema):
     # id, name, type (label, retailer), code, details (JSONB)
     # refs: improves_hotspots
+    name = Translated(attribute='name')
     category = Nested('CriterionCategory', only=('id', 'name', 'category'))
     details = TranslatedJSON(attribute='details')
     improves_hotspots = Nested('CriterionImprovesHotspot', exclude=['criterion'], many=True)

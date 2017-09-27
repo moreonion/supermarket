@@ -487,7 +487,7 @@ class LabelResource(GenericResource):
         query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
         return query
 
-    def _parse_include_params(self, query, include_fields, errors):
+    def _parse_include_params(self, include_fields, errors):
         # include hotspots, too
         include_raw = include_fields.split(',')
         hotspot_fields = []
@@ -520,7 +520,7 @@ class LabelResource(GenericResource):
             if not only:
                 only = None
 
-        included = super()._parse_include_params(query, ','.join(super_fields), errors)
+        included = super(LabelResource, self)._parse_include_params(','.join(super_fields), errors)
         if only is not None:
             included['hotspots'] = {'resource': resource, 'only': only}
 

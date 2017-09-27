@@ -153,7 +153,9 @@ class Criterion(db.Model):
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
     type = db.Column(db.Enum('label', 'retailer', name='criterion_type'))
-    name = db.Column(db.String(128))
+    translation_id = db.Column(db.Integer(), db.ForeignKey('translations.id'))
+    translation = db.relationship('Translation', cascade='all, delete')
+    name = set_translation(TranslatedString, translation_id, 'name')
     details = db.Column(JSONB)  # details holds question, measures
     improves_hotspots = db.relationship(
         'CriterionImprovesHotspot', backref=db.backref('criterion'))

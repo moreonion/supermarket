@@ -4,19 +4,31 @@ from pytest import raises
 
 
 def test_label_model(db):
+    t = m.Translation()
+    name = m.TranslatedString(value='EU organic', language='en', field='name',
+                              translation=t)
+    description = m.TranslatedText(value='A cool label', language='en',
+                                   field='description', translation=t)
     label = m.Label(
-        name='EU organic',
-        description='A cool label.',
+        translation=t,
+        name=[name],
+        description=[description],
         logo='some url',
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )
 
     criterion_1_assoc = m.LabelMeetsCriterion(score=1, explanation='Nope.')
-    criterion_1_assoc.criterion = m.Criterion(name='Saves the world')
+    t = m.Translation()
+    name = m.TranslatedString(value='Saves the world', language='en', field='name',
+                              translation=t)
+    criterion_1_assoc.criterion = m.Criterion(name=[name], translation=t)
     label.meets_criteria.append(criterion_1_assoc)
 
     criterion_2_assoc = m.LabelMeetsCriterion(score=2, explanation='At least a few of us…')
-    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy')
+    t = m.Translation()
+    name = m.TranslatedString(value='Makes us all happy', language='en', field='name',
+                              translation=t)
+    criterion_2_assoc.criterion = m.Criterion(name=[name], translation=t)
     label.meets_criteria.append(criterion_2_assoc)
 
     resource_1 = m.Resource(name='cocoa')
@@ -36,7 +48,7 @@ def test_label_model(db):
     assert label.products[0].name == 'Organic vegan gluten-free cookies'
     assert label.meets_criteria[0].score is 1
     assert label.meets_criteria[0].explanation == 'Nope.'
-    assert label.meets_criteria[0].criterion.name == 'Saves the world'
+    assert label.meets_criteria[0].criterion.name[0].value == 'Saves the world'
     assert label.resources[0].name == 'cocoa'
     assert label.countries[0].code == 'AT'
     assert product.labels[0] == label
@@ -44,9 +56,14 @@ def test_label_model(db):
 
 
 def test_label_model_empty_name(db):
+    t = m.Translation()
+    name = m.TranslatedString(value='', language='en', field='name',
+                              translation=t)
+    description = m.TranslatedText(value='A cool label.', language='en',
+                                   field='description', translation=t)
     label = m.Label(
-        name='',
-        description='A cool label.',
+        name=[name],
+        description=[description],
         logo='some url',
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )
@@ -58,15 +75,25 @@ def test_label_model_empty_name(db):
 
 
 def test_label_model_duplicate_name(db):
+    t = m.Translation()
+    name = m.TranslatedString(value='A unique name', language='en', translation=t,
+                              field='name')
+    description = m.TranslatedText(value='A cool label.', language='en',
+                                   translation=t, field='description')
     label = m.Label(
-        name='A unique name',
-        description='A cool label.',
+        name=[name],
+        description=[description],
         logo='some url',
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )
+    t = m.Translation()
+    name = m.TranslatedString(value='A unique name', language='en', translation=t,
+                              field='name')
+    description = m.TranslatedText(value='A cool label.', language='en',
+                                   translation=t, field='description')
     label2 = m.Label(
-        name='A unique name',
-        description='A cool label.',
+        name=[name],
+        description=[description],
         logo='some url',
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )

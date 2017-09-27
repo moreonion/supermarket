@@ -51,9 +51,13 @@ def example_data_brands(request, app, db):
 def example_data_criteria(request, app, db):
     with app.app_context():
         print('\nSetting up criteria example data for {} {}'.format(id(db), db))
+        t = m.Translation()
+        name = m.TranslatedString(value='English only criterion', language='en',
+                                  translation=t, field='name')
         crit_en_only = m.Criterion(
             type='label',
-            name='English only criterion',
+            translation=t,
+            name=[name],
             details=json.dumps({
                 'question': [{'value': 'What is a question?',
                               'lang': 'en'}],
@@ -64,9 +68,13 @@ def example_data_criteria(request, app, db):
             })
         )
 
+        t = m.Translation()
+        name = m.TranslatedString(value='German only criterion', language='de',
+                                  translation=t, field='name')
         crit_de_only = m.Criterion(
             type='label',
-            name='German only criterion',
+            translation=t,
+            name=[name],
             details=json.dumps({
                 'question': [{'value': 'Was ist eine Frage?',
                              'lang': 'de'}],
@@ -77,9 +85,15 @@ def example_data_criteria(request, app, db):
             })
         )
 
+        t = m.Translation()
+        name = m.TranslatedString(value='German and English criterion', language='en',
+                                  translation=t, field='name')
+        name_de = m.TranslatedString(value='Deutsch und Englisch Kriterium',
+                                     language='de', translation=t, field='name')
         crit_de_en = m.Criterion(
             type='label',
-            name='German and English criterion',
+            translation=t,
+            name=[name, name_de],
             details=json.dumps({
                 'question': [{'value': 'What is a question?',
                               'lang': 'en'},
@@ -117,19 +131,30 @@ def example_data_labels(request, app, db):
             explanation='What better QA than solid test data?',
             hotspot=hotspot
         )
+        t = m.Translation()
+        name = m.TranslatedString(value='The test improvement criterion',
+                                  language='en', field='name', translation=t)
         crit = m.Criterion(
             type='label',
-            name='The test improvement criterion',
+            name=[name],
+            translation=t,
             improves_hotspots=[crit_hs]
         )
         crit_cat = m.CriterionCategory(
             name='Test Data',
             criteria=[crit]
         )
+        t = m.Translation()
+        name = m.TranslatedString(value='Testlabel',
+                                  language='en', field='name', translation=t)
+        description = m.TranslatedText(value='For exceptional testing.',
+                                       language='en', field='description',
+                                       translation=t)
         lbl = m.Label(
-            name='Testlabel',
+            translation=t,
+            name=[name],
             type='product',
-            description='For exceptional testing.',
+            description=[description],
             logo='beautiful_logo.png',
             resources=[r1, r2],
             countries=[lbl_country],

@@ -35,7 +35,10 @@ def test_category_model(db):
 
 
 def test_criterion_model(db):
-    criterion = m.Criterion(name='Saves the world')
+    t = m.Translation()
+    name = m.TranslatedString(value='Saves the world', language='en', field='name',
+                              translation=t)
+    criterion = m.Criterion(name=[name], translation=t)
     criterion.details = {
         'question': 'Does the certificate/label save the world?',
         'response_options': '0 - no, 1 - partly, 2 - totally!',
@@ -105,7 +108,10 @@ def test_product_model(db):
         percentage=10,
         weight=2,
     )
-    organic = m.Label(name='EU organic')
+    t = m.Translation()
+    name = m.TranslatedString(value='EU organic', language='en', field='name',
+                              translation=t)
+    organic = m.Label(name=[name], translation=t)
     billa = m.Store(name='Billa')
     brand = m.Brand(name='BestBio')
     producer = m.Producer(name='Raw Organic Cookie Factory')
@@ -149,7 +155,10 @@ def test_product_model(db):
 def test_resource_model(db):
     resource = m.Resource(name='Cocoa')
     origin = m.Origin(name='Ghana')
-    label = m.Label(name='Fairtrade')
+    t = m.Translation()
+    name = m.TranslatedString(value='Fairtrade', language='en', field='name',
+                              translation=t)
+    label = m.Label(name=[name], translation=t)
     supplier = m.Supplier(name='XY')
     product = m.Product(name='Chocolate', labels=[label])
     ingredient = m.Ingredient(
@@ -186,15 +195,23 @@ def test_retailer_model(db):
     m.Store(name='Billa', retailer=retailer)
     m.Store(name='Penny', retailer=retailer)
     m.Brand(name='Clever', retailer=retailer)
-    m.Label(name='BEPI', type='retailer', retailers=[retailer])
+    t = m.Translation()
+    name = m.TranslatedString(value='BEPI', language='en', field='name', translation=t)
+    m.Label(name=[name], translation=t, type='retailer', retailers=[retailer])
 
     criterion_1_assoc = m.RetailerMeetsCriterion(satisfied=False, explanation='Nope.')
-    criterion_1_assoc.criterion = m.Criterion(name='Saves the world', type='retailer')
+    t = m.Translation()
+    name = m.TranslatedString(value='Saves the world', language='en', field='name',
+                              translation=t)
+    criterion_1_assoc.criterion = m.Criterion(name=[name], translation=t, type='retailer')
     retailer.meets_criteria.append(criterion_1_assoc)
 
     criterion_2_assoc = m.RetailerMeetsCriterion(
         satisfied=True, explanation='At least a few of us...')
-    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy', type='retailer')
+    t = m.Translation()
+    name = m.TranslatedString(value='Makes us all happy', language='en', field='name',
+                              translation=t)
+    criterion_2_assoc.criterion = m.Criterion(name=[name], translation=t, type='retailer')
     retailer.meets_criteria.append(criterion_2_assoc)
 
     db.session.add(retailer)
@@ -208,9 +225,9 @@ def test_retailer_model(db):
     assert retailer.name == 'Rewe'
     assert retailer.meets_criteria[0].satisfied is False
     assert retailer.meets_criteria[0].explanation == 'Nope.'
-    assert retailer.meets_criteria[0].criterion.name == 'Saves the world'
+    assert retailer.meets_criteria[0].criterion.name[0].value == 'Saves the world'
     assert retailer.meets_criteria[0].criterion.type == 'retailer'
-    assert retailer.labels[0].name == 'BEPI'
+    assert retailer.labels[0].name[0].value == 'BEPI'
 
 
 def test_score_model(db):
