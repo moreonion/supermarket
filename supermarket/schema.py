@@ -216,11 +216,14 @@ class TranslatedJSON(ma_fields.Field):
         return old
 
     def _serialize(self, value, attr, obj):
-        lang = self.parent.language
-        selected = self._select_fields_for_lang(
-            json.loads(value), lang)
+        if value is not None:
+            lang = self.parent.language
+            selected = self._select_fields_for_lang(
+                json.loads(value), lang)
 
-        return selected
+            return selected
+
+        return {}
 
     def _deserialize(self, value, attr, data):
         parent_instance = self.parent.instance or self.parent.get_instance(data)

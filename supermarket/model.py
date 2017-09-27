@@ -144,6 +144,16 @@ class Criterion(db.Model):
 
     """
 
+    def __init__(self, *args, **kwargs):
+        if 'name' in kwargs and isinstance(kwargs['name'], str):
+            t = Translation()
+            name = [TranslatedString(field='name', value=kwargs['name'], language='en',
+                                     translation=t)]
+            kwargs['name'] = name
+            kwargs['translation'] = t
+
+        super().__init__(*args, **kwargs)
+
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
     type = db.Column(db.Enum('label', 'retailer', name='criterion_type'))
