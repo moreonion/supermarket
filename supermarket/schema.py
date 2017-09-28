@@ -26,6 +26,7 @@ class Nested(ma.Nested):
 
     def _serialize(self, value, attr, obj):
         self.schema.language = self.parent.language
+        self.schema.output_language = self.parent.output_language
         return super()._serialize(value, attr, obj)
 
     def _deserialize(self, value, attr, data):
@@ -134,21 +135,14 @@ class Translated(masqla_fields.Related):
 
     def _serialize(self, value, attr, obj):
         lang = self.parent.language
+        self.parent.output_language = lang
         translation = list(filter(lambda t: t.language == lang, value))
 
         if len(translation) == 0:
             default_lang = self.parent.default_language
             translation = list(filter(lambda t: t.language == default_lang,
                                       value))
-            if self.parent.output_language is not None:
-                self.parent.output_language = 'mixed'
-            else:
-                self.parent.output_language = default_lang
-        else:
-            if self.parent.output_language is not None:
-                self.parent.output_language = 'mixed'
-            else:
-                self.parent.output_language = lang
+            self.parent.output_language = default_lang
 
         return None if len(translation) == 0 else translation[0].value
 
@@ -265,11 +259,11 @@ class CustomSchema(ma.ModelSchema):
 
     def __init__(self, lang=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.output_language = None
         if lang:
             self.language = lang
         else:
             self.language = self.default_language
+        self.output_language = self.language
 
     @property
     def nested_fields(self):
