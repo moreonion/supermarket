@@ -6,6 +6,13 @@ from sqlalchemy import CheckConstraint
 db = SQLAlchemy()
 
 
+class Translation(JSONB):
+
+    """Translation type, contains a JSON of translated data."""
+
+    pass
+
+
 # helper tables
 
 brands_stores = db.Table(
@@ -185,9 +192,9 @@ class Label(db.Model):
 
     __tablename__ = 'labels'
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(64), CheckConstraint('LENGTH(name)>0'), nullable=False, unique=True)
+    name = db.Column(Translation, nullable=False, unique=True)
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
-    description = db.Column(db.Text)
+    description = db.Column(Translation)
     details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(db.String(256))
     meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True)

@@ -105,7 +105,7 @@ def test_product_model(db):
         percentage=10,
         weight=2,
     )
-    organic = m.Label(name='EU organic')
+    organic = m.Label(name={'en': 'EU organic'})
     billa = m.Store(name='Billa')
     brand = m.Brand(name='BestBio')
     producer = m.Producer(name='Raw Organic Cookie Factory')
@@ -149,7 +149,7 @@ def test_product_model(db):
 def test_resource_model(db):
     resource = m.Resource(name='Cocoa')
     origin = m.Origin(name='Ghana')
-    label = m.Label(name='Fairtrade')
+    label = m.Label(name={'en': 'Fairtrade'})
     supplier = m.Supplier(name='XY')
     product = m.Product(name='Chocolate', labels=[label])
     ingredient = m.Ingredient(
@@ -186,7 +186,7 @@ def test_retailer_model(db):
     m.Store(name='Billa', retailer=retailer)
     m.Store(name='Penny', retailer=retailer)
     m.Brand(name='Clever', retailer=retailer)
-    m.Label(name='BEPI', type='retailer', retailers=[retailer])
+    m.Label(name={'en': 'BEPI'}, type='retailer', retailers=[retailer])
 
     criterion_1_assoc = m.RetailerMeetsCriterion(satisfied=False, explanation='Nope.')
     criterion_1_assoc.criterion = m.Criterion(name='Saves the world', type='retailer')
@@ -210,7 +210,7 @@ def test_retailer_model(db):
     assert retailer.meets_criteria[0].explanation == 'Nope.'
     assert retailer.meets_criteria[0].criterion.name == 'Saves the world'
     assert retailer.meets_criteria[0].criterion.type == 'retailer'
-    assert retailer.labels[0].name == 'BEPI'
+    assert retailer.labels[0].name['en'] == 'BEPI'
 
 
 def test_score_model(db):

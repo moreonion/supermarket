@@ -254,87 +254,87 @@ class TestLabelApiFilteringAndSorting:
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'A',
+                'name': {'en': 'A'},
             }),
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'A'
+        assert res.json['name']['en'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'B',
+                'name': {'en': 'B'},
             }),
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'B'
+        assert res.json['name']['en'] == 'B'
 
     def test_reverse_sort_by_name(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', sort='-name')
+            url_for(api.ResourceList, type='labels', sort='-name.en')
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 2
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
-        assert res.json['items'][1]['name'] == 'A'
+        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][1]['name']['en'] == 'A'
 
     def test_filter_by_name(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', name='B')
+            url_for(api.ResourceList, type='labels', **{'name.en': 'B'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_greater_than_name(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:gt': 'A'})
+            url_for(api.ResourceList, type='labels', **{'name.en:gt': 'A'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_greater_or_equal_name(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:ge': 'B'})
+            url_for(api.ResourceList, type='labels', **{'name.en:ge': 'B'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_name_in(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:in': 'B,C'})
+            url_for(api.ResourceList, type='labels', **{'name.en:in': 'B,C'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en']== 'B'
 
     def test_filter_name_like(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:like': 'B'})
+            url_for(api.ResourceList, type='labels', **{'name.en:like': 'B'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_not_name(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:ne': 'A'})
+            url_for(api.ResourceList, type='labels', **{'name.en:ne': 'A'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_reverse_sort_unknown_field(self):
         res = self.client.get(
@@ -360,12 +360,12 @@ class TestLabelApiFilteringAndSorting:
 
     def test_filter_unknown_operator(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:xy': 'A'})
+            url_for(api.ResourceList, type='labels', **{'name.en:xy': 'A'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 2
         assert len(res.json['errors']) == 1
-        assert res.json['errors'][0]['errors'][0]['param'] == 'name:xy'
+        assert res.json['errors'][0]['errors'][0]['param'] == 'name.en:xy'
         assert res.json['errors'][0]['errors'][0]['message'].startswith('Unknown operator `xy`')
 
     def test_filter_like_integer(self):

@@ -5,8 +5,8 @@ from pytest import raises
 
 def test_label_model(db):
     label = m.Label(
-        name='EU organic',
-        description='A cool label.',
+        name={'en': 'EU organic', 'de': 'EU Bio'},
+        description={'en': 'A cool label.', 'de': 'Ein cooles Label'},
         logo='some url',
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )
@@ -33,6 +33,8 @@ def test_label_model(db):
     assert product.id > 0
     assert len(label.meets_criteria) == 2
     assert len(label.resources) == 2
+    assert label.name['en'] == 'EU organic'
+    assert label.name['de'] == 'EU Bio'
     assert label.products[0].name == 'Organic vegan gluten-free cookies'
     assert label.meets_criteria[0].score is 1
     assert label.meets_criteria[0].explanation == 'Nope.'
@@ -43,9 +45,8 @@ def test_label_model(db):
     assert resource_2.labels[0] == label
 
 
-def test_label_model_empty_name(db):
+def test_label_model_no_name(db):
     label = m.Label(
-        name='',
         description='A cool label.',
         logo='some url',
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
@@ -59,14 +60,14 @@ def test_label_model_empty_name(db):
 
 def test_label_model_duplicate_name(db):
     label = m.Label(
-        name='A unique name',
-        description='A cool label.',
+        name={'en': 'A unique name'},
+        description={'en': 'A cool label.'},
         logo='some url',
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )
     label2 = m.Label(
-        name='A unique name',
-        description='A cool label.',
+        name={'en': 'A unique name'},
+        description={'en': 'A cool label.'},
         logo='some url',
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )

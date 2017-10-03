@@ -82,6 +82,7 @@ def import_example_data():
     with open(os.path.dirname(__file__) + '/csvs/Label-Info.csv') as csv_file:
         ltype = 'retailer'
         reader = csv.reader(csv_file)
+        lang = 'en'  # assuming everything is English for now
         # Skip the header lines.
         for i in range(4):
             next(reader)
@@ -94,8 +95,8 @@ def import_example_data():
             credibility, environment, social = row[18], row[19], row[20]
             l = Label(
                 type=ltype,
-                name=name,
-                description=description,
+                name={lang: name},
+                description={lang: description},
                 countries=label_countries,
                 details=dict(score=dict(
                     credibility=score_map[credibility],
@@ -266,7 +267,7 @@ def import_example_data():
                 weight += 1
 
     # Product labels
-    labels = {l.name: l for l in Label.query.all()}
+    labels = {l.name['en']: l for l in Label.query.all()}
     print(list(labels.keys()))
     with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
         next(csv_file)  # Skip header line.
