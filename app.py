@@ -15,6 +15,6 @@ def _make_shell_context():
 # Custom commands
 
 @app.cli.command()
-def fixture_example_data(coverage):
+def fixture_example_data():
     """Reset database and import example data from fixtures."""
     import_example_data()
