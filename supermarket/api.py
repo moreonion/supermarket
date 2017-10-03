@@ -119,6 +119,9 @@ class GenericResource:
             attr = None
         elif isinstance(attr.type, m.JSONB) and keys:
             attr = attr[keys].astext
+        elif isinstance(attr.type, m.Translation) and hasattr(self, 'language') and self.language:
+            keys.append(self.language)
+            attr = attr[keys].astext
         elif keys:  # not a perfect match after all
             attr = None
 
@@ -336,10 +339,10 @@ class GenericResource:
         r = self.model.query.get_or_404(id)
         errors = []
         query = self.model.query
-        args = request.args.copy()
-        only = self._sanitize_only(args.pop('only', None))
-        include = args.pop('include', '')
+        only = self._sanitize_only(request.args.get('only', None))
         schema = self.schema(only=only)
+        schema.context['lang'] = request.args.get('lang', None)
+        include = request.args.get('include', '')
         if include:
             schema.context['include'] = self._parse_include_params(query, include, errors)
 
@@ -397,6 +400,8 @@ class GenericResource:
         sort = args.pop('sort', None)
         include = args.pop('include', '')
         only = self._sanitize_only(args.pop('only', None))
+        lang = args.pop('lang', None)
+        self.language = lang
         errors = []
 
         # get data from model
@@ -405,6 +410,7 @@ class GenericResource:
         query = self._filter(query, args, errors)
         page = query.paginate(page=page, per_page=limit)
         schema = self.schema(many=True, only=only)
+        schema.context['lang'] = lang
         if include:
             schema.context['include'] = self._parse_include_params(query, include, errors)
 

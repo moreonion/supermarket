@@ -248,17 +248,37 @@ class TestProductApiValidation:
 
 
 @pytest.mark.usefixtures('client_class', 'db')
-class TestLabelTranslations:
+class TestLabelApiTranslations:
     def test_post(self):
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
-                'name': {'en': 'A label'}
+                'name': {'en': 'A label', 'de': 'Ein Label'}
             }),
             content_type='application/json')
+        print(res.json)
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['name']['en'] == 'A label'
+        assert res.json['name']['de'] == 'Ein Label'
+
+    def test_get_item_with_lang(self):
+        res = self.client.get(url_for(api.ResourceItem, type='labels', lang='en', id=1))
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'A label'
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', lang='de', id=1))
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'Ein Label'
+
+    def test_get_list_with_lang(self):
+        res = self.client.get(url_for(api.ResourceList, type='labels', lang='en'))
+        assert res.status_code == 200
+        assert res.json['items'][0]['name'] == 'A label'
+
+        res = self.client.get(url_for(api.ResourceList, type='labels', lang='de'))
+        assert res.status_code == 200
+        assert res.json['items'][0]['name'] == 'Ein Label'
 
     def test_post_wrong_lang(self):
         res = self.client.post(
@@ -309,6 +329,70 @@ class TestLabelApiFilteringAndSorting:
         )
         assert res.status_code == 201
         assert res.json['name']['en'] == 'B'
+
+    def test_reverse_sort_by_name_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', sort='-name')
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 2
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][1]['name'] == 'A'
+
+    def test_filter_by_name_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', name='B')
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_greater_than_name_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:gt': 'A'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_greater_or_equal_name_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:ge': 'B'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_name_in_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:in': 'B,C'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_name_like_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:like': 'B'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_not_name_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:ne': 'A'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
 
     def test_reverse_sort_by_name(self):
         res = self.client.get(

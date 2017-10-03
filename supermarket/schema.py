@@ -26,6 +26,7 @@ class Nested(ma.Nested):
     def _deserialize(self, value, attr, data):
         if self.many and not utils.is_collection(value):
             self.fail('type', input=value, type=value.__class__.__name__)
+        self.schema.context.update(self.parent.context)
         session = self.parent.session
         data, errors = self.schema.load(value, session=session)
         if errors:
@@ -241,6 +242,20 @@ class CustomSchema(ma.ModelSchema):
                 'Invalid language ({}).'.format(', '.join(set(errors.values()))), errors.keys())
 
     @post_dump(pass_many=False)
+    def filter_translations_by_language(self, data):
+        """Replace translations with the data of the specified language."""
+        if 'lang' not in self.context or not self.context['lang']:
+            return data
+        lang = self.context['lang']
+        for field in self.translated_fields:
+            if field in data and data[field]:
+                if lang in data[field]:
+                    data[field] = data[field][lang]
+                else:
+                    data[field] = data[field].pop()  # TODO: think of a better fallback
+        return data
+
+    @post_dump(pass_many=False)
     def load_queried_nested_fields(self, data):
         """Injects nested fields requested in `include` into the JSON dump.
 
@@ -262,6 +277,7 @@ class CustomSchema(ma.ModelSchema):
                 query = model.query.get(data[key])
                 many = False
             s = v['resource'].schema(many=many, only=v['only'])
+            s.context['lang'] = self.context['lang'] if 'lang' in self.context else None
             data[key] = s.dump(query).data
 
     @post_load
