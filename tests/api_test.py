@@ -158,7 +158,7 @@ class TestLabelApiRelations:
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
-                'name': 'A label',
+                'name': {'en': 'A label'},
                 'meets_criteria': [{
                     'criterion': {'name': 'A criterion'},
                     'score': '2'
@@ -167,7 +167,7 @@ class TestLabelApiRelations:
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 1
-        assert res.json['name'] == 'A label'
+        assert res.json['name']['en'] == 'A label'
         assert res.json['meets_criteria'][0]['criterion'] == 1
         assert res.json['meets_criteria'][0]['score'] == 2
 
@@ -245,6 +245,44 @@ class TestProductApiValidation:
         assert res.mimetype == 'application/json'
         assert res.json['errors'][0]['field'] == 'brand'
         assert res.json['errors'][0]['messages'][0] == 'There is no brand with id 1.'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
+class TestLabelTranslations:
+    def test_post(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'name': {'en': 'A label'}
+            }),
+            content_type='application/json')
+        assert res.status_code == 201
+        assert res.mimetype == 'application/json'
+        assert res.json['name']['en'] == 'A label'
+
+    def test_post_wrong_lang(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'name': {'at': 'A label'}
+            }),
+            content_type='application/json')
+        assert res.status_code == 400
+        assert res.mimetype == 'application/json'
+        assert res.json['errors'][0]['field'] == 'name'
+        assert res.json['errors'][0]['messages'][0] == 'Invalid language (at).'
+
+    def test_post_string(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'name': 'A label'
+            }),
+            content_type='application/json')
+        assert res.status_code == 400
+        assert res.mimetype == 'application/json'
+        assert res.json['errors'][0]['field'] == 'name'
+        assert res.json['errors'][0]['messages'][0] == 'No language specified.'
 
 
 @pytest.mark.usefixtures('client_class', 'db')
@@ -386,23 +424,23 @@ class TestLabelApiPagination:
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'A',
+                'name': {'en': 'A'},
             }),
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'A'
+        assert res.json['name']['en'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'B',
+                'name': {'en': 'B'},
             }),
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'B'
+        assert res.json['name']['en'] == 'B'
 
     def test_one_page(self):
         res = self.client.get(
