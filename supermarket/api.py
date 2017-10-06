@@ -108,19 +108,19 @@ class GenericResource:
             field = keys.pop(0) if keys else inspect(model).primary_key[0].name
             schema = schema()
 
-        if field in schema.related_fields + schema.related_lists:
+        if field in schema.related_fields + schema.related_lists + schema.translated_fields:
             relation = getattr(model, field)
             query = query.outerjoin(relation)
             model = relation.property.mapper.class_
-            field = keys.pop(0) if keys else inspect(model).primary_key[0].name
+            if field in schema.translated_fields:
+                field = 'value'
+            else:
+                field = keys.pop(0) if keys else inspect(model).primary_key[0].name
 
         attr = getattr(model, field, None)
         if not hasattr(attr, 'type'):  # not a proper column
             attr = None
         elif isinstance(attr.type, m.JSONB) and keys:
-            attr = attr[keys].astext
-        elif isinstance(attr.type, m.Translation) and hasattr(self, 'language') and self.language:
-            keys.append(self.language)
             attr = attr[keys].astext
         elif keys:  # not a perfect match after all
             attr = None
@@ -131,14 +131,21 @@ class GenericResource:
 
         return (attr, query)
 
-    def _find_filter(self, field):
+    def _find_filter(self, query, field, op, value, lang):
         # Defines which filter method should be used for `field`.
         #
         # Allows child classes to add their own filters.
         #
         # :param str field      Name of the field to filter.
         #
-        return self._default_filter
+        if field in self.schema().translated_fields:
+            return self._translation_filter(query, field, op, value, lang)
+        return self._default_filter(query, field, op, value)
+
+    def _translation_filter(self, query, field, op, value, lang):
+        model = getattr(self.model, field).property.mapper.class_
+        query = query.filter(getattr(model, 'language') == lang)
+        return self._default_filter(query, field, op, value)
 
     def _default_filter(self, query, field, op, value):
         # Default filter method, filters `field` by `value` using `op`.
@@ -170,7 +177,7 @@ class GenericResource:
             query = query.filter(op(attr, value))
         return query
 
-    def _filter(self, query, filter_fields, errors):
+    def _filter(self, query, filter_fields, language, errors):
         # Go through `filter_fields` and apply a matching filter to the `query`.
         #
         # Adds any errors to `errors` and returns the filtered query.
@@ -183,9 +190,8 @@ class GenericResource:
         not_filtered = []
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
-            filter = self._find_filter(field)
             try:
-                query = filter(query, field, op, value)
+                query = self._find_filter(query, field, op, value, language)
             except ParamException as pe:
                 not_filtered.append({
                     'param': key,
@@ -265,7 +271,7 @@ class GenericResource:
         }
         return pages
 
-    def _parse_include_params(self, query, include_fields, errors):
+    def _parse_include_params(self, include_fields, errors):
         # Go through `include_fields` (fields that should be nested) and retrieve their schema.
         #
         # :params str include_fields   The raw parameter value: a comma seperated list of fields
@@ -300,7 +306,8 @@ class GenericResource:
                 fields = ['all']
             # get attr of related field
             try:
-                attr = self._field_to_attr(relation, query)[0]  # no need to update the query
+                # query isn’t needed, using dummy query to get at attr
+                attr = self._field_to_attr(relation, self.model.query)[0]
             except ParamException as e:
                 for f in fields:
                     not_included.append({
@@ -338,13 +345,13 @@ class GenericResource:
         """Get an item of ‘type’ by ‘ID’."""
         r = self.model.query.get_or_404(id)
         errors = []
-        query = self.model.query
-        only = self._sanitize_only(request.args.get('only', None))
-        schema = self.schema(only=only)
-        schema.context['lang'] = request.args.get('lang', None)
-        include = request.args.get('include', '')
+        args = request.args.copy()
+        only = self._sanitize_only(args.pop('only', None))
+        include = args.pop('include', '')
+        lang = args.pop('lang', None)
+        schema = self.schema(lang=lang, only=only)
         if include:
-            schema.context['include'] = self._parse_include_params(query, include, errors)
+            schema.context['include'] = self._parse_include_params(include, errors)
 
         return {
             'item': schema.dump(r).data,
@@ -354,23 +361,29 @@ class GenericResource:
     def patch_item(self, id):
         """Update an existing item with new data."""
         r = self.model.query.get_or_404(id)
-        data = self.schema().load(request.get_json(), partial=True,
-                                  session=m.db.session, instance=r)
+        lang = request.args.get('lang', None)
+        schema = self.schema(lang=lang)
+
+        data = schema.load(request.get_json(), partial=True,
+                           session=m.db.session, instance=r)
         if data.errors:
             raise ValidationFailed(data.errors)
         m.db.session.commit()
-        return self.schema().dump(r).data, 201
+        return schema.dump(r).data, 201
 
     def put_item(self, id):
         """Add a new item if the ID doesn’t exist, or replace the existing one."""
-        data = self.schema().load(request.get_json(), session=m.db.session)
+        lang = request.args.get('lang', None)
+        schema = self.schema(lang=lang)
+
+        data = schema.load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
         setattr(r, inspect(self.model).primary_key[0].name, id)
         m.db.session.merge(r)
         m.db.session.commit()
-        return self.schema().dump(r).data, 201
+        return schema.dump(r).data, 201
 
     def delete_item(self, id):
         """Delete an item of ‘type’ by its ID."""
@@ -383,6 +396,7 @@ class GenericResource:
         """Get a paged list containing all items of type ‘type’.
 
         It's possible to amend the list with query parameters:
+        - lang: language for translated content (default 'en')
         - limit: maximum number of items per page (default 20)
         - page: which page to display (default 1)
         - only: comma seperated field names to return in the result (includes all fields if empty).
@@ -399,20 +413,20 @@ class GenericResource:
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', None)
         include = args.pop('include', '')
-        only = self._sanitize_only(args.pop('only', None))
         lang = args.pop('lang', None)
-        self.language = lang
+        only = self._sanitize_only(args.pop('only', None))
         errors = []
+
+        # make schema
+        schema = self.schema(many=True, lang=lang, only=only)
+        if include:
+            schema.context['include'] = self._parse_include_params(include, errors)
 
         # get data from model
         query = self.model.query
         query = self._sort(query, sort, errors)
-        query = self._filter(query, args, errors)
+        query = self._filter(query, args, schema.language, errors)
         page = query.paginate(page=page, per_page=limit)
-        schema = self.schema(many=True, only=only)
-        schema.context['lang'] = lang
-        if include:
-            schema.context['include'] = self._parse_include_params(query, include, errors)
 
         return {
             'items': schema.dump(page.items).data,
@@ -422,13 +436,16 @@ class GenericResource:
 
     def post_to_list(self):
         """Add a new item of type ‘type’."""
-        data = self.schema().load(request.get_json(), session=m.db.session)
+        lang = request.args.get('lang', None)
+        schema = self.schema(lang=lang)
+
+        data = schema.load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
         m.db.session.add(r)
         m.db.session.commit()
-        return self.schema().dump(r).data, 201
+        return schema.dump(r).data, 201
 
     def get_doc(self):
         """Get documentation for type ‘type’."""
@@ -439,13 +456,13 @@ class LabelResource(GenericResource):
 
     """Has additional label specifc filters and include options."""
 
-    def _find_filter(self, field):
+    def _find_filter(self, query, field, op, value, lang):
         if field == 'hotspots':
-            filter = self._hotspot_filter
+            filter = self._hotspot_filter(query, field, op, value)
         elif field == 'countries':
-            filter = self._country_filter
+            filter = self._country_filter(query, field, op, value)
         else:
-            filter = super()._find_filter(field)
+            filter = super()._find_filter(query, field, op, value, lang)
         return filter
 
     def _hotspot_filter(self, query, field, op, value):
@@ -470,7 +487,7 @@ class LabelResource(GenericResource):
         query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
         return query
 
-    def _parse_include_params(self, query, include_fields, errors):
+    def _parse_include_params(self, include_fields, errors):
         # include hotspots, too
         include_raw = include_fields.split(',')
         hotspot_fields = []
@@ -503,7 +520,7 @@ class LabelResource(GenericResource):
             if not only:
                 only = None
 
-        included = super()._parse_include_params(query, ','.join(super_fields), errors)
+        included = super(LabelResource, self)._parse_include_params(','.join(super_fields), errors)
         if only is not None:
             included['hotspots'] = {'resource': resource, 'only': only}
 

@@ -1,4 +1,5 @@
 import pytest
+import json
 
 import supermarket.model as m
 from supermarket import App
@@ -43,6 +44,53 @@ def example_data_brands(request, app, db):
         brand = m.Brand(name='Clever', retailer=retailer, products=[p1])
         db.session.add(p2)
         db.session.add(brand)
+        db.session.commit()
+
+
+@pytest.fixture(scope='class')
+def example_data_label_guide(request, app, db):
+    with app.app_context():
+        print('\nSetting up example data for label guide use cases for {} {}'.format(
+            id(db), db))
+
+        l1 = m.Label(name=json.dumps({"en": "English and German",
+                                      "de": "Englisch und Deutsch"}))
+        l2 = m.Label(name=json.dumps({"en": "English only"}))
+        l3 = m.Label(name=json.dumps({"de": "Nur Deutsch"}))
+
+        crit1 = m.Criterion(name='Multilingual')
+        crit2 = m.Criterion(name='Understandable')
+        crit3 = m.Criterion(name='Ignorant')
+
+        l1_m_c1 = m.LabelMeetsCriterion(
+            label=l1,
+            criterion=crit1,
+            explanation=json.dumps({"en": "The label is both English and German.",
+                                    "de": "Das Label ist sowohl Deutsch, als auch Englisch."}),
+            score=100
+        )
+        l2_m_c2 = m.LabelMeetsCriterion(
+            label=l2,
+            criterion=crit2,
+            explanation=json.dumps({
+                "en": "The label is at least in English, so a lot of people will understand it."
+            }),
+            score=50
+        )
+        l3_m_c3 = m.LabelMeetsCriterion(
+            label=l3,
+            criterion=crit3,
+            explanation=json.dumps({
+                "de": "Alles nur Deutsch."
+            }),
+            score=100
+        )
+
+        l1.meets_criteria = [l1_m_c1]
+        l2.meets_criteria = [l2_m_c2]
+        l3.meets_criteria = [l3_m_c3]
+
+        db.session.add_all([l1, l2, l3])
         db.session.commit()
 
 
