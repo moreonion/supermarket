@@ -26,6 +26,10 @@ class Nested(ma.Nested):
 
     """
 
+    def _serialize(self, value, attr, obj):
+        self.schema.language = self.parent.language
+        return super()._serialize(value, attr, obj)
+
     def _deserialize(self, value, attr, data):
         if self.many and not utils.is_collection(value):
             self.fail('type', input=value, type=value.__class__.__name__)
@@ -546,6 +550,7 @@ class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
     name = Translated(attribute='name')
+    description = Translated(attribute='description')
     meets_criteria = Nested('LabelMeetsCriterion', exclude=['label'], many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 

@@ -54,9 +54,13 @@ def example_data_label_guide(request, app, db):
             id(db), db))
 
         l1 = m.Label(name=json.dumps({"en": "English and German",
-                                      "de": "Englisch und Deutsch"}))
-        l2 = m.Label(name=json.dumps({"en": "English only"}))
-        l3 = m.Label(name=json.dumps({"de": "Nur Deutsch"}))
+                                      "de": "Englisch und Deutsch"}),
+                     description=json.dumps({"en": "English description",
+                                             "de": "Deutsche Beschreibung"}))
+        l2 = m.Label(name=json.dumps({"en": "English only"}),
+                     description=json.dumps({"en": "English description only"}))
+        l3 = m.Label(name=json.dumps({"de": "Nur Deutsch"}),
+                     description=json.dumps({"de": "Nur eine deutsche Beschreibung"}))
 
         crit1 = m.Criterion(name='Multilingual')
         crit2 = m.Criterion(name='Understandable')

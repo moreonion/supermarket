@@ -1,26 +1,254 @@
+import json
 import pytest
 import supermarket.api as api
 
 url_for = api.api.url_for
 
 
+class Util:
+    # Label #1: English & German
+    lbl1_name = 'English and German'
+    lbl1_name_de = 'Englisch und Deutsch'
+    lbl1_description = 'English description'
+    lbl1_description_de = 'Deutsche Beschreibung'
+    # Label #2: English only
+    lbl2_name = 'English only'
+    lbl2_description = 'English description only'
+    # Label #3: German only
+    lbl3_name = 'Nur Deutsch'
+    lbl3_description = 'Nur eine deutsche Beschreibung'
+    # Criterion #1: Label #1
+    crit1_explanation = 'The label is both English and German.'
+    crit1_explanation_de = 'Das Label ist sowohl Deutsch, als auch Englisch.'
+    # Criterion #2: Label #2
+    crit2_explanation = 'The label is at least in English, so a lot of people will understand it.'
+    # Criterion #3: Label #3
+    crit3_explanation = 'Alles nur Deutsch.'
+
+    # A label for POST testing
+    lbl4_name = 'A posted label'
+    lbl4_name_de = 'Ein gepostetes Label'
+    lbl4_description = 'This label was posted to the ResourceList!'
+    lbl4_description_de = 'Dieses Label wurde auf die ResourceList gepostet!'
+
+    # A label for PUT testing
+    lbl5_name = 'A putted label'
+    lbl5_name_de = 'Ein geputtetes Label'
+    lbl5_description = 'This label was put on another one!'
+    lbl5_description_de = 'Dieses Label wurde auf ein anderes geputtet!'
+
+    # A label for PATCH testing
+    lbl6_name = 'A patched label'
+    lbl6_name_de = 'Ein gepachtes Label'
+    lbl6_description = 'This label has been patched!'
+    lbl6_description_de = 'Dieses Label wurde gepatcht!'
+
+
+@pytest.mark.usefixtures('client_class', 'db', 'example_data_label_guide')
+class TestLabels:
+    """Tests all HTTP verbs of the Label schema. GET is already implemented
+    in TestLabelGuideUseCases"""
+    def test_post_to_list(self):
+        res = self.client.post(url_for(api.ResourceList, type='labels'),
+                               data=json.dumps(
+                                   {"name": {"en": Util.lbl4_name,
+                                             "de": Util.lbl4_name_de},
+                                    "description": {
+                                        "en": Util.lbl4_description,
+                                        "de": Util.lbl4_description_de},
+                                    "meets_criteria": [{"criterion": 1}],
+                                    }),
+                               content_type='application/json')
+
+        assert res.status_code == 201
+        assert res.json['name'] == Util.lbl4_name
+        assert res.json['description'] == Util.lbl4_description
+        id = res.json['id']
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=id))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl4_name
+        assert res.json['item']['description'] == Util.lbl4_description
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=id, lang='de'))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl4_name_de
+        assert res.json['item']['description'] == Util.lbl4_description_de
+
+        # What's our return value if we don't post an English value?
+        res = self.client.post(url_for(api.ResourceList, type='labels'),
+                               data=json.dumps(
+                                   {"name": {"de": Util.lbl4_name_de},
+                                    "description": {"de": Util.lbl4_description_de},
+                                    "meets_criteria": [{"criterion": 3}],
+                                    }),
+                               content_type='application/json')
+
+        assert res.status_code == 201
+        assert res.json['name'] == Util.lbl4_name_de
+        assert res.json['description'] == Util.lbl4_description_de
+
+    def test_put_item(self):
+        # Replace first label's data with new data
+        res = self.client.put(url_for(api.ResourceItem, type='labels', id=1),
+                              data=json.dumps(
+                                  {"name": {"en": Util.lbl5_name,
+                                            "de": Util.lbl5_name_de},
+                                   "description": {
+                                       "en": Util.lbl5_description,
+                                       "de": Util.lbl5_description_de},
+                                   "meets_criteria": [{"criterion": 1}],
+                                   }),
+                              content_type='application/json')
+
+        assert res.status_code == 201
+        assert res.json['name'] == Util.lbl5_name
+        assert res.json['description'] == Util.lbl5_description
+        assert res.json['meets_criteria'][0]['criterion'] == 1
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl5_name
+        assert res.json['item']['description'] == Util.lbl5_description
+        assert res.json['item']['meets_criteria'][0]['criterion'] == 1
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=1, lang='de'))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl5_name_de
+        assert res.json['item']['description'] == Util.lbl5_description_de
+        assert res.json['item']['meets_criteria'][0]['criterion'] == 1
+
+    def test_patch_item(self):
+        # Update the German only label's data by adding English values
+        res = self.client.patch(url_for(api.ResourceItem, type='labels', id=3),
+                                data=json.dumps(
+                                    {"name": {"en": Util.lbl6_name},
+                                     "description": {"en": Util.lbl6_description},
+                                     "meets_criteria": [{"criterion": 1}]}),
+                                content_type='application/json'
+                                )
+
+        assert res.status_code == 201
+        assert res.json['name'] == Util.lbl6_name
+        assert res.json['description'] == Util.lbl6_description
+        assert res.json['meets_criteria'][0]['criterion'] == 1
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=3))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl6_name
+        assert res.json['item']['description'] == Util.lbl6_description
+        assert res.json['item']['meets_criteria'][0]['criterion'] == 1
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=3, lang='de'))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl3_name
+        assert res.json['item']['description'] == Util.lbl3_description
+        assert res.json['item']['meets_criteria'][0]['criterion'] == 1
+
+        # Update the English values of the German & English label
+        res = self.client.patch(url_for(api.ResourceItem, type='labels', id=1),
+                                data=json.dumps(
+                                    {"name": {"en": Util.lbl6_name},
+                                     "description": {"en": Util.lbl6_description}}),
+                                content_type='application/json')
+
+        assert res.status_code == 201
+        assert res.json['name'] == Util.lbl6_name
+        assert res.json['description'] == Util.lbl6_description
+
+    def test_delete_item(self):
+        # Delete a whole item
+        res = self.client.delete(url_for(api.ResourceItem, type='labels', id=1))
+        assert res.status_code == 204
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
+        assert res.status_code == 404
+
+
 @pytest.mark.usefixtures('client_class', 'db', 'example_data_label_guide')
 class TestLabelGuideUseCases:
+    """Tests the label guide use cases, i.e.: GET /labels, GET/label?id=X"""
     def test_get_from_list(self):
+        # Test default
         res = self.client.get(url_for(api.ResourceList, type='labels'))
 
         assert res.status_code == 200
 
-        assert res.json['items'][0]['name'] == 'English and German'
-        assert res.json['items'][1]['name'] == 'English only'
-        assert res.json['items'][2]['name'] == 'Nur Deutsch'
+        assert res.json['items'][0]['name'] == Util.lbl1_name
+        assert res.json['items'][0]['description'] == Util.lbl1_description
+        assert res.json['items'][1]['name'] == Util.lbl2_name
+        assert res.json['items'][1]['description'] == Util.lbl2_description
+        assert res.json['items'][2]['name'] == Util.lbl3_name
+        assert res.json['items'][2]['description'] == Util.lbl3_description
+
+        assert res.json['items'][0]['meets_criteria'][0]['explanation'] == Util.crit1_explanation
+        assert res.json['items'][1]['meets_criteria'][0]['explanation'] == Util.crit2_explanation
+        assert res.json['items'][2]['meets_criteria'][0]['explanation'] == Util.crit3_explanation
+
+        # Test German (data without German translation should revert to English)
+        res = self.client.get(url_for(api.ResourceList, type='labels', lang='de'))
+
+        assert res.status_code == 200
+
+        assert res.json['items'][0]['name'] == Util.lbl1_name_de
+        assert res.json['items'][0]['description'] == Util.lbl1_description_de
+        assert res.json['items'][1]['name'] == Util.lbl2_name
+        assert res.json['items'][1]['description'] == Util.lbl2_description
+        assert res.json['items'][2]['name'] == Util.lbl3_name
+        assert res.json['items'][2]['description'] == Util.lbl3_description
 
         assert res.json['items'][0]['meets_criteria'][0]['explanation'] == (
-            'The label is both English and German.')
-        assert res.json['items'][1]['meets_criteria'][0]['explanation'] == (
-            'The label is at least in English, so a lot of people will understand it.')
-        assert res.json['items'][2]['meets_criteria'][0]['explanation'] == (
-            'Alles nur Deutsch.')
+            Util.crit1_explanation_de)
+        assert res.json['items'][1]['meets_criteria'][0]['explanation'] == Util.crit2_explanation
+        assert res.json['items'][2]['meets_criteria'][0]['explanation'] == Util.crit3_explanation
+
+        # Test Italian (no data, should revert to default)
+        res = self.client.get(url_for(api.ResourceList, type='labels', lang='it'))
+
+        assert res.status_code == 200
+
+        assert res.json['items'][0]['name'] == Util.lbl1_name
+        assert res.json['items'][0]['description'] == Util.lbl1_description
+        assert res.json['items'][1]['name'] == Util.lbl2_name
+        assert res.json['items'][1]['description'] == Util.lbl2_description
+        assert res.json['items'][2]['name'] == Util.lbl3_name
+        assert res.json['items'][2]['description'] == Util.lbl3_description
+
+        assert res.json['items'][0]['meets_criteria'][0]['explanation'] == Util.crit1_explanation
+        assert res.json['items'][1]['meets_criteria'][0]['explanation'] == Util.crit2_explanation
+        assert res.json['items'][2]['meets_criteria'][0]['explanation'] == Util.crit3_explanation
+
+    def test_get_single_item(self):
+        # Test default
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl1_name
+        assert res.json['item']['description'] == Util.lbl1_description
+        assert res.json['item']['meets_criteria'][0]['explanation'] == Util.crit1_explanation
+
+        # Test German
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=1, lang='de'))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl1_name_de
+        assert res.json['item']['description'] == Util.lbl1_description_de
+        assert res.json['item']['meets_criteria'][0]['explanation'] == Util.crit1_explanation_de
+
+        # Test Italian (no data, should revert to English)
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=1, lang='it'))
+
+        assert res.status_code == 200
+        assert res.json['item']['name'] == Util.lbl1_name
+        assert res.json['item']['description'] == Util.lbl1_description
+        assert res.json['item']['meets_criteria'][0]['explanation'] == Util.crit1_explanation
+
 
 # class TestLabelGuideUseCases:
 #     def test_labels(self):

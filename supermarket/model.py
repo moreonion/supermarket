@@ -196,7 +196,8 @@ class Label(db.Model):
     description = db.Column(Translation)
     details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(db.String(256))
-    meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True)
+    meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True,
+                                     cascade='all, delete-orphan')
     resources = db.relationship(
         'Resource', secondary=labels_resources,
         lazy='subquery', backref=db.backref('labels', lazy=True)

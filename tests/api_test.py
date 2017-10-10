@@ -438,7 +438,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name']['en']== 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_name_like(self):
         res = self.client.get(
