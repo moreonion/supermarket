@@ -260,6 +260,8 @@ class CustomSchema(ma.ModelSchema):
         lang = self.language
         for field in self.translated_fields:
             if field in data and data[field]:
+                if not isinstance(data[field], dict):
+                    raise ValidationError('No language specified', field)
                 if lang in data[field]:
                     data[field] = data[field][lang]
                 elif self.default_language in data[field]:
@@ -399,7 +401,7 @@ class CriterionCategory(CustomSchema):
     category = Nested('CriterionCategory', only=('id', 'name'))
 
     class Meta(CustomSchema.Meta):
-        model = m.Criterion
+        model = m.CriterionCategory
 
 
 class CriterionImprovesHotspot(CustomSchema):

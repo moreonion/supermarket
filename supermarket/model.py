@@ -100,8 +100,8 @@ class Criterion(db.Model):
     __tablename__ = 'criteria'
     id = db.Column(db.Integer(), primary_key=True)
     type = db.Column(db.Enum('label', 'retailer', name='criterion_type'))
-    name = db.Column(db.String(128))
-    details = db.Column(JSONB)  # details holds question, measures
+    name = db.Column(Translation)
+    details = db.Column(Translation)  # details holds question, measures
     improves_hotspots = db.relationship(
         'CriterionImprovesHotspot', backref=db.backref('criterion'))
     category_id = db.Column(db.ForeignKey('criterion_category.id'))
@@ -119,7 +119,7 @@ class CriterionCategory(db.Model):
 
     __tablename__ = 'criterion_category'
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(128))
+    name = db.Column(Translation)
     parent_id = db.Column(db.ForeignKey('criterion_category.id'))
     subcategories = db.relationship(
         'CriterionCategory', backref=db.backref('category', remote_side=[id]))
@@ -140,7 +140,7 @@ class CriterionImprovesHotspot(db.Model):
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
     hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
     weight = db.Column(db.SmallInteger)
-    explanation = db.Column(db.Text)
+    explanation = db.Column(Translation)
     hotspot = db.relationship('Hotspot', lazy=True)
     # criterion – backref from Criterion
 
@@ -151,8 +151,8 @@ class Hotspot(db.Model):
 
     __tablename__ = 'hotspots'
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(64))
-    description = db.Column(db.Text)
+    name = db.Column(Translation)
+    description = db.Column(Translation)
     # scores – backref from Score
 
 
@@ -171,11 +171,12 @@ class Ingredient(db.Model):
     resource_id = db.Column(db.ForeignKey('resources.id'), nullable=True)
     origin_id = db.Column(db.ForeignKey('origins.id'), nullable=True)
     supplier_id = db.Column(db.ForeignKey('suppliers.id'), nullable=True)
-    product = db.relationship('Product', lazy=True, backref=db.backref('ingredients', lazy=True))
+    product = db.relationship('Product', lazy=True, backref=db.backref(
+        'ingredients', lazy=True, cascade='all, delete-orphan'))
     resource = db.relationship('Resource', lazy=True, backref=db.backref('ingredients', lazy=True))
     origin = db.relationship('Origin', lazy=True, backref=db.backref('ingredients', lazy=True))
     supplier = db.relationship('Supplier', lazy=True, backref=db.backref('ingredients', lazy=True))
-    name = db.Column(db.String(256))
+    name = db.Column(Translation)
     percentage = db.Column(db.SmallInteger)
 
 
@@ -195,7 +196,7 @@ class Label(db.Model):
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
     description = db.Column(Translation)
     details = db.Column(JSONB)  # Holds overall score
-    logo = db.Column(db.String(256))
+    logo = db.Column(Translation)
     meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True,
                                      cascade='all, delete-orphan')
     resources = db.relationship(
@@ -244,7 +245,7 @@ class Origin(db.Model):
     __tablename__ = 'origins'
     id = db.Column(db.Integer(), primary_key=True)
     code = db.Column(db.String(2))
-    name = db.Column(db.String(64))
+    name = db.Column(Translation)
     # ingredients – backref from Ingredient
     # supplies – backref from Supply
 
@@ -271,8 +272,8 @@ class Product(db.Model):
 
     __tablename__ = 'products'
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(64))
-    details = db.Column(JSONB)  # holds image url, weight, price, currency
+    name = db.Column(Translation)
+    details = db.Column(Translation)  # holds image url, weight, price, currency
     gtin = db.Column(db.String(14))   # Global Trade Item Number
     brand_id = db.Column(db.ForeignKey('brands.id'))
     category_id = db.Column(db.ForeignKey('categories.id'))
@@ -297,7 +298,7 @@ class Resource(db.Model):
 
     __tablename__ = 'resources'
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(64))
+    name = db.Column(Translation)
     # ingredients – backref from Ingredient
     # labels – backref from Label
     # supplies – backref from Supply
@@ -350,11 +351,11 @@ class Score(db.Model):
     hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
     supply_id = db.Column(db.ForeignKey('supplies.id'), primary_key=True)
     score = db.Column(db.SmallInteger, nullable=False)
-    explanation = db.Column(db.Text)
+    explanation = db.Column(Translation)
     hotspot = db.relationship(
         'Hotspot', lazy=True, backref=db.backref('scores', lazy=True))
     supply = db.relationship(
-        'Supply', lazy=True, backref=db.backref('scores', lazy=True))
+        'Supply', lazy=True, backref=db.backref('scores', lazy=True, cascade='all, delete-orphan'))
 
 
 class Store(db.Model):

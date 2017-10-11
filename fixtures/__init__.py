@@ -120,25 +120,29 @@ def import_example_data():
             (category_name, subcategory_name, criterion_name) = (row[1], row[3], row[5])
             if criterion_name == 'Consumer communication: label':
                 continue  # criterion data in csv is incomplete
-            criterion = Criterion.query.filter_by(name=criterion_name).first()
+            criterion = Criterion.query.filter(
+                Criterion.name['en'].astext == criterion_name).first()
             if criterion is None:
-                subcategory = CriterionCategory.query.filter_by(name=subcategory_name).first()
+                subcategory = CriterionCategory.query.filter(
+                    CriterionCategory.name['en'].astext == subcategory_name).first()
                 if subcategory is None:
-                    category = CriterionCategory.query.filter_by(name=category_name).first()
+                    category = CriterionCategory.query.filter(
+                        CriterionCategory.name['en'].astext == category_name).first()
                     if category is None:
-                        category = CriterionCategory(name=category_name)
+                        category = CriterionCategory(name={'en': category_name})
                         db.session.add(category)
-                    subcategory = CriterionCategory(name=subcategory_name, category=category)
+                    subcategory = CriterionCategory(
+                        name={'en': subcategory_name}, category=category)
                     db.session.add(subcategory)
                 criterion = Criterion(
-                    name=criterion_name,
+                    name={'en': criterion_name},
                     category=subcategory,
-                    details={'question': row[6], 'measures': {}}
+                    details={'en': {'question': row[6], 'measures': {}}}
                 )
                 db.session.add(criterion)
                 criteria[row[4]] = criterion
             details = deepcopy(criterion.details)
-            details['measures'][int(row[9])] = row[8]
+            details['en']['measures'][int(row[9])] = row[8]
             criterion.details = details
             db.session.add(criterion)
 

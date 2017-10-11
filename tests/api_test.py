@@ -11,11 +11,13 @@ class TestProductApi:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Organic cookies',
+                'name': {'en': 'Organic cookies'},
                 'gtin': '99999999999999',
                 'details': {
-                    'price': '2,99',
-                    'currency': 'Euro'
+                    'en': {
+                        'price': '2,99',
+                        'currency': 'Euro'
+                    }
                 }
             }),
             content_type='application/json')
@@ -30,7 +32,7 @@ class TestProductApi:
         res = self.client.put(
             url_for(api.ResourceItem, type='products', id=2),
             data=json.dumps({
-                'name': 'Chocolate Ice Cream',
+                'name': {'en': 'Chocolate Ice Cream'},
                 'gtin': '11111111111111'
             }),
             content_type='application/json')
@@ -44,7 +46,7 @@ class TestProductApi:
     def test_put_existing(self):
         res = self.client.put(
             url_for(api.ResourceItem, type='products', id=2),
-            data=json.dumps({'name': 'Vanilla Ice Cream'}),
+            data=json.dumps({'name': {'en': 'Vanilla Ice Cream'}}),
             content_type='application/json')
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
@@ -104,7 +106,7 @@ class TestProductApiRelations:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Organic cookies',
+                'name': {'en': 'Organic cookies'},
                 'brand': {'name': 'Spar'}
             }),
             content_type='application/json')
@@ -122,7 +124,7 @@ class TestProductApiRelations:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Vanillia Ice Cream',
+                'name': {'en': 'Vanillia Ice Cream'},
                 'brand': 1
             }),
             content_type='application/json')
@@ -139,7 +141,7 @@ class TestProductApiRelations:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Fluffy Cake',
+                'name': {'en': 'Fluffy Cake'},
                 'brand': {'id': 1}
             }),
             content_type='application/json')
@@ -194,7 +196,7 @@ class TestProductApiValidation:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Organic cookies',
+                'name': {'en': 'Organic cookies'},
                 'gtin': '99999999999999'
             }),
             content_type='application/json')
@@ -208,7 +210,7 @@ class TestProductApiValidation:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'nonsense',
+                'name': {'en': 'nonsense'},
                 'foo': 'bar',
                 'gtin': 99999999999999
             }),
@@ -219,7 +221,7 @@ class TestProductApiValidation:
         res = self.client.put(
             url_for(api.ResourceItem, type='products', id=1),
             data=json.dumps({
-                'name': 'nonsense',
+                'name': {'en': 'nonsense'},
                 'foo': 'bar',
                 'gtin': 99999999999999
             }),
@@ -231,13 +233,14 @@ class TestProductApiValidation:
             url_for(api.ResourceItem, type='products', id=1),
             data=json.dumps({'gtin': 99999999999999, 'foo': 'bar'}),
             content_type='application/json')
+        print(res.json)
         self.assert_validation_failed(res)
 
     def test_post_bogus_relation(self):
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Organic cookies',
+                'name': {'en': 'Organic cookies'},
                 'brand': 1
             }),
             content_type='application/json')

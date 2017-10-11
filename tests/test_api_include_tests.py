@@ -171,6 +171,7 @@ class TestLabelQueryInclude:
             api.ResourceList, type='labels', include='meets_criteria.criterion.name')
         res = self.client.get(url)
 
+        print(res.json)
         assert res.status_code == 200
         assert (res.json['items'][0]['meets_criteria'][0]['criterion']['name'] ==
                 'The test improvement criterion')
