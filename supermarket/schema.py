@@ -1,14 +1,11 @@
 import pycountry
 
-import collections
-import json
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
 from marshmallow_sqlalchemy import fields as masqla_fields
 from marshmallow import (class_registry, post_dump, post_load, utils,
                          validates_schema, ValidationError)
-from marshmallow.fields import Field as ma_field
 from sqlalchemy.inspection import inspect
 
 import supermarket.model as m
@@ -129,98 +126,6 @@ class Hyperlinks(ma.Hyperlinks):
             return val
 
         return ma_rapply(self.schema, _url_val, key=attr, obj=obj)
-
-
-class Translated(ma_field):
-    def _select_fields_for_lang(self, fields, lang, default_lang='en'):
-        # Go through fields returning everything but values for fields
-        # in a different language (i.e. remove all translations to
-        # languages different from `lang`).
-        # The high amount of checks is necessary to cover the following:
-        #   * How do we know the field contains a translation?
-        #   * What if there is no translation in the default language?
-        selected = {}
-
-        if isinstance(fields, dict):
-            # If this is a dict, we go through all the keys
-            for k, v in fields.items():
-                selected[k] = self._select_fields_for_lang(v, lang)
-
-            return selected
-        elif isinstance(fields, list):
-            # If this is a list, it may contain translation items
-            if len(fields) > 0:
-                if isinstance(fields[0], dict):
-                    if 'lang' in fields[0].keys() and 'value' in fields[0].keys():
-                        # Found a translation list
-                        translation = fields[0]['value']  # Store first value found
-
-                        for elem in fields:
-                            if elem['lang'] == lang:
-                                # We found the wanted language, return it
-                                return elem['value']
-                            elif elem['lang'] == default_lang:
-                                # We found the default language, overwrite
-                                # first language found with this value
-                                translation = elem['value']
-
-                        return translation
-        return fields
-
-    def _update_translation_list(self, old, new):
-        # Update the translations in `old` with the values from `new`
-        old.extend(new)
-        unduplicate = {e['lang']: e['value'] for e in old}
-        updated = [{'lang': k, 'value': v} for k, v in unduplicate.items()]
-
-        return updated
-
-    def _recursive_update(self, old, new):
-        # Recursively updates the dictionary `old` with the values of
-        # dictionary `new`
-        for k, v in new.items():
-            if isinstance(v, collections.Mapping):
-                old[k] = self._recursive_update(old.get(k, {}), v)
-            elif isinstance(v, list):
-                if len(v) > 0 and isinstance(v[0], dict):
-                    if 'lang' in v[0].keys() and 'value' in v[0].keys():
-                        # We got a translation list
-                        old[k] = self._update_translation_list(old[k], new[k])
-            else:
-                old[k] = new[k]
-
-        return old
-
-    def _serialize(self, value, attr, obj):
-        if value is not None:
-            lang = self.parent.language
-            default_lang = self.parent.default_language
-            v = json.loads(value)
-
-            try:
-                selected = v[lang]
-            except KeyError:
-                try:
-                    selected = v[default_lang]
-                except KeyError:
-                    try:
-                        selected = next(iter(v.values()))
-                    except StopIteration:
-                        return None
-
-            return selected
-
-        return {}
-
-    def _deserialize(self, value, attr, data):
-        parent_instance = self.parent.instance or self.parent.get_instance(data)
-        if parent_instance is not None:
-            stored_json = json.loads(getattr(parent_instance, attr))
-            stored_json.update(value)
-        else:
-            stored_json = value
-
-        return json.dumps(stored_json)
 
 
 # Custom (overriden) base schema
@@ -352,15 +257,18 @@ class CustomSchema(ma.ModelSchema):
     @post_dump(pass_many=False)
     def filter_translations_by_language(self, data):
         """Replace translations with the data of the specified language."""
-        if 'lang' not in self.context or not self.context['lang']:
-            return data
-        lang = self.context['lang']
+        lang = self.language
         for field in self.translated_fields:
             if field in data and data[field]:
                 if lang in data[field]:
                     data[field] = data[field][lang]
+                elif self.default_language in data[field]:
+                    data[field] = data[field][self.default_language]
                 else:
-                    data[field] = data[field].pop()  # TODO: think of a better fallback
+                    try:
+                        data[field] = next(iter(data[field].values()))
+                    except StopIteration:
+                        data[field] = None
         return data
 
     @post_dump(pass_many=False)
@@ -549,8 +457,8 @@ class Ingredient(CustomSchema):
 class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
-    name = Translated(attribute='name')
-    description = Translated(attribute='description')
+    # name = Translated(attribute='name')
+    # description = Translated(attribute='description')
     meets_criteria = Nested('LabelMeetsCriterion', exclude=['label'], many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 
@@ -605,7 +513,7 @@ class LabelMeetsCriterion(CustomSchema):
     # primary key: label_id + criterion_id
     # score, explanation
     # refs: criterion, label
-    explanation = Translated(attribute='explanation')
+    # explanation = Translated(attribute='explanation')
 
     @property
     def schema_description(self):

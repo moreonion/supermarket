@@ -1,5 +1,4 @@
 import pytest
-import json
 
 import supermarket.model as m
 from supermarket import App
@@ -53,14 +52,14 @@ def example_data_label_guide(request, app, db):
         print('\nSetting up example data for label guide use cases for {} {}'.format(
             id(db), db))
 
-        l1 = m.Label(name=json.dumps({"en": "English and German",
-                                      "de": "Englisch und Deutsch"}),
-                     description=json.dumps({"en": "English description",
-                                             "de": "Deutsche Beschreibung"}))
-        l2 = m.Label(name=json.dumps({"en": "English only"}),
-                     description=json.dumps({"en": "English description only"}))
-        l3 = m.Label(name=json.dumps({"de": "Nur Deutsch"}),
-                     description=json.dumps({"de": "Nur eine deutsche Beschreibung"}))
+        l1 = m.Label(name={"en": "English and German",
+                           "de": "Englisch und Deutsch"},
+                     description={"en": "English description",
+                                  "de": "Deutsche Beschreibung"})
+        l2 = m.Label(name={"en": "English only"},
+                     description={"en": "English description only"})
+        l3 = m.Label(name={"de": "Nur Deutsch"},
+                     description={"de": "Nur eine deutsche Beschreibung"})
 
         crit1 = m.Criterion(name='Multilingual')
         crit2 = m.Criterion(name='Understandable')
@@ -69,24 +68,24 @@ def example_data_label_guide(request, app, db):
         l1_m_c1 = m.LabelMeetsCriterion(
             label=l1,
             criterion=crit1,
-            explanation=json.dumps({"en": "The label is both English and German.",
-                                    "de": "Das Label ist sowohl Deutsch, als auch Englisch."}),
+            explanation={"en": "The label is both English and German.",
+                         "de": "Das Label ist sowohl Deutsch, als auch Englisch."},
             score=100
         )
         l2_m_c2 = m.LabelMeetsCriterion(
             label=l2,
             criterion=crit2,
-            explanation=json.dumps({
+            explanation={
                 "en": "The label is at least in English, so a lot of people will understand it."
-            }),
+            },
             score=50
         )
         l3_m_c3 = m.LabelMeetsCriterion(
             label=l3,
             criterion=crit3,
-            explanation=json.dumps({
+            explanation={
                 "de": "Alles nur Deutsch."
-            }),
+            },
             score=100
         )
 
@@ -125,9 +124,9 @@ def example_data_labels(request, app, db):
             criteria=[crit]
         )
         lbl = m.Label(
-            name='Testlabel',
+            name={'en': 'Testlabel'},
             type='product',
-            description='For exceptional testing.',
+            description={'en': 'For exceptional testing.'},
             logo='beautiful_logo.png',
             resources=[r1, r2],
             countries=[lbl_country],
@@ -136,7 +135,7 @@ def example_data_labels(request, app, db):
             label=lbl,
             criterion=crit,
             score=100,
-            explanation='Does the label improve testing for all of us?'
+            explanation={'en': 'Does the label improve testing for all of us?'}
         )
 
         db.session.add(lbl)

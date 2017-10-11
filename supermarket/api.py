@@ -108,20 +108,19 @@ class GenericResource:
             field = keys.pop(0) if keys else inspect(model).primary_key[0].name
             schema = schema()
 
-        if field in schema.related_fields + schema.related_lists + schema.translated_fields:
+        if field in schema.related_fields + schema.related_lists:
             relation = getattr(model, field)
             query = query.outerjoin(relation)
             model = relation.property.mapper.class_
-            if field in schema.translated_fields:
-                field = 'value'
-            else:
-                field = keys.pop(0) if keys else inspect(model).primary_key[0].name
+            field = keys.pop(0) if keys else inspect(model).primary_key[0].name
 
         attr = getattr(model, field, None)
         if not hasattr(attr, 'type'):  # not a proper column
             attr = None
         elif isinstance(attr.type, m.JSONB) and keys:
             attr = attr[keys].astext
+        elif isinstance(attr.type, m.Translation) and schema.language:
+            attr = attr[schema.language].astext
         elif keys:  # not a perfect match after all
             attr = None
 
@@ -138,8 +137,6 @@ class GenericResource:
         #
         # :param str field      Name of the field to filter.
         #
-        if field in self.schema().translated_fields:
-            return self._translation_filter(query, field, op, value, lang)
         return self._default_filter(query, field, op, value)
 
     def _translation_filter(self, query, field, op, value, lang):

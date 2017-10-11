@@ -167,7 +167,7 @@ class TestLabelApiRelations:
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 1
-        assert res.json['name']['en'] == 'A label'
+        assert res.json['name'] == 'A label'
         assert res.json['meets_criteria'][0]['criterion'] == 1
         assert res.json['meets_criteria'][0]['score'] == 2
 
@@ -252,15 +252,16 @@ class TestLabelApiTranslations:
     def test_post(self):
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
-            data=json.dumps({
-                'name': {'en': 'A label', 'de': 'Ein Label'}
-            }),
+            data=json.dumps({"name": {"en": "A label", "de": "Ein Label"}}),
             content_type='application/json')
         print(res.json)
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
-        assert res.json['name']['en'] == 'A label'
-        assert res.json['name']['de'] == 'Ein Label'
+        assert res.json['name'] == 'A label'
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=res.json['id'],
+                                      lang='de'))
+        assert res.json['item']['name'] == 'Ein Label'
 
     def test_get_item_with_lang(self):
         res = self.client.get(url_for(api.ResourceItem, type='labels', lang='en', id=1))
@@ -317,7 +318,7 @@ class TestLabelApiFilteringAndSorting:
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name']['en'] == 'A'
+        assert res.json['name'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
@@ -328,7 +329,7 @@ class TestLabelApiFilteringAndSorting:
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name']['en'] == 'B'
+        assert res.json['name'] == 'B'
 
     def test_reverse_sort_by_name_with_lang(self):
         res = self.client.get(
@@ -401,8 +402,8 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 2
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name']['en'] == 'B'
-        assert res.json['items'][1]['name']['en'] == 'A'
+        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][1]['name'] == 'A'
 
     def test_filter_by_name(self):
         res = self.client.get(
@@ -411,7 +412,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_greater_than_name(self):
         res = self.client.get(
@@ -420,7 +421,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_greater_or_equal_name(self):
         res = self.client.get(
@@ -429,7 +430,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_name_in(self):
         res = self.client.get(
@@ -438,7 +439,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_name_like(self):
         res = self.client.get(
@@ -447,7 +448,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][0]['name'] == 'B'
 
     def test_filter_not_name(self):
         res = self.client.get(
@@ -456,7 +457,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][0]['name'] == 'B'
 
     def test_reverse_sort_unknown_field(self):
         res = self.client.get(
@@ -513,7 +514,7 @@ class TestLabelApiPagination:
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name']['en'] == 'A'
+        assert res.json['name'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
@@ -524,7 +525,7 @@ class TestLabelApiPagination:
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name']['en'] == 'B'
+        assert res.json['name'] == 'B'
 
     def test_one_page(self):
         res = self.client.get(

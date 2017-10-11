@@ -94,8 +94,7 @@ class TestLabels:
         # Replace first label's data with new data
         res = self.client.put(url_for(api.ResourceItem, type='labels', id=1),
                               data=json.dumps(
-                                  {"name": {"en": Util.lbl5_name,
-                                            "de": Util.lbl5_name_de},
+                                  {"name": {"de": Util.lbl5_name_de},
                                    "description": {
                                        "en": Util.lbl5_description,
                                        "de": Util.lbl5_description_de},
@@ -104,14 +103,14 @@ class TestLabels:
                               content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == Util.lbl5_name
+        assert res.json['name'] == Util.lbl5_name_de
         assert res.json['description'] == Util.lbl5_description
         assert res.json['meets_criteria'][0]['criterion'] == 1
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == Util.lbl5_name
+        assert res.json['item']['name'] == Util.lbl5_name_de
         assert res.json['item']['description'] == Util.lbl5_description
         assert res.json['item']['meets_criteria'][0]['criterion'] == 1
 
@@ -143,24 +142,6 @@ class TestLabels:
         assert res.json['item']['name'] == Util.lbl6_name
         assert res.json['item']['description'] == Util.lbl6_description
         assert res.json['item']['meets_criteria'][0]['criterion'] == 1
-
-        res = self.client.get(url_for(api.ResourceItem, type='labels', id=3, lang='de'))
-
-        assert res.status_code == 200
-        assert res.json['item']['name'] == Util.lbl3_name
-        assert res.json['item']['description'] == Util.lbl3_description
-        assert res.json['item']['meets_criteria'][0]['criterion'] == 1
-
-        # Update the English values of the German & English label
-        res = self.client.patch(url_for(api.ResourceItem, type='labels', id=1),
-                                data=json.dumps(
-                                    {"name": {"en": Util.lbl6_name},
-                                     "description": {"en": Util.lbl6_description}}),
-                                content_type='application/json')
-
-        assert res.status_code == 201
-        assert res.json['name'] == Util.lbl6_name
-        assert res.json['description'] == Util.lbl6_description
 
     def test_delete_item(self):
         # Delete a whole item

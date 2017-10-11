@@ -232,7 +232,7 @@ class LabelMeetsCriterion(db.Model):
     label_id = db.Column(db.ForeignKey('labels.id'), primary_key=True)
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
     score = db.Column(db.SmallInteger)
-    explanation = db.Column(db.JSON)
+    explanation = db.Column(Translation)
     criterion = db.relationship('Criterion')
     label = db.relationship('Label')
 
