@@ -135,7 +135,7 @@ def example_data_scores(request, app, db):
         print('\nSetting up score example data for {} {}'.format(id(db), db))
         hotspot = m.Hotspot(name={'en': 'Test Hotspot'})
         resource = m.Resource(name={'en': 'Test Resource'})
-        origin = m.Origin(name='Test Origin')
+        origin = m.Origin(name={'en': 'Test Origin'})
         supplier = m.Supplier(name='Test Supplier')
         supply = m.Supply(resource=resource, origin=origin, supplier=supplier)
         supply2 = m.Supply(resource=resource, origin=origin, supplier=supplier)
@@ -158,8 +158,8 @@ def example_data_brands(request, app, db):
         print('\nSetting up brand example data for {} {}'.format(id(db), db))
         retailer = m.Retailer(name='Rewe')
         category = m.Category(name='Cookies')
-        p1 = m.Product(name='Chocolate chip cookies', category=category)
-        p2 = m.Product(name='Triple chocolate bombs', category=category)
+        p1 = m.Product(name={'en': 'Chocolate chip cookies'}, category=category)
+        p2 = m.Product(name={'en': 'Triple chocolate bombs'}, category=category)
         brand = m.Brand(name='Clever', retailer=retailer, products=[p1])
         db.session.add(p2)
         db.session.add(brand)
@@ -185,9 +185,9 @@ def example_data_label_guide(request, app, db):
                      description={"de": "Nur eine deutsche Beschreibung"},
                      logo={'de': 'german_only_logo.png'})
 
-        crit1 = m.Criterion(name='Multilingual')
-        crit2 = m.Criterion(name='Understandable')
-        crit3 = m.Criterion(name='Ignorant')
+        crit1 = m.Criterion(name={'en': 'Multilingual'})
+        crit2 = m.Criterion(name={'en': 'Understandable'})
+        crit3 = m.Criterion(name={'en': 'Ignorant'})
 
         l1_m_c1 = m.LabelMeetsCriterion(
             label=l1,

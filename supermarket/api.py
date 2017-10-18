@@ -137,14 +137,9 @@ class GenericResource:
         #
         # :param str field      Name of the field to filter.
         #
-        return self._default_filter(query, field, op, value)
+        return self._default_filter(query, field, op, value, lang)
 
-    def _translation_filter(self, query, field, op, value, lang):
-        model = getattr(self.model, field).property.mapper.class_
-        query = query.filter(getattr(model, 'language') == lang)
-        return self._default_filter(query, field, op, value)
-
-    def _default_filter(self, query, field, op, value):
+    def _default_filter(self, query, field, op, value, lang):
         # Default filter method, filters `field` by `value` using `op`.
         #
         # Returns the filtered query.
@@ -158,6 +153,8 @@ class GenericResource:
         #
         accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
         (attr, query) = self._field_to_attr(field, query)
+        if lang and isinstance(attr.type, m.Translation):
+            attr = attr[lang].astext
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
         if op == 'like':
@@ -358,29 +355,23 @@ class GenericResource:
     def patch_item(self, id):
         """Update an existing item with new data."""
         r = self.model.query.get_or_404(id)
-        lang = request.args.get('lang', None)
-        schema = self.schema(lang=lang)
-
-        data = schema.load(request.get_json(), partial=True,
-                           session=m.db.session, instance=r)
+        data = self.schema().load(request.get_json(), partial=True,
+                                  session=m.db.session, instance=r)
         if data.errors:
             raise ValidationFailed(data.errors)
         m.db.session.commit()
-        return schema.dump(r).data, 201
+        return self.schema().dump(r).data, 201
 
     def put_item(self, id):
         """Add a new item if the ID doesn’t exist, or replace the existing one."""
-        lang = request.args.get('lang', None)
-        schema = self.schema(lang=lang)
-
-        data = schema.load(request.get_json(), session=m.db.session)
+        data = self.schema().load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
         setattr(r, inspect(self.model).primary_key[0].name, id)
         m.db.session.merge(r)
         m.db.session.commit()
-        return schema.dump(r).data, 201
+        return self.schema().dump(r).data, 201
 
     def delete_item(self, id):
         """Delete an item of ‘type’ by its ID."""
@@ -433,16 +424,13 @@ class GenericResource:
 
     def post_to_list(self):
         """Add a new item of type ‘type’."""
-        lang = request.args.get('lang', None)
-        schema = self.schema(lang=lang)
-
-        data = schema.load(request.get_json(), session=m.db.session)
+        data = self.schema().load(request.get_json(), session=m.db.session)
         if data.errors:
             raise ValidationFailed(data.errors)
         r = data.data
         m.db.session.add(r)
         m.db.session.commit()
-        return schema.dump(r).data, 201
+        return self.schema().dump(r).data, 201
 
     def get_doc(self):
         """Get documentation for type ‘type’."""

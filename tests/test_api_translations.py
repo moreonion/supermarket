@@ -66,17 +66,23 @@ class TestLabels:
                                content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == Util.lbl4_name
-        assert res.json['description'] == Util.lbl4_description
-        assert res.json['logo'] == Util.lbl4_logo
+        assert res.json['name']['en'] == Util.lbl4_name
+        assert res.json['name']['de'] == Util.lbl4_name_de
+        assert res.json['description']['en'] == Util.lbl4_description
+        assert res.json['description']['de'] == Util.lbl4_description_de
+        assert res.json['logo']['en'] == Util.lbl4_logo
+        assert res.json['logo']['de'] == Util.lbl4_logo_de
         id = res.json['id']
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=id))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == Util.lbl4_name
-        assert res.json['item']['description'] == Util.lbl4_description
-        assert res.json['item']['logo'] == Util.lbl4_logo
+        assert res.json['item']['name']['en'] == Util.lbl4_name
+        assert res.json['item']['name']['de'] == Util.lbl4_name_de
+        assert res.json['item']['description']['en'] == Util.lbl4_description
+        assert res.json['item']['description']['de'] == Util.lbl4_description_de
+        assert res.json['item']['logo']['en'] == Util.lbl4_logo
+        assert res.json['item']['logo']['de'] == Util.lbl4_logo_de
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=id, lang='de'))
 
@@ -96,9 +102,9 @@ class TestLabels:
                                content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == Util.lbl4_name_de
-        assert res.json['description'] == Util.lbl4_description_de
-        assert res.json['logo'] == Util.lbl4_logo_de
+        assert res.json['name']['de'] == Util.lbl4_name_de
+        assert res.json['description']['de'] == Util.lbl4_description_de
+        assert res.json['logo']['de'] == Util.lbl4_logo_de
 
     def test_put_item(self):
         # Replace first label's data with new data
@@ -113,15 +119,17 @@ class TestLabels:
                               content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == Util.lbl5_name_de
-        assert res.json['description'] == Util.lbl5_description
+        assert res.json['name']['de'] == Util.lbl5_name_de
+        assert res.json['description']['en'] == Util.lbl5_description
+        assert res.json['description']['de'] == Util.lbl5_description_de
         assert res.json['meets_criteria'][0]['criterion'] == 1
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == Util.lbl5_name_de
-        assert res.json['item']['description'] == Util.lbl5_description
+        assert res.json['item']['name']['de'] == Util.lbl5_name_de
+        assert res.json['item']['description']['en'] == Util.lbl5_description
+        assert res.json['item']['description']['de'] == Util.lbl5_description_de
         assert res.json['item']['meets_criteria'][0]['criterion'] == 1
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1, lang='de'))
@@ -142,15 +150,15 @@ class TestLabels:
                                 )
 
         assert res.status_code == 201
-        assert res.json['name'] == Util.lbl6_name
-        assert res.json['description'] == Util.lbl6_description
+        assert res.json['name']['en'] == Util.lbl6_name
+        assert res.json['description']['en'] == Util.lbl6_description
         assert res.json['meets_criteria'][0]['criterion'] == 1
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=3))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == Util.lbl6_name
-        assert res.json['item']['description'] == Util.lbl6_description
+        assert res.json['item']['name']['en'] == Util.lbl6_name
+        assert res.json['item']['description']['en'] == Util.lbl6_description
         assert res.json['item']['meets_criteria'][0]['criterion'] == 1
 
     def test_delete_item(self):
@@ -167,9 +175,10 @@ class TestResources:
     def test_get_from_list(self):
         res = self.client.get(url_for(api.ResourceList, type='resources'))
         assert res.status_code == 200
-        assert res.json['items'][0]['name'] == 'English Test Resource'
-        assert res.json['items'][1]['name'] == 'Deutsche Test Resource'
-        assert res.json['items'][2]['name'] == 'Multilingual Test Resource'
+        assert res.json['items'][0]['name']['en'] == 'English Test Resource'
+        assert res.json['items'][1]['name']['de'] == 'Deutsche Test Resource'
+        assert res.json['items'][2]['name']['en'] == 'Multilingual Test Resource'
+        assert res.json['items'][2]['name']['de'] == 'Mehrsprachige Test Resource'
 
         res = self.client.get(url_for(api.ResourceList, type='resources', lang='de'))
         assert res.status_code == 200
@@ -180,7 +189,8 @@ class TestResources:
     def test_get_item(self):
         res = self.client.get(url_for(api.ResourceItem, type='resources', id=3))
         assert res.status_code == 200
-        assert res.json['item']['name'] == 'Multilingual Test Resource'
+        assert res.json['item']['name']['en'] == 'Multilingual Test Resource'
+        assert res.json['item']['name']['de'] == 'Mehrsprachige Test Resource'
 
         res = self.client.get(url_for(api.ResourceItem, type='resources', id=3, lang='de'))
         assert res.status_code == 200
@@ -193,7 +203,8 @@ class TestResources:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'Herbal Tea'
+        assert res.json['name']['en'] == 'Herbal Tea'
+        assert res.json['name']['de'] == 'Herber Tee'
 
         res = self.client.get(url_for(api.ResourceItem, type='resources',
                                       id=res.json['id'], lang='de'))
@@ -210,7 +221,8 @@ class TestResources:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'I put that here'
+        assert res.json['name']['en'] == 'I put that here'
+        assert res.json['name']['de'] == 'Ich leg\'s hier hin'
 
         res = self.client.get(url_for(api.ResourceItem, type='resources',
                                       id=1, lang='de'))
@@ -226,7 +238,8 @@ class TestResources:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'That should fix it...'
+        assert res.json['name']['en'] == 'That should fix it...'
+        assert res.json['name']['de'] == 'Sollte wieder gehn.'
 
         res = self.client.get(url_for(api.ResourceItem, type='resources',
                                       id=2, lang='de'))
@@ -248,14 +261,17 @@ class TestHotspots:
         res = self.client.get(url_for(api.ResourceList, type='hotspots'))
 
         assert res.status_code == 200
-        assert res.json['items'][0]['name'] == 'Multilingual hotspot'
-        assert res.json['items'][0]['description'] == (
+        assert res.json['items'][0]['name']['en'] == 'Multilingual hotspot'
+        assert res.json['items'][0]['name']['de'] == 'Mehrsprachiger hotspot'
+        assert res.json['items'][0]['description']['en'] == (
             'This hotspot speaks 2 languages')
-        assert res.json['items'][1]['name'] == 'English hotspot'
-        assert res.json['items'][1]['description'] == (
+        assert res.json['items'][0]['description']['de'] == (
+            'Dieser hotspot spricht 2 sprachen')
+        assert res.json['items'][1]['name']['en'] == 'English hotspot'
+        assert res.json['items'][1]['description']['en'] == (
             'This hotspot speaks English')
-        assert res.json['items'][2]['name'] == 'Deutscher hotspot'
-        assert res.json['items'][2]['description'] == (
+        assert res.json['items'][2]['name']['de'] == 'Deutscher hotspot'
+        assert res.json['items'][2]['description']['de'] == (
             'Dieser hotspot spricht deutsch')
 
         res = self.client.get(url_for(api.ResourceList, type='hotspots', lang='de'))
@@ -275,9 +291,12 @@ class TestHotspots:
         res = self.client.get(url_for(api.ResourceItem, type='hotspots', id=1))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == 'Multilingual hotspot'
-        assert res.json['item']['description'] == (
+        assert res.json['item']['name']['en'] == 'Multilingual hotspot'
+        assert res.json['item']['name']['de'] == 'Mehrsprachiger hotspot'
+        assert res.json['item']['description']['en'] == (
             'This hotspot speaks 2 languages')
+        assert res.json['item']['description']['de'] == (
+            'Dieser hotspot spricht 2 sprachen')
 
         res = self.client.get(url_for(api.ResourceItem, type='hotspots', id=1, lang='de'))
 
@@ -297,8 +316,8 @@ class TestHotspots:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'New hotspot'
-        assert res.json['description'] == 'A brandnew hotspot!'
+        assert res.json['name']['en'] == 'New hotspot'
+        assert res.json['description']['en'] == 'A brandnew hotspot!'
 
         res = self.client.get(url_for(api.ResourceItem, type='hotspots',
                                       id=res.json['id'], lang='de'))
@@ -317,8 +336,10 @@ class TestHotspots:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'Slowly multilingual'
-        assert res.json['description'] == 'Good things take time'
+        assert res.json['name']['en'] == 'Slowly multilingual'
+        assert res.json['name']['de'] == 'Langsam mehrsprachig'
+        assert res.json['description']['en'] == 'Good things take time'
+        assert res.json['description']['de'] == 'Gut Ding braucht Weile'
 
         res = self.client.get(url_for(api.ResourceItem, type='hotspots',
                                       id=2, lang='de'))
@@ -335,14 +356,14 @@ class TestHotspots:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'Immer noch deutsch :('
-        assert res.json['description'] == 'Ohje'
+        assert res.json['name']['de'] == 'Immer noch deutsch :('
+        assert res.json['description']['de'] == 'Ohje'
 
         res = self.client.get(url_for(api.ResourceItem, type='hotspots', id=3))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == 'Immer noch deutsch :('
-        assert res.json['item']['description'] == 'Ohje'
+        assert res.json['item']['name']['de'] == 'Immer noch deutsch :('
+        assert res.json['item']['description']['de'] == 'Ohje'
 
     def test_delete_item(self):
         res = self.client.delete(url_for(api.ResourceItem, type='hotspots', id=3))
@@ -359,12 +380,14 @@ class TestSupplies:
         res = self.client.get(url_for(api.ResourceList, type='supplies'))
 
         assert res.status_code == 200
-        assert res.json['items'][0]['scores'][0]['explanation'] == (
+        assert res.json['items'][0]['scores'][0]['explanation']['de'] == (
             'Diese Erklaerung ist auf deutsch.')
-        assert res.json['items'][1]['scores'][0]['explanation'] == (
+        assert res.json['items'][1]['scores'][0]['explanation']['en'] == (
             'This explanation is in English.')
-        assert res.json['items'][2]['scores'][0]['explanation'] == (
+        assert res.json['items'][2]['scores'][0]['explanation']['en'] == (
             'This explanation is multilingual!')
+        assert res.json['items'][2]['scores'][0]['explanation']['de'] == (
+            'Diese Erklaerung ist mehrsprachig!')
 
         res = self.client.get(url_for(api.ResourceList, type='supplies', lang='de'))
 
@@ -380,7 +403,10 @@ class TestSupplies:
         res = self.client.get(url_for(api.ResourceItem, type='supplies', id=3))
 
         assert res.status_code == 200
-        assert res.json['item']['scores'][0]['explanation'] == 'This explanation is multilingual!'
+        assert res.json['item']['scores'][0]['explanation']['en'] == (
+            'This explanation is multilingual!')
+        assert res.json['item']['scores'][0]['explanation']['de'] == (
+            'Diese Erklaerung ist mehrsprachig!')
 
         res = self.client.get(url_for(api.ResourceItem, type='supplies', id=3, lang='de'))
 
@@ -390,9 +416,9 @@ class TestSupplies:
     def test_post_to_list(self):
         res = self.client.post(
             url_for(api.ResourceList, type='supplies'),
-            data=json.dumps({'resource': {'name': 'POST resource'},
+            data=json.dumps({'resource': {'name': {'en': 'POST resource'}},
                              'scores': [{
-                                 'hotspot': {'name': 'POST hotspot'},
+                                 'hotspot': {'name': {'en': 'POST hotspot'}},
                                  'explanation': {'en': 'I just posted this here.',
                                                  'de': 'Wurde gePOSTet.'},
                                  'score': 99
@@ -400,7 +426,7 @@ class TestSupplies:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['scores'][0]['explanation'] == 'I just posted this here.'
+        assert res.json['scores'][0]['explanation']['en'] == 'I just posted this here.'
 
         res = self.client.get(url_for(api.ResourceItem, type='supplies', id=res.json['id'],
                                       lang='de'))
@@ -411,10 +437,10 @@ class TestSupplies:
     def test_put_item(self):
         res = self.client.put(
             url_for(api.ResourceItem, type='supplies', id=1),
-            data=json.dumps({'resource': {'name': 'PUT'},
+            data=json.dumps({'resource': {'name': {'en': 'PUT'}},
                              'supplier': {'name': 'PUT-Dealer'},
                              'scores': [{
-                                 'hotspot': {'name': 'All PUT, no GET'},
+                                 'hotspot': {'name': {'en': 'All PUT, no GET'}},
                                  'explanation': {'en': 'I just put that here for a minute.',
                                                  'de': 'Ich stell das kurz hier hin.'},
                                  'score': 999
@@ -422,7 +448,7 @@ class TestSupplies:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['scores'][0]['explanation'] == 'I just put that here for a minute.'
+        assert res.json['scores'][0]['explanation']['en'] == 'I just put that here for a minute.'
 
         res = self.client.get(url_for(api.ResourceItem, type='supplies', id=1, lang='de'))
         assert res.status_code == 200
@@ -433,13 +459,13 @@ class TestSupplies:
             url_for(api.ResourceItem, type='supplies', id=1),
             data=json.dumps({
                 'scores': [{
-                    'hotspot': {'name': 'All PUT, no GET'},
+                    'hotspot': {'name': {'en': 'All PUT, no GET'}},
                     'explanation': {'en': 'Ok, patch will take care of it.'},
                     'score': 100}]}),
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['scores'][0]['explanation'] == 'Ok, patch will take care of it.'
+        assert res.json['scores'][0]['explanation']['en'] == 'Ok, patch will take care of it.'
 
     def test_delete_item(self):
         res = self.client.delete(url_for(api.ResourceItem, type='supplies', id=1))
@@ -455,17 +481,17 @@ class TestProducts:
         res = self.client.get(url_for(api.ResourceList, type='products'))
 
         assert res.status_code == 200
-        assert res.json['items'][0]['name'] == 'Multilingual Product'
-        assert res.json['items'][0]['details'] == 'A product of society'
-        assert res.json['items'][0]['ingredients'][0]['name'] == (
+        assert res.json['items'][0]['name']['en'] == 'Multilingual Product'
+        assert res.json['items'][0]['details']['en'] == 'A product of society'
+        assert res.json['items'][0]['ingredients'][0]['name']['en'] == (
             'Multilingual Ingredient')
-        assert res.json['items'][1]['name'] == 'English Product'
-        assert res.json['items'][1]['details'] == 'A product of English society'
-        assert res.json['items'][1]['ingredients'][0]['name'] == (
+        assert res.json['items'][1]['name']['en'] == 'English Product'
+        assert res.json['items'][1]['details']['en'] == 'A product of English society'
+        assert res.json['items'][1]['ingredients'][0]['name']['en'] == (
             'English Ingredient (probably Tea)')
-        assert res.json['items'][2]['name'] == 'Deutsches Produkt'
-        assert res.json['items'][2]['details'] == 'Faelscht Emissionsdaten'
-        assert res.json['items'][2]['ingredients'][0]['name'] == (
+        assert res.json['items'][2]['name']['de'] == 'Deutsches Produkt'
+        assert res.json['items'][2]['details']['de'] == 'Faelscht Emissionsdaten'
+        assert res.json['items'][2]['ingredients'][0]['name']['de'] == (
             'Deutscher Inhaltsstoff (wahrscheinlich Sauerkraut)')
 
         res = self.client.get(url_for(api.ResourceList, type='products', lang='de'))
@@ -504,9 +530,9 @@ class TestProducts:
         res = self.client.get(url_for(api.ResourceItem, type='products', id=1))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == 'Multilingual Product'
-        assert res.json['item']['details'] == 'A product of society'
-        assert res.json['item']['ingredients'][0]['name'] == (
+        assert res.json['item']['name']['en'] == 'Multilingual Product'
+        assert res.json['item']['details']['en'] == 'A product of society'
+        assert res.json['item']['ingredients'][0]['name']['en'] == (
             'Multilingual Ingredient')
 
         res = self.client.get(url_for(api.ResourceItem, type='products',
@@ -540,9 +566,9 @@ class TestProducts:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'POSTed Product'
-        assert res.json['details'] == 'POSTed details'
-        assert res.json['ingredients'][0]['name'] == 'POSTed Ingredient'
+        assert res.json['name']['en'] == 'POSTed Product'
+        assert res.json['details']['en'] == 'POSTed details'
+        assert res.json['ingredients'][0]['name']['en'] == 'POSTed Ingredient'
 
         res = self.client.get(url_for(api.ResourceItem, type='products',
                                       id=res.json['id'], lang='de'))
@@ -565,9 +591,9 @@ class TestProducts:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'PUTted Product'
-        assert res.json['details'] == 'PUTted details'
-        assert res.json['ingredients'][0]['name'] == 'PUTted Ingredient'
+        assert res.json['name']['en'] == 'PUTted Product'
+        assert res.json['details']['en'] == 'PUTted details'
+        assert res.json['ingredients'][0]['name']['en'] == 'PUTted Ingredient'
 
         res = self.client.get(url_for(api.ResourceItem, type='products',
                                       id=2, lang='de'))
@@ -586,9 +612,9 @@ class TestProducts:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'English only'
-        assert res.json['details'] == 'English details'
-        assert res.json['ingredients'][0]['name'] == 'English Ingredient'
+        assert res.json['name']['en'] == 'English only'
+        assert res.json['details']['en'] == 'English details'
+        assert res.json['ingredients'][0]['name']['en'] == 'English Ingredient'
 
         res = self.client.get(url_for(api.ResourceItem, type='products',
                                       id=3, lang='de'))
@@ -611,11 +637,11 @@ class TestOrigin:
         res = self.client.get(url_for(api.ResourceList, type='origins'))
 
         assert res.status_code == 200
-        assert res.json['items'][0]['name'] == 'Austria'
+        assert res.json['items'][0]['name']['en'] == 'Austria'
         assert res.json['items'][0]['code'] == 'AT'
-        assert res.json['items'][1]['name'] == 'Deutschland'
+        assert res.json['items'][1]['name']['de'] == 'Deutschland'
         assert res.json['items'][1]['code'] == 'DE'
-        assert res.json['items'][2]['name'] == 'Great Britain'
+        assert res.json['items'][2]['name']['en'] == 'Great Britain'
         assert res.json['items'][2]['code'] == 'GB'
 
         res = self.client.get(url_for(api.ResourceList, type='origins', lang='de'))
@@ -642,7 +668,7 @@ class TestOrigin:
         res = self.client.get(url_for(api.ResourceItem, type='origins', id=1))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == 'Austria'
+        assert res.json['item']['name']['en'] == 'Austria'
         assert res.json['item']['code'] == 'AT'
 
         res = self.client.get(url_for(api.ResourceItem, type='origins',
@@ -668,7 +694,7 @@ class TestOrigin:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'POSTed Origin'
+        assert res.json['name']['en'] == 'POSTed Origin'
         assert res.json['code'] == 'PO'
 
         res = self.client.get(url_for(api.ResourceItem, type='origins',
@@ -686,9 +712,8 @@ class TestOrigin:
                              'code': 'TO'}),
             content_type='application/json')
 
-        print(res.json)
         assert res.status_code == 201
-        assert res.json['name'] == 'PUTted Origin'
+        assert res.json['name']['en'] == 'PUTted Origin'
         assert res.json['code'] == 'TO'
 
         res = self.client.get(url_for(api.ResourceItem, type='origins',
@@ -704,7 +729,7 @@ class TestOrigin:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'Vereinigtes Koenigreich'
+        assert res.json['name']['de'] == 'Vereinigtes Koenigreich'
         assert res.json['code'] == 'GB'
 
         res = self.client.get(url_for(api.ResourceItem, type='origins',
@@ -727,15 +752,15 @@ class TestCriteria:
         res = self.client.get(url_for(api.ResourceList, type='criteria'))
 
         assert res.status_code == 200
-        assert res.json['items'][0]['name'] == 'Multilingual Criterion'
-        assert res.json['items'][0]['details'] == 'Multilingual details'
-        assert res.json['items'][0]['category']['name'] == 'Multilingual Criterion Category'
-        assert res.json['items'][1]['name'] == 'English Criterion'
-        assert res.json['items'][1]['details'] == 'English details'
-        assert res.json['items'][1]['category']['name'] == 'English Criterion Category'
-        assert res.json['items'][2]['name'] == 'Deutsches Criterion'
-        assert res.json['items'][2]['details'] == 'Deutsche Details'
-        assert res.json['items'][2]['category']['name'] == 'Deutsche Criterion Category'
+        assert res.json['items'][0]['name']['en'] == 'Multilingual Criterion'
+        assert res.json['items'][0]['details']['en'] == 'Multilingual details'
+        assert res.json['items'][0]['category']['name']['en'] == 'Multilingual Criterion Category'
+        assert res.json['items'][1]['name']['en'] == 'English Criterion'
+        assert res.json['items'][1]['details']['en'] == 'English details'
+        assert res.json['items'][1]['category']['name']['en'] == 'English Criterion Category'
+        assert res.json['items'][2]['name']['de'] == 'Deutsches Criterion'
+        assert res.json['items'][2]['details']['de'] == 'Deutsche Details'
+        assert res.json['items'][2]['category']['name']['de'] == 'Deutsche Criterion Category'
 
         res = self.client.get(url_for(api.ResourceList, type='criteria', lang='de'))
 
@@ -767,9 +792,9 @@ class TestCriteria:
         res = self.client.get(url_for(api.ResourceItem, type='criteria', id=1))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == 'Multilingual Criterion'
-        assert res.json['item']['details'] == 'Multilingual details'
-        assert res.json['item']['category']['name'] == 'Multilingual Criterion Category'
+        assert res.json['item']['name']['en'] == 'Multilingual Criterion'
+        assert res.json['item']['details']['en'] == 'Multilingual details'
+        assert res.json['item']['category']['name']['en'] == 'Multilingual Criterion Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
                                       id=1, lang='de'))
@@ -799,9 +824,9 @@ class TestCriteria:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'POSTed Criterion'
-        assert res.json['details'] == 'POSTed details'
-        assert res.json['category']['name'] == 'POSTed Category'
+        assert res.json['name']['en'] == 'POSTed Criterion'
+        assert res.json['details']['en'] == 'POSTed details'
+        assert res.json['category']['name']['en'] == 'POSTed Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
                                       id=res.json['id'], lang='de'))
@@ -822,11 +847,10 @@ class TestCriteria:
                                                    'de': 'Geputtete Category'}}}),
             content_type='application/json')
 
-        print(res.json)
         assert res.status_code == 201
-        assert res.json['name'] == 'PUTted Criterion'
-        assert res.json['details'] == 'PUTted details'
-        assert res.json['category']['name'] == 'PUTted Category'
+        assert res.json['name']['en'] == 'PUTted Criterion'
+        assert res.json['details']['en'] == 'PUTted details'
+        assert res.json['category']['name']['en'] == 'PUTted Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
                                       id=2, lang='de'))
@@ -844,9 +868,9 @@ class TestCriteria:
             content_type='application/json')
 
         assert res.status_code == 201
-        assert res.json['name'] == 'English only'
-        assert res.json['details'] == 'English details'
-        assert res.json['category']['name'] == 'English Category'
+        assert res.json['name']['en'] == 'English only'
+        assert res.json['details']['en'] == 'English details'
+        assert res.json['category']['name']['en'] == 'English Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
                                       id=3, lang='de'))
@@ -872,16 +896,23 @@ class TestLabelGuideUseCases:
 
         assert res.status_code == 200
 
-        assert res.json['items'][0]['name'] == Util.lbl1_name
-        assert res.json['items'][0]['description'] == Util.lbl1_description
-        assert res.json['items'][1]['name'] == Util.lbl2_name
-        assert res.json['items'][1]['description'] == Util.lbl2_description
-        assert res.json['items'][2]['name'] == Util.lbl3_name
-        assert res.json['items'][2]['description'] == Util.lbl3_description
+        assert res.json['items'][0]['name']['en'] == Util.lbl1_name
+        assert res.json['items'][0]['name']['de'] == Util.lbl1_name_de
+        assert res.json['items'][0]['description']['en'] == Util.lbl1_description
+        assert res.json['items'][0]['description']['de'] == Util.lbl1_description_de
+        assert res.json['items'][1]['name']['en'] == Util.lbl2_name
+        assert res.json['items'][1]['description']['en'] == Util.lbl2_description
+        assert res.json['items'][2]['name']['de'] == Util.lbl3_name
+        assert res.json['items'][2]['description']['de'] == Util.lbl3_description
 
-        assert res.json['items'][0]['meets_criteria'][0]['explanation'] == Util.crit1_explanation
-        assert res.json['items'][1]['meets_criteria'][0]['explanation'] == Util.crit2_explanation
-        assert res.json['items'][2]['meets_criteria'][0]['explanation'] == Util.crit3_explanation
+        assert res.json['items'][0]['meets_criteria'][0]['explanation']['en'] == (
+            Util.crit1_explanation)
+        assert res.json['items'][0]['meets_criteria'][0]['explanation']['de'] == (
+            Util.crit1_explanation_de)
+        assert res.json['items'][1]['meets_criteria'][0]['explanation']['en'] == (
+            Util.crit2_explanation)
+        assert res.json['items'][2]['meets_criteria'][0]['explanation']['de'] == (
+            Util.crit3_explanation)
 
         # Test German (data without German translation should revert to English)
         res = self.client.get(url_for(api.ResourceList, type='labels', lang='de'))
@@ -921,9 +952,13 @@ class TestLabelGuideUseCases:
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
 
         assert res.status_code == 200
-        assert res.json['item']['name'] == Util.lbl1_name
-        assert res.json['item']['description'] == Util.lbl1_description
-        assert res.json['item']['meets_criteria'][0]['explanation'] == Util.crit1_explanation
+        assert res.json['item']['name']['en'] == Util.lbl1_name
+        assert res.json['item']['name']['de'] == Util.lbl1_name_de
+        assert res.json['item']['description']['en'] == Util.lbl1_description
+        assert res.json['item']['description']['de'] == Util.lbl1_description_de
+        assert res.json['item']['meets_criteria'][0]['explanation']['en'] == Util.crit1_explanation
+        assert res.json['item']['meets_criteria'][0]['explanation']['de'] == (
+            Util.crit1_explanation_de)
 
         # Test German
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1, lang='de'))

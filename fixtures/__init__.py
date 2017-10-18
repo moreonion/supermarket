@@ -121,28 +121,28 @@ def import_example_data():
             if criterion_name == 'Consumer communication: label':
                 continue  # criterion data in csv is incomplete
             criterion = Criterion.query.filter(
-                Criterion.name['en'].astext == criterion_name).first()
+                Criterion.name[lang].astext == criterion_name).first()
             if criterion is None:
                 subcategory = CriterionCategory.query.filter(
-                    CriterionCategory.name['en'].astext == subcategory_name).first()
+                    CriterionCategory.name[lang].astext == subcategory_name).first()
                 if subcategory is None:
                     category = CriterionCategory.query.filter(
-                        CriterionCategory.name['en'].astext == category_name).first()
+                        CriterionCategory.name[lang].astext == category_name).first()
                     if category is None:
-                        category = CriterionCategory(name={'en': category_name})
+                        category = CriterionCategory(name={lang: category_name})
                         db.session.add(category)
                     subcategory = CriterionCategory(
-                        name={'en': subcategory_name}, category=category)
+                        name={lang: subcategory_name}, category=category)
                     db.session.add(subcategory)
                 criterion = Criterion(
-                    name={'en': criterion_name},
+                    name={lang: criterion_name},
                     category=subcategory,
-                    details={'en': {'question': row[6], 'measures': {}}}
+                    details={lang: {'question': row[6], 'measures': {}}}
                 )
                 db.session.add(criterion)
                 criteria[row[4]] = criterion
             details = deepcopy(criterion.details)
-            details['en']['measures'][int(row[9])] = row[8]
+            details[lang]['measures'][int(row[9])] = row[8]
             criterion.details = details
             db.session.add(criterion)
 
@@ -271,7 +271,7 @@ def import_example_data():
                 weight += 1
 
     # Product labels
-    labels = {l.name['en']: l for l in Label.query.all()}
+    labels = {l.name[lang]: l for l in Label.query.all()}
     print(list(labels.keys()))
     with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
         next(csv_file)  # Skip header line.

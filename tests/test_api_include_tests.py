@@ -137,8 +137,8 @@ class TestLabelQueryInclude:
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert res.json['items'][0]['resources'][0]['name'] == 'Testresource #1'
-        assert res.json['items'][0]['resources'][1]['name'] == 'Testresource #2'
+        assert res.json['items'][0]['resources'][0]['name']['en'] == 'Testresource #1'
+        assert res.json['items'][0]['resources'][1]['name']['en'] == 'Testresource #2'
 
     def test_include_resources(self):
         url = url_for(api.ResourceItem, type='labels', id=1, only='name,resources',
@@ -147,15 +147,15 @@ class TestLabelQueryInclude:
 
         assert res.status_code == 200
         assert len(res.json['item']['resources']) == 2
-        assert {'id': 1, 'name': 'Testresource #1'} in res.json['item']['resources']
-        assert {'id': 2, 'name': 'Testresource #2'} in res.json['item']['resources']
+        assert {'id': 1, 'name': {'en': 'Testresource #1'}} in res.json['item']['resources']
+        assert {'id': 2, 'name': {'en': 'Testresource #2'}} in res.json['item']['resources']
 
     def test_include_hotspots(self):
         url = url_for(api.ResourceItem, type='labels', id=1, include='hotspots.name')
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert res.json['item']['hotspots'][0]['name'] == 'Quality Assurance'
+        assert res.json['item']['hotspots'][0]['name']['en'] == 'Quality Assurance'
 
     def test_include_criteria(self):
         url = url_for(
@@ -163,7 +163,7 @@ class TestLabelQueryInclude:
         res = self.client.get(url)
 
         assert res.status_code == 200
-        assert (res.json['item']['meets_criteria'][0]['criterion']['name'] ==
+        assert (res.json['item']['meets_criteria'][0]['criterion']['name']['en'] ==
                 'The test improvement criterion')
 
     def test_include_criteria_in_list(self):
@@ -171,7 +171,6 @@ class TestLabelQueryInclude:
             api.ResourceList, type='labels', include='meets_criteria.criterion.name')
         res = self.client.get(url)
 
-        print(res.json)
         assert res.status_code == 200
-        assert (res.json['items'][0]['meets_criteria'][0]['criterion']['name'] ==
+        assert (res.json['items'][0]['meets_criteria'][0]['criterion']['name']['en'] ==
                 'The test improvement criterion')

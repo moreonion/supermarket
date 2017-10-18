@@ -4,10 +4,9 @@ from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
 from marshmallow_sqlalchemy import fields as masqla_fields
-from marshmallow import (class_registry, post_dump, post_load, utils,
+from marshmallow import (class_registry, post_dump, post_load, pre_load, utils,
                          validates_schema, ValidationError)
 from sqlalchemy.inspection import inspect
-
 import supermarket.model as m
 
 ma = Marshmallow()
@@ -30,7 +29,6 @@ class Nested(ma.Nested):
     def _deserialize(self, value, attr, data):
         if self.many and not utils.is_collection(value):
             self.fail('type', input=value, type=value.__class__.__name__)
-        self.schema.context.update(self.parent.context)
         session = self.parent.session
         data, errors = self.schema.load(value, session=session)
         if errors:
@@ -137,11 +135,10 @@ class CustomSchema(ma.ModelSchema):
 
     def __init__(self, lang=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.output_language = None
         if lang:
             self.language = lang
         else:
-            self.language = self.default_language
+            self.language = None
 
     @property
     def nested_fields(self):
@@ -180,6 +177,11 @@ class CustomSchema(ma.ModelSchema):
                 attr = getattr(self.opts.model, field.attribute or field.name)
                 if isinstance(attr.type, m.Translation):
                     fields.append(key)
+            # if isinstance(field, masqla_fields.Related):
+            #     for f in class_mapper(field.related_model).iterate_properties:
+            #         if isinstance(f, ColumnProperty):
+            #             if isinstance(f.class_attribute.type, m.Translation):
+            #                 fields.append(f.key)
         return fields
 
     @property
@@ -230,7 +232,7 @@ class CustomSchema(ma.ModelSchema):
         if unknown:
             raise ValidationError('Unknown field.', unknown)
 
-    @validates_schema()
+    @pre_load()
     def check_translations(self, data):
         """Check if translations have valid language codes."""
         errors = {}
@@ -257,20 +259,19 @@ class CustomSchema(ma.ModelSchema):
     @post_dump(pass_many=False)
     def filter_translations_by_language(self, data):
         """Replace translations with the data of the specified language."""
-        lang = self.language
-        for field in self.translated_fields:
-            if field in data and data[field]:
-                if not isinstance(data[field], dict):
-                    raise ValidationError('No language specified', field)
-                if lang in data[field]:
-                    data[field] = data[field][lang]
-                elif self.default_language in data[field]:
-                    data[field] = data[field][self.default_language]
-                else:
-                    try:
-                        data[field] = next(iter(data[field].values()))
-                    except StopIteration:
-                        data[field] = None
+
+        if self.language is not None:
+            for field in self.translated_fields:
+                if field in data and data[field]:
+                    if self.language in data[field]:
+                        data[field] = data[field][self.language]
+                    elif self.default_language in data[field]:
+                        data[field] = data[field][self.default_language]
+                    else:
+                        try:
+                            data[field] = next(iter(data[field].values()))
+                        except StopIteration:
+                            data[field] = None
         return data
 
     @post_dump(pass_many=False)
@@ -295,7 +296,6 @@ class CustomSchema(ma.ModelSchema):
                 query = model.query.get(data[key])
                 many = False
             s = v['resource'].schema(many=many, only=v['only'])
-            s.context['lang'] = self.context['lang'] if 'lang' in self.context else None
             data[key] = s.dump(query).data
 
     @post_load
@@ -459,8 +459,6 @@ class Ingredient(CustomSchema):
 class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
-    # name = Translated(attribute='name')
-    # description = Translated(attribute='description')
     meets_criteria = Nested('LabelMeetsCriterion', exclude=['label'], many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 
@@ -515,7 +513,6 @@ class LabelMeetsCriterion(CustomSchema):
     # primary key: label_id + criterion_id
     # score, explanation
     # refs: criterion, label
-    # explanation = Translated(attribute='explanation')
 
     @property
     def schema_description(self):

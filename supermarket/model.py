@@ -1,5 +1,7 @@
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import validates
+from marshmallow.exceptions import ValidationError
 
 
 db = SQLAlchemy()
@@ -9,7 +11,11 @@ class Translation(JSONB):
 
     """Translation type, contains a JSON of translated data."""
 
-    pass
+    @classmethod
+    def validate_translation(cls, key, value):
+        if not isinstance(value, dict):
+            raise ValidationError("No language specified.", key)
+        return value
 
 
 # helper tables
@@ -107,6 +113,12 @@ class Criterion(db.Model):
     category_id = db.Column(db.ForeignKey('criterion_category.id'))
     # category – backref from CriterionCategory
 
+    @validates('name', 'details')
+    def validate(self, key, value):
+        if key == 'name' and len(value) > 128:
+            raise ValidationError('Only 128 characters allowed.', key)
+        return Translation.validate_translation(key, value)
+
 
 class CriterionCategory(db.Model):
 
@@ -127,6 +139,12 @@ class CriterionCategory(db.Model):
         'Criterion', backref=db.backref('category'))
     # category – backref from CriterionCategory
 
+    @validates('name')
+    def validate(self, key, value):
+        if key == 'name' and len(value) > 128:
+            raise ValidationError('Only 128 characters allowed.', key)
+        return Translation.validate_translation(key, value)
+
 
 class CriterionImprovesHotspot(db.Model):
 
@@ -144,6 +162,10 @@ class CriterionImprovesHotspot(db.Model):
     hotspot = db.relationship('Hotspot', lazy=True)
     # criterion – backref from Criterion
 
+    @validates('explanation')
+    def validate(self, key, value):
+        return Translation.validate_translation(key, value)
+
 
 class Hotspot(db.Model):
 
@@ -154,6 +176,10 @@ class Hotspot(db.Model):
     name = db.Column(Translation)
     description = db.Column(Translation)
     # scores – backref from Score
+
+    @validates('name', 'description')
+    def validate(self, key, value):
+        return Translation.validate_translation(key, value)
 
 
 class Ingredient(db.Model):
@@ -178,6 +204,10 @@ class Ingredient(db.Model):
     supplier = db.relationship('Supplier', lazy=True, backref=db.backref('ingredients', lazy=True))
     name = db.Column(Translation)
     percentage = db.Column(db.SmallInteger)
+
+    @validates('name')
+    def validate(self, key, value):
+        return Translation.validate_translation(key, value)
 
 
 class Label(db.Model):
@@ -210,6 +240,12 @@ class Label(db.Model):
     # products – backref from Product
     # retailers – backref from Retailer
 
+    @validates('name', 'logo')
+    def validate(self, key, value):
+        if key == 'logo' and len(value) > 256:
+            raise ValidationError('Only 256 characters allowed.', key)
+        return Translation.validate_translation(key, value)
+
 
 class LabelCountry(db.Model):
 
@@ -237,6 +273,10 @@ class LabelMeetsCriterion(db.Model):
     criterion = db.relationship('Criterion')
     label = db.relationship('Label')
 
+    @validates('explanation')
+    def validate(self, key, value):
+        return Translation.validate_translation(key, value)
+
 
 class Origin(db.Model):
 
@@ -248,6 +288,12 @@ class Origin(db.Model):
     name = db.Column(Translation)
     # ingredients – backref from Ingredient
     # supplies – backref from Supply
+
+    @validates('name')
+    def validate(self, key, value):
+        if key == 'name' and len(value) > 64:
+            raise ValidationError('Only 64 characters allowed.', key)
+        return Translation.validate_translation(key, value)
 
 
 class Producer(db.Model):
@@ -291,6 +337,10 @@ class Product(db.Model):
     # ingredients – backref from Ingredient
     # producer – backref from Producer
 
+    @validates('name', 'details')
+    def validate(self, key, value):
+        return Translation.validate_translation(key, value)
+
 
 class Resource(db.Model):
 
@@ -302,6 +352,12 @@ class Resource(db.Model):
     # ingredients – backref from Ingredient
     # labels – backref from Label
     # supplies – backref from Supply
+
+    @validates('name')
+    def validate(self, key, value):
+        if key == 'name' and len(value) > 64:
+            raise ValidationError('Only 64 characters allowed.', key)
+        return Translation.validate_translation(key, value)
 
 
 class Retailer(db.Model):
@@ -356,6 +412,10 @@ class Score(db.Model):
         'Hotspot', lazy=True, backref=db.backref('scores', lazy=True))
     supply = db.relationship(
         'Supply', lazy=True, backref=db.backref('scores', lazy=True, cascade='all, delete-orphan'))
+
+    @validates('explanation')
+    def validate(self, key, value):
+        return Translation.validate_translation(key, value)
 
 
 class Store(db.Model):

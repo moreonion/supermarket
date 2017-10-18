@@ -6,6 +6,28 @@ url_for = api.api.url_for
 
 
 @pytest.mark.usefixtures('client_class', 'db')
+class TestFormerBugs:
+    def test_related_translations(self):
+        """A translated field in a Related field did not
+        get checked for validity (i.e. that the value
+        contains a language key)."""
+
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'name': {'en': 'A label'},
+                'meets_criteria': [{
+                    'criterion': {'name': 'A criterion'},
+                    'score': '2'
+                }]
+            }),
+            content_type='application/json')
+        assert res.status_code == 400
+        assert res.json['message'] == 'Validation error.'
+        assert res.json['errors'][0]['messages']['0']['criterion'][0] == 'No language specified.'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
 class TestProductApi:
     def test_post(self):
         res = self.client.post(
@@ -24,9 +46,9 @@ class TestProductApi:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 1
-        assert res.json['name'] == 'Organic cookies'
+        assert res.json['name']['en'] == 'Organic cookies'
         assert res.json['gtin'] == '99999999999999'
-        assert res.json['details']['currency'] == 'Euro'
+        assert res.json['details']['en']['currency'] == 'Euro'
 
     def test_put_new(self):
         res = self.client.put(
@@ -39,7 +61,7 @@ class TestProductApi:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 2
-        assert res.json['name'] == 'Chocolate Ice Cream'
+        assert res.json['name']['en'] == 'Chocolate Ice Cream'
         assert res.json['gtin'] == '11111111111111'
         assert res.json['details'] is None
 
@@ -51,7 +73,7 @@ class TestProductApi:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 2
-        assert res.json['name'] == 'Vanilla Ice Cream'
+        assert res.json['name']['en'] == 'Vanilla Ice Cream'
         assert res.json['gtin'] is None
 
     def test_patch(self):
@@ -62,7 +84,7 @@ class TestProductApi:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 2
-        assert res.json['name'] == 'Vanilla Ice Cream'
+        assert res.json['name']['en'] == 'Vanilla Ice Cream'
         assert res.json['gtin'] == '11111111111111'
 
     def test_get(self):
@@ -70,20 +92,20 @@ class TestProductApi:
         assert res.status_code == 200
         assert res.mimetype == 'application/json'
         assert res.json['item']['id'] == 1
-        assert res.json['item']['name'] == 'Organic cookies'
+        assert res.json['item']['name']['en'] == 'Organic cookies'
         assert res.json['item']['gtin'] == '99999999999999'
-        assert res.json['item']['details']['currency'] == 'Euro'
+        assert res.json['item']['details']['en']['currency'] == 'Euro'
 
     def test_get_all(self):
         res = self.client.get(url_for(api.ResourceList, type='products'))
         assert res.status_code == 200
         assert res.mimetype == 'application/json'
         assert res.json['items'][0]['id'] == 1
-        assert res.json['items'][0]['name'] == 'Organic cookies'
+        assert res.json['items'][0]['name']['en'] == 'Organic cookies'
         assert res.json['items'][0]['gtin'] == '99999999999999'
-        assert res.json['items'][0]['details']['currency'] == 'Euro'
+        assert res.json['items'][0]['details']['en']['currency'] == 'Euro'
         assert res.json['items'][1]['id'] == 2
-        assert res.json['items'][1]['name'] == 'Vanilla Ice Cream'
+        assert res.json['items'][1]['name']['en'] == 'Vanilla Ice Cream'
         assert res.json['items'][1]['gtin'] == '11111111111111'
         assert res.json['items'][1]['details'] is None
 
@@ -112,7 +134,7 @@ class TestProductApiRelations:
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 1
-        assert res.json['name'] == 'Organic cookies'
+        assert res.json['name']['en'] == 'Organic cookies'
         assert res.json['brand'] == 1
 
         related_brand = self.client.get(
@@ -162,21 +184,21 @@ class TestLabelApiRelations:
             data=json.dumps({
                 'name': {'en': 'A label'},
                 'meets_criteria': [{
-                    'criterion': {'name': 'A criterion'},
+                    'criterion': {'name': {'en': 'A criterion'}},
                     'score': '2'
                 }]
             }),
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 1
-        assert res.json['name'] == 'A label'
+        assert res.json['name']['en'] == 'A label'
         assert res.json['meets_criteria'][0]['criterion'] == 1
         assert res.json['meets_criteria'][0]['score'] == 2
 
         related_criterion = self.client.get(
             url_for(api.ResourceItem, type='criteria',
                     id=res.json['meets_criteria'][0]['criterion']))
-        assert related_criterion.json['item']['name'] == 'A criterion'
+        assert related_criterion.json['item']['name']['en'] == 'A criterion'
 
 
 @pytest.mark.usefixtures('client_class', 'db')
@@ -203,7 +225,7 @@ class TestProductApiValidation:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 1
-        assert res.json['name'] == 'Organic cookies'
+        assert res.json['name']['en'] == 'Organic cookies'
         assert res.json['gtin'] == '99999999999999'
 
     def test_post_nonsense(self):
@@ -233,7 +255,6 @@ class TestProductApiValidation:
             url_for(api.ResourceItem, type='products', id=1),
             data=json.dumps({'gtin': 99999999999999, 'foo': 'bar'}),
             content_type='application/json')
-        print(res.json)
         self.assert_validation_failed(res)
 
     def test_post_bogus_relation(self):
@@ -257,10 +278,9 @@ class TestLabelApiTranslations:
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({"name": {"en": "A label", "de": "Ein Label"}}),
             content_type='application/json')
-        print(res.json)
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
-        assert res.json['name'] == 'A label'
+        assert res.json['name']['en'] == 'A label'
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=res.json['id'],
                                       lang='de'))
@@ -321,7 +341,7 @@ class TestLabelApiFilteringAndSorting:
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'A'
+        assert res.json['name']['en'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
@@ -332,7 +352,7 @@ class TestLabelApiFilteringAndSorting:
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'B'
+        assert res.json['name']['en'] == 'B'
 
     def test_reverse_sort_by_name_with_lang(self):
         res = self.client.get(
@@ -405,8 +425,8 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 2
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
-        assert res.json['items'][1]['name'] == 'A'
+        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][1]['name']['en'] == 'A'
 
     def test_filter_by_name(self):
         res = self.client.get(
@@ -415,7 +435,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_greater_than_name(self):
         res = self.client.get(
@@ -424,7 +444,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_greater_or_equal_name(self):
         res = self.client.get(
@@ -433,7 +453,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_name_in(self):
         res = self.client.get(
@@ -442,7 +462,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_name_like(self):
         res = self.client.get(
@@ -451,7 +471,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_not_name(self):
         res = self.client.get(
@@ -460,7 +480,7 @@ class TestLabelApiFilteringAndSorting:
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_reverse_sort_unknown_field(self):
         res = self.client.get(
@@ -517,7 +537,7 @@ class TestLabelApiPagination:
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'A'
+        assert res.json['name']['en'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
@@ -528,7 +548,7 @@ class TestLabelApiPagination:
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'B'
+        assert res.json['name']['en'] == 'B'
 
     def test_one_page(self):
         res = self.client.get(
