@@ -54,7 +54,6 @@ class Auth0(object):
         @wraps(f)
         def decorated(*args, **kwargs):
             if self.enabled:
-                return f(*args, **kwargs)
                 token = self.get_token_auth_header()
                 # get public key
                 jsonurl = urllib.request.urlopen(
