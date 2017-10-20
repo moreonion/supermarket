@@ -33,7 +33,7 @@ class Auth0(object):
 
     @property
     def testing(self):
-        return current_app.config['AUTH0_TESTING']
+        return current_app.config['TESTING']
 
     def get_token_auth_header(self):
         """Obtains the access token from the Authorization Header."""

@@ -4,13 +4,10 @@ class Common:
     AUTH0_DOMAIN = 'moreonion.eu.auth0.com'
     AUTH0_API_AUDIENCE = 'supermarket-api'
     AUTH0_ENABLE = True
-    AUTH0_TESTING = False
 
 
 class TestingConfig(Common):
     TESTING = True
-    AUTH0_ENABLE = False
-    AUTH0_TESTING = True
     SECRET_KEY = b'Testing secret key'
     SQLALCHEMY_DATABASE_URI = 'postgresql:///supermarket_test'
 
@@ -18,7 +15,6 @@ class TestingConfig(Common):
 class DevelopmentConfig(Common):
     DEBUG = True
     AUTH0_ENABLE = False
-    AUTH0_TESTING = True
     SECRET_KEY = b'Development secret key'
     SQLALCHEMY_DATABASE_URI = "postgresql:///supermarket"
     SQLALCHEMY_RECORD_QUERIES = True
