@@ -84,7 +84,7 @@ class GenericResource:
         self.model = model
         self.schema = schema
 
-    def _field_to_attr(self, field, query):
+    def _field_to_attr(self, field, query, lang=None):
         # Get the attribute of a model class by field name and update the query if necessary.
         #
         # Returns a :class:`~sqlalchemy.orm.attributes.InstrumentedAttribute` matching
@@ -119,8 +119,8 @@ class GenericResource:
             attr = None
         elif isinstance(attr.type, m.JSONB) and keys:
             attr = attr[keys].astext
-        elif isinstance(attr.type, m.Translation) and schema.language:
-            attr = attr[schema.language].astext
+        elif isinstance(attr.type, m.Translation) and lang:
+            attr = attr[lang].astext
         elif keys:  # not a perfect match after all
             attr = None
 
@@ -152,9 +152,9 @@ class GenericResource:
         # :param str value      Value to filter by.
         #
         accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
-        (attr, query) = self._field_to_attr(field, query)
-        if lang and isinstance(attr.type, m.Translation):
-            attr = attr[lang].astext
+        (attr, query) = self._field_to_attr(field, query, lang)
+        # if lang and isinstance(attr.type, m.Translation):
+        #     attr = attr[lang].astext
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
         if op == 'like':
