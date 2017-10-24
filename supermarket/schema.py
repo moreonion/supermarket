@@ -177,11 +177,6 @@ class CustomSchema(ma.ModelSchema):
                 attr = getattr(self.opts.model, field.attribute or field.name)
                 if isinstance(attr.type, m.Translation):
                     fields.append(key)
-            # if isinstance(field, masqla_fields.Related):
-            #     for f in class_mapper(field.related_model).iterate_properties:
-            #         if isinstance(f, ColumnProperty):
-            #             if isinstance(f.class_attribute.type, m.Translation):
-            #                 fields.append(f.key)
         return fields
 
     @property
