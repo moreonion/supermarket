@@ -84,7 +84,7 @@ class GenericResource:
         self.model = model
         self.schema = schema
 
-    def _field_to_attr(self, field, query, lang=None):
+    def _field_to_attr(self, field, query):
         # Get the attribute of a model class by field name and update the query if necessary.
         #
         # Returns a :class:`~sqlalchemy.orm.attributes.InstrumentedAttribute` matching
@@ -119,8 +119,8 @@ class GenericResource:
             attr = None
         elif isinstance(attr.type, m.JSONB) and keys:
             attr = attr[keys].astext
-        elif isinstance(attr.type, m.Translation) and lang:
-            attr = attr[lang].astext
+        elif isinstance(attr.type, m.Translation) and getattr(self, 'language', None):
+            attr = attr[self.language].astext
         elif keys:  # not a perfect match after all
             attr = None
 
@@ -130,16 +130,16 @@ class GenericResource:
 
         return (attr, query)
 
-    def _find_filter(self, query, field, op, value, lang):
+    def _find_filter(self, field):
         # Defines which filter method should be used for `field`.
         #
         # Allows child classes to add their own filters.
         #
         # :param str field      Name of the field to filter.
         #
-        return self._default_filter(query, field, op, value, lang)
+        return self._default_filter
 
-    def _default_filter(self, query, field, op, value, lang):
+    def _default_filter(self, query, field, op, value):
         # Default filter method, filters `field` by `value` using `op`.
         #
         # Returns the filtered query.
@@ -152,9 +152,8 @@ class GenericResource:
         # :param str value      Value to filter by.
         #
         accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
-        (attr, query) = self._field_to_attr(field, query, lang)
-        # if lang and isinstance(attr.type, m.Translation):
-        #     attr = attr[lang].astext
+        (attr, query) = self._field_to_attr(field, query)
+
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
         if op == 'like':
@@ -171,7 +170,7 @@ class GenericResource:
             query = query.filter(op(attr, value))
         return query
 
-    def _filter(self, query, filter_fields, language, errors):
+    def _filter(self, query, filter_fields, errors):
         # Go through `filter_fields` and apply a matching filter to the `query`.
         #
         # Adds any errors to `errors` and returns the filtered query.
@@ -184,8 +183,10 @@ class GenericResource:
         not_filtered = []
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
+            filter = self._find_filter(field)
+
             try:
-                query = self._find_filter(query, field, op, value, language)
+                query = filter(query, field, op, value)
             except ParamException as pe:
                 not_filtered.append({
                     'param': key,
@@ -342,8 +343,8 @@ class GenericResource:
         args = request.args.copy()
         only = self._sanitize_only(args.pop('only', None))
         include = args.pop('include', '')
-        lang = args.pop('lang', None)
-        schema = self.schema(lang=lang, only=only)
+        self.language = args.pop('lang', None)
+        schema = self.schema(lang=self.language, only=only)
         if include:
             schema.context['include'] = self._parse_include_params(include, errors)
 
@@ -401,20 +402,18 @@ class GenericResource:
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', None)
         include = args.pop('include', '')
-        lang = args.pop('lang', None)
+        self.language = args.pop('lang', None)
         only = self._sanitize_only(args.pop('only', None))
         errors = []
-
-        # make schema
-        schema = self.schema(many=True, lang=lang, only=only)
-        if include:
-            schema.context['include'] = self._parse_include_params(include, errors)
 
         # get data from model
         query = self.model.query
         query = self._sort(query, sort, errors)
-        query = self._filter(query, args, schema.language, errors)
+        query = self._filter(query, args, errors)
         page = query.paginate(page=page, per_page=limit)
+        schema = self.schema(many=True, lang=self.language, only=only)
+        if include:
+            schema.context['include'] = self._parse_include_params(include, errors)
 
         return {
             'items': schema.dump(page.items).data,
@@ -441,13 +440,13 @@ class LabelResource(GenericResource):
 
     """Has additional label specifc filters and include options."""
 
-    def _find_filter(self, query, field, op, value, lang):
+    def _find_filter(self, field):
         if field == 'hotspots':
-            filter = self._hotspot_filter(query, field, op, value)
+            filter = self._hotspot_filter
         elif field == 'countries':
-            filter = self._country_filter(query, field, op, value)
+            filter = self._country_filter
         else:
-            filter = super()._find_filter(query, field, op, value, lang)
+            filter = super()._find_filter(field)
         return filter
 
     def _hotspot_filter(self, query, field, op, value):
@@ -505,7 +504,7 @@ class LabelResource(GenericResource):
             if not only:
                 only = None
 
-        included = super(LabelResource, self)._parse_include_params(','.join(super_fields), errors)
+        included = super()._parse_include_params(','.join(super_fields), errors)
         if only is not None:
             included['hotspots'] = {'resource': resource, 'only': only}
 
