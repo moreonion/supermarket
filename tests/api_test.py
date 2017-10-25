@@ -7,16 +7,40 @@ auth_header = {'authorization': "Bearer notarealbearertokenofcourse"}
 
 
 @pytest.mark.usefixtures('client_class', 'db')
+class TestFormerBugs:
+    def test_related_translations(self):
+        """A translated field in a Related field did not
+        get checked for validity (i.e. that the value
+        contains a language key)."""
+
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'name': {'en': 'A label'},
+                'meets_criteria': [{
+                    'criterion': {'name': 'A criterion'},
+                    'score': '2'
+                }]
+            }),
+            content_type='application/json')
+        assert res.status_code == 400
+        assert res.json['message'] == 'Validation error.'
+        assert res.json['errors'][0]['messages']['0']['criterion'][0] == 'No language specified.'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
 class TestProductApi:
     def test_post(self):
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Organic cookies',
+                'name': {'en': 'Organic cookies'},
                 'gtin': '99999999999999',
                 'details': {
-                    'price': '2,99',
-                    'currency': 'Euro'
+                    'en': {
+                        'price': '2,99',
+                        'currency': 'Euro'
+                    }
                 }
             }),
             headers=auth_header,
@@ -24,15 +48,15 @@ class TestProductApi:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 1
-        assert res.json['name'] == 'Organic cookies'
+        assert res.json['name']['en'] == 'Organic cookies'
         assert res.json['gtin'] == '99999999999999'
-        assert res.json['details']['currency'] == 'Euro'
+        assert res.json['details']['en']['currency'] == 'Euro'
 
     def test_put_new(self):
         res = self.client.put(
             url_for(api.ResourceItem, type='products', id=2),
             data=json.dumps({
-                'name': 'Chocolate Ice Cream',
+                'name': {'en': 'Chocolate Ice Cream'},
                 'gtin': '11111111111111'
             }),
             headers=auth_header,
@@ -40,20 +64,20 @@ class TestProductApi:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 2
-        assert res.json['name'] == 'Chocolate Ice Cream'
+        assert res.json['name']['en'] == 'Chocolate Ice Cream'
         assert res.json['gtin'] == '11111111111111'
         assert res.json['details'] is None
 
     def test_put_existing(self):
         res = self.client.put(
             url_for(api.ResourceItem, type='products', id=2),
-            data=json.dumps({'name': 'Vanilla Ice Cream'}),
+            data=json.dumps({'name': {'en': 'Vanilla Ice Cream'}}),
             headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 2
-        assert res.json['name'] == 'Vanilla Ice Cream'
+        assert res.json['name']['en'] == 'Vanilla Ice Cream'
         assert res.json['gtin'] is None
 
     def test_patch(self):
@@ -65,7 +89,7 @@ class TestProductApi:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 2
-        assert res.json['name'] == 'Vanilla Ice Cream'
+        assert res.json['name']['en'] == 'Vanilla Ice Cream'
         assert res.json['gtin'] == '11111111111111'
 
     def test_get(self):
@@ -73,20 +97,20 @@ class TestProductApi:
         assert res.status_code == 200
         assert res.mimetype == 'application/json'
         assert res.json['item']['id'] == 1
-        assert res.json['item']['name'] == 'Organic cookies'
+        assert res.json['item']['name']['en'] == 'Organic cookies'
         assert res.json['item']['gtin'] == '99999999999999'
-        assert res.json['item']['details']['currency'] == 'Euro'
+        assert res.json['item']['details']['en']['currency'] == 'Euro'
 
     def test_get_all(self):
         res = self.client.get(url_for(api.ResourceList, type='products'))
         assert res.status_code == 200
         assert res.mimetype == 'application/json'
         assert res.json['items'][0]['id'] == 1
-        assert res.json['items'][0]['name'] == 'Organic cookies'
+        assert res.json['items'][0]['name']['en'] == 'Organic cookies'
         assert res.json['items'][0]['gtin'] == '99999999999999'
-        assert res.json['items'][0]['details']['currency'] == 'Euro'
+        assert res.json['items'][0]['details']['en']['currency'] == 'Euro'
         assert res.json['items'][1]['id'] == 2
-        assert res.json['items'][1]['name'] == 'Vanilla Ice Cream'
+        assert res.json['items'][1]['name']['en'] == 'Vanilla Ice Cream'
         assert res.json['items'][1]['gtin'] == '11111111111111'
         assert res.json['items'][1]['details'] is None
 
@@ -111,14 +135,14 @@ class TestProductApiRelations:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Organic cookies',
+                'name': {'en': 'Organic cookies'},
                 'brand': {'name': 'Spar'}
             }),
             headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 1
-        assert res.json['name'] == 'Organic cookies'
+        assert res.json['name']['en'] == 'Organic cookies'
         assert res.json['brand'] == 1
 
         related_brand = self.client.get(
@@ -130,7 +154,7 @@ class TestProductApiRelations:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Vanillia Ice Cream',
+                'name': {'en': 'Vanillia Ice Cream'},
                 'brand': 1
             }),
             headers=auth_header,
@@ -148,7 +172,7 @@ class TestProductApiRelations:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Fluffy Cake',
+                'name': {'en': 'Fluffy Cake'},
                 'brand': {'id': 1}
             }),
             headers=auth_header,
@@ -168,9 +192,9 @@ class TestLabelApiRelations:
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
-                'name': 'A label',
+                'name': {'en': 'A label'},
                 'meets_criteria': [{
-                    'criterion': {'name': 'A criterion'},
+                    'criterion': {'name': {'en': 'A criterion'}},
                     'score': '2'
                 }]
             }),
@@ -178,14 +202,14 @@ class TestLabelApiRelations:
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 1
-        assert res.json['name'] == 'A label'
+        assert res.json['name']['en'] == 'A label'
         assert res.json['meets_criteria'][0]['criterion'] == 1
         assert res.json['meets_criteria'][0]['score'] == 2
 
         related_criterion = self.client.get(
             url_for(api.ResourceItem, type='criteria',
                     id=res.json['meets_criteria'][0]['criterion']))
-        assert related_criterion.json['item']['name'] == 'A criterion'
+        assert related_criterion.json['item']['name']['en'] == 'A criterion'
 
 
 @pytest.mark.usefixtures('client_class', 'db')
@@ -205,7 +229,7 @@ class TestProductApiValidation:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Organic cookies',
+                'name': {'en': 'Organic cookies'},
                 'gtin': '99999999999999'
             }),
             headers=auth_header,
@@ -213,14 +237,14 @@ class TestProductApiValidation:
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
         assert res.json['id'] == 1
-        assert res.json['name'] == 'Organic cookies'
+        assert res.json['name']['en'] == 'Organic cookies'
         assert res.json['gtin'] == '99999999999999'
 
     def test_post_nonsense(self):
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'nonsense',
+                'name': {'en': 'nonsense'},
                 'foo': 'bar',
                 'gtin': 99999999999999
             }),
@@ -232,7 +256,7 @@ class TestProductApiValidation:
         res = self.client.put(
             url_for(api.ResourceItem, type='products', id=1),
             data=json.dumps({
-                'name': 'nonsense',
+                'name': {'en': 'nonsense'},
                 'foo': 'bar',
                 'gtin': 99999999999999
             }),
@@ -252,7 +276,7 @@ class TestProductApiValidation:
         res = self.client.post(
             url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': 'Organic cookies',
+                'name': {'en': 'Organic cookies'},
                 'brand': 1
             }),
             headers=auth_header,
@@ -264,35 +288,93 @@ class TestProductApiValidation:
 
 
 @pytest.mark.usefixtures('client_class', 'db')
+class TestLabelApiTranslations:
+    def test_post(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({"name": {"en": "A label", "de": "Ein Label"}}),
+            content_type='application/json')
+        assert res.status_code == 201
+        assert res.mimetype == 'application/json'
+        assert res.json['name']['en'] == 'A label'
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', id=res.json['id'],
+                                      lang='de'))
+        assert res.json['item']['name'] == 'Ein Label'
+
+    def test_get_item_with_lang(self):
+        res = self.client.get(url_for(api.ResourceItem, type='labels', lang='en', id=1))
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'A label'
+
+        res = self.client.get(url_for(api.ResourceItem, type='labels', lang='de', id=1))
+        assert res.status_code == 200
+        assert res.json['item']['name'] == 'Ein Label'
+
+    def test_get_list_with_lang(self):
+        res = self.client.get(url_for(api.ResourceList, type='labels', lang='en'))
+        assert res.status_code == 200
+        assert res.json['items'][0]['name'] == 'A label'
+
+        res = self.client.get(url_for(api.ResourceList, type='labels', lang='de'))
+        assert res.status_code == 200
+        assert res.json['items'][0]['name'] == 'Ein Label'
+
+    def test_post_wrong_lang(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'name': {'at': 'A label'}
+            }),
+            content_type='application/json')
+        assert res.status_code == 400
+        assert res.mimetype == 'application/json'
+        assert res.json['errors'][0]['field'] == 'name'
+        assert res.json['errors'][0]['messages'][0] == 'Invalid language (at).'
+
+    def test_post_string(self):
+        res = self.client.post(
+            url_for(api.ResourceList, type='labels'),
+            data=json.dumps({
+                'name': 'A label'
+            }),
+            content_type='application/json')
+        assert res.status_code == 400
+        assert res.mimetype == 'application/json'
+        assert res.json['errors'][0]['field'] == 'name'
+        assert res.json['errors'][0]['messages'][0] == 'No language specified.'
+
+
+@pytest.mark.usefixtures('client_class', 'db')
 class TestLabelApiFilteringAndSorting:
     def test_post_labels(self):
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'A',
+                'name': {'en': 'A'},
             }),
             headers=auth_header,
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'A'
+        assert res.json['name']['en'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'B',
+                'name': {'en': 'B'},
             }),
             headers=auth_header,
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'B'
+        assert res.json['name']['en'] == 'B'
 
-    def test_reverse_sort_by_name(self):
+    def test_reverse_sort_by_name_with_lang(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', sort='-name')
+            url_for(api.ResourceList, type='labels', lang='en', sort='-name')
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 2
@@ -300,59 +382,123 @@ class TestLabelApiFilteringAndSorting:
         assert res.json['items'][0]['name'] == 'B'
         assert res.json['items'][1]['name'] == 'A'
 
-    def test_filter_by_name(self):
+    def test_filter_by_name_with_lang(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', name='B')
+            url_for(api.ResourceList, type='labels', lang='en', name='B')
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
         assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_greater_than_name_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:gt': 'A'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_greater_or_equal_name_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:ge': 'B'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_name_in_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:in': 'B,C'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_name_like_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:like': 'B'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_filter_not_name_with_lang(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', lang='en', **{'name:ne': 'A'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name'] == 'B'
+
+    def test_reverse_sort_by_name(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', sort='-name.en')
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 2
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name']['en'] == 'B'
+        assert res.json['items'][1]['name']['en'] == 'A'
+
+    def test_filter_by_name(self):
+        res = self.client.get(
+            url_for(api.ResourceList, type='labels', **{'name.en': 'B'})
+        )
+        assert res.status_code == 200
+        assert len(res.json['items']) == 1
+        assert len(res.json['errors']) == 0
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_greater_than_name(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:gt': 'A'})
+            url_for(api.ResourceList, type='labels', **{'name.en:gt': 'A'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_greater_or_equal_name(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:ge': 'B'})
+            url_for(api.ResourceList, type='labels', **{'name.en:ge': 'B'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_name_in(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:in': 'B,C'})
+            url_for(api.ResourceList, type='labels', **{'name.en:in': 'B,C'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_name_like(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:like': 'B'})
+            url_for(api.ResourceList, type='labels', **{'name.en:like': 'B'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_filter_not_name(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:ne': 'A'})
+            url_for(api.ResourceList, type='labels', **{'name.en:ne': 'A'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 1
         assert len(res.json['errors']) == 0
-        assert res.json['items'][0]['name'] == 'B'
+        assert res.json['items'][0]['name']['en'] == 'B'
 
     def test_reverse_sort_unknown_field(self):
         res = self.client.get(
@@ -378,12 +524,12 @@ class TestLabelApiFilteringAndSorting:
 
     def test_filter_unknown_operator(self):
         res = self.client.get(
-            url_for(api.ResourceList, type='labels', **{'name:xy': 'A'})
+            url_for(api.ResourceList, type='labels', **{'name.en:xy': 'A'})
         )
         assert res.status_code == 200
         assert len(res.json['items']) == 2
         assert len(res.json['errors']) == 1
-        assert res.json['errors'][0]['errors'][0]['param'] == 'name:xy'
+        assert res.json['errors'][0]['errors'][0]['param'] == 'name.en:xy'
         assert res.json['errors'][0]['errors'][0]['message'].startswith('Unknown operator `xy`')
 
     def test_filter_like_integer(self):
@@ -404,25 +550,25 @@ class TestLabelApiPagination:
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'A',
+                'name': {'en': 'A'},
             }),
             headers=auth_header,
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'A'
+        assert res.json['name']['en'] == 'A'
 
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'type': 'product',
-                'name': 'B',
+                'name': {'en': 'B'},
             }),
             headers=auth_header,
             content_type='application/json'
         )
         assert res.status_code == 201
-        assert res.json['name'] == 'B'
+        assert res.json['name']['en'] == 'B'
 
     def test_one_page(self):
         res = self.client.get(

@@ -1,11 +1,12 @@
+import pycountry
+
 from flask import url_for
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import _rapply as ma_rapply
 from marshmallow_sqlalchemy import fields as masqla_fields
-from marshmallow import (class_registry, post_dump, post_load, utils,
+from marshmallow import (class_registry, post_dump, post_load, pre_load, utils,
                          validates_schema, ValidationError)
 from sqlalchemy.inspection import inspect
-
 import supermarket.model as m
 
 ma = Marshmallow()
@@ -20,6 +21,10 @@ class Nested(ma.Nested):
     Fixes https://github.com/marshmallow-code/marshmallow-sqlalchemy/issues/67.
 
     """
+
+    def _serialize(self, value, attr, obj):
+        self.schema.language = self.parent.language
+        return super()._serialize(value, attr, obj)
 
     def _deserialize(self, value, attr, data):
         if self.many and not utils.is_collection(value):
@@ -126,6 +131,14 @@ class Hyperlinks(ma.Hyperlinks):
 class CustomSchema(ma.ModelSchema):
 
     """Config and validation that all our schemas share."""
+    default_language = 'en'
+
+    def __init__(self, lang=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if lang:
+            self.language = lang
+        else:
+            self.language = None
 
     @property
     def nested_fields(self):
@@ -156,6 +169,17 @@ class CustomSchema(ma.ModelSchema):
         return lists
 
     @property
+    def translated_fields(self):
+        """Get the keys of all fields that contain translations."""
+        fields = []
+        for key, field in self.fields.items():
+            if isinstance(field, ma.Raw):
+                attr = getattr(self.opts.model, field.attribute or field.name)
+                if isinstance(attr.type, m.Translation):
+                    fields.append(key)
+        return fields
+
+    @property
     def schema_description(self):
         """Document the schema."""
         fields = {}
@@ -168,6 +192,8 @@ class CustomSchema(ma.ModelSchema):
                 'read-only': v.dump_only,
                 'list': isinstance(v, ma.List) or (isinstance(v, Nested) and v.many)
             }
+            if k in self.translated_fields:
+                d['type'] = 'translation'
             if k in self.nested_fields:
                 if isinstance(self.fields[k].nested, str):
                     nested_schema = class_registry.get_class(self.fields[k].nested)
@@ -200,6 +226,48 @@ class CustomSchema(ma.ModelSchema):
         unknown = set(original_data) - set(self.fields)
         if unknown:
             raise ValidationError('Unknown field.', unknown)
+
+    @pre_load()
+    def check_translations(self, data):
+        """Check if translations have valid language codes."""
+        errors = {}
+
+        def check_language(lang):
+            try:
+                pycountry.languages.lookup(lang)
+            except LookupError:
+                return False
+            return True
+
+        for field in self.translated_fields:
+            if field in data:
+                if not isinstance(data[field], dict):
+                    raise ValidationError('No language specified.', field)
+                langs = data[field].keys()
+                for lang in langs:
+                    if check_language(lang) is False:
+                        errors[field] = lang
+        if errors:
+            raise ValidationError(
+                'Invalid language ({}).'.format(', '.join(set(errors.values()))), errors.keys())
+
+    @post_dump(pass_many=False)
+    def filter_translations_by_language(self, data):
+        """Replace translations with the data of the specified language."""
+
+        if self.language is not None:
+            for field in self.translated_fields:
+                if field in data and data[field]:
+                    if self.language in data[field]:
+                        data[field] = data[field][self.language]
+                    elif self.default_language in data[field]:
+                        data[field] = data[field][self.default_language]
+                    else:
+                        try:
+                            data[field] = next(iter(data[field].values()))
+                        except StopIteration:
+                            data[field] = None
+        return data
 
     @post_dump(pass_many=False)
     def load_queried_nested_fields(self, data):
@@ -328,7 +396,7 @@ class CriterionCategory(CustomSchema):
     category = Nested('CriterionCategory', only=('id', 'name'))
 
     class Meta(CustomSchema.Meta):
-        model = m.Criterion
+        model = m.CriterionCategory
 
 
 class CriterionImprovesHotspot(CustomSchema):

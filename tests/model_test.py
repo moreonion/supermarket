@@ -22,8 +22,8 @@ def test_brand_model(db):
 
 def test_category_model(db):
     category = m.Category(name='cookies')
-    product_1 = m.Product(name='Chocolate chip cookies', category=category)
-    product_2 = m.Product(name='Triple chocolate bombs', category=category)
+    product_1 = m.Product(name={'en': 'Chocolate chip cookies'}, category=category)
+    product_2 = m.Product(name={'en': 'Triple chocolate bombs'}, category=category)
 
     db.session.add(product_1)
     db.session.add(product_2)
@@ -35,31 +35,33 @@ def test_category_model(db):
 
 
 def test_criterion_model(db):
-    criterion = m.Criterion(name='Saves the world')
+    criterion = m.Criterion(name={'en': 'Saves the world'})
     criterion.details = {
-        'question': 'Does the certificate/label save the world?',
-        'response_options': '0 - no, 1 - partly, 2 - totally!',
-        'explanation': '2 applies only if it really saves the world.',
-        'possible_scores': [-1, 0, 1, 2]  # -1 means not applicable
+        'en': {
+            'question': 'Does the certificate/label save the world?',
+            'response_options': '0 - no, 1 - partly, 2 - totally!',
+            'explanation': '2 applies only if it really saves the world.',
+            'possible_scores': [-1, 0, 1, 2]  # -1 means not applicable
+        }
     }
 
-    hotspot_assoc = m.CriterionImprovesHotspot(weight=2, explanation='Obvious.')
-    hotspot_assoc.hotspot = m.Hotspot(name='Saving the world')
+    hotspot_assoc = m.CriterionImprovesHotspot(weight=2, explanation={'en': 'Obvious.'})
+    hotspot_assoc.hotspot = m.Hotspot(name={'en': 'Saving the world'})
     criterion.improves_hotspots.append(hotspot_assoc)
 
     db.session.add(criterion)
     db.session.commit()
 
     assert criterion.id > 0
-    assert criterion.details['possible_scores'][0] == -1
+    assert criterion.details['en']['possible_scores'][0] == -1
     assert len(criterion.improves_hotspots) == 1
     assert criterion.improves_hotspots[0].weight == 2
-    assert criterion.improves_hotspots[0].explanation == 'Obvious.'
-    assert criterion.improves_hotspots[0].hotspot.name == 'Saving the world'
+    assert criterion.improves_hotspots[0].explanation['en'] == 'Obvious.'
+    assert criterion.improves_hotspots[0].hotspot.name['en'] == 'Saving the world'
 
 
 def test_hotspot_model(db):
-    hotspot = m.Hotspot(name='Saving the world', description='Today’s agenda')
+    hotspot = m.Hotspot(name={'en': 'Saving the world'}, description={'en': 'Today’s agenda'})
 
     db.session.add(hotspot)
     db.session.commit()
@@ -68,7 +70,7 @@ def test_hotspot_model(db):
 
 
 def test_origin_model(db):
-    origin = m.Origin(name='Indonesia')
+    origin = m.Origin(name={'en': 'Indonesia'})
 
     db.session.add(origin)
     db.session.commit()
@@ -78,7 +80,7 @@ def test_origin_model(db):
 
 def test_producer_model(db):
     producer = m.Producer(name='Willy Wonka’s Chocolate Factory')
-    product = m.Product(name='Zucchini Chocolate', producer=producer)
+    product = m.Product(name={'en': 'Zucchini Chocolate'}, producer=producer)
 
     db.session.add(product)
     db.session.commit()
@@ -89,14 +91,14 @@ def test_producer_model(db):
 
 
 def test_product_model(db):
-    raw_palm_oil = m.Resource(name='Palm oil')
+    raw_palm_oil = m.Resource(name={'en': 'Palm oil'})
     palm_oil = m.Ingredient(
         resource=raw_palm_oil,
         percentage=90,
         weight=1,
     )
-    raw_cocoa = m.Resource(name='Cocoa')
-    peru = m.Origin(name='Peru')
+    raw_cocoa = m.Resource(name={'en': 'Cocoa'})
+    peru = m.Origin(name={'en': 'Peru'})
     supplier = m.Supplier(name='Cocoa Trade Inc.')
     cocoa = m.Ingredient(
         resource=raw_cocoa,
@@ -105,24 +107,26 @@ def test_product_model(db):
         percentage=10,
         weight=2,
     )
-    organic = m.Label(name='EU organic')
+    organic = m.Label(name={'en': 'EU organic'})
     billa = m.Store(name='Billa')
     brand = m.Brand(name='BestBio')
     producer = m.Producer(name='Raw Organic Cookie Factory')
     category = m.Category(name='Cookies')
 
     product = m.Product(
-        name='Raw organic vegan gluten-free cookies',
+        name={'en': 'Raw organic vegan gluten-free cookies'},
         gtin='99999999999999',
         stores=[billa],
         brand=brand,
         producer=producer,
         category=category,
         details={
-            'image': 'some url',
-            'weight': '300 g',
-            'price': '2,99',
-            'currency': 'Euro'
+            'en': {
+                'image': 'some url',
+                'weight': '300 g',
+                'price': '2,99',
+                'currency': 'Euro'
+            }
         },
         ingredients=[palm_oil, cocoa],
         labels=[organic]
@@ -147,11 +151,11 @@ def test_product_model(db):
 
 
 def test_resource_model(db):
-    resource = m.Resource(name='Cocoa')
-    origin = m.Origin(name='Ghana')
-    label = m.Label(name='Fairtrade')
+    resource = m.Resource(name={'en': 'Cocoa'})
+    origin = m.Origin(name={'en': 'Ghana'})
+    label = m.Label(name={'en': 'Fairtrade'})
     supplier = m.Supplier(name='XY')
-    product = m.Product(name='Chocolate', labels=[label])
+    product = m.Product(name={'en': 'Chocolate'}, labels=[label])
     ingredient = m.Ingredient(
         resource=resource,
         supplier=supplier,
@@ -169,7 +173,7 @@ def test_resource_model(db):
     db.session.commit()
 
     assert resource.id > 0
-    assert resource.name == 'Cocoa'
+    assert resource.name['en'] == 'Cocoa'
     assert resource.labels[0] == label
     assert product.labels[0] in resource.labels
     assert resource.ingredients[0].origin == origin      # Read: Resource used as an ingredient
@@ -186,15 +190,15 @@ def test_retailer_model(db):
     m.Store(name='Billa', retailer=retailer)
     m.Store(name='Penny', retailer=retailer)
     m.Brand(name='Clever', retailer=retailer)
-    m.Label(name='BEPI', type='retailer', retailers=[retailer])
+    m.Label(name={'en': 'BEPI'}, type='retailer', retailers=[retailer])
 
     criterion_1_assoc = m.RetailerMeetsCriterion(satisfied=False, explanation='Nope.')
-    criterion_1_assoc.criterion = m.Criterion(name='Saves the world', type='retailer')
+    criterion_1_assoc.criterion = m.Criterion(name={'en': 'Saves the world'}, type='retailer')
     retailer.meets_criteria.append(criterion_1_assoc)
 
     criterion_2_assoc = m.RetailerMeetsCriterion(
         satisfied=True, explanation='At least a few of us...')
-    criterion_2_assoc.criterion = m.Criterion(name='Makes us all happy', type='retailer')
+    criterion_2_assoc.criterion = m.Criterion(name={'en': 'Makes us all happy'}, type='retailer')
     retailer.meets_criteria.append(criterion_2_assoc)
 
     db.session.add(retailer)
@@ -208,29 +212,29 @@ def test_retailer_model(db):
     assert retailer.name == 'Rewe'
     assert retailer.meets_criteria[0].satisfied is False
     assert retailer.meets_criteria[0].explanation == 'Nope.'
-    assert retailer.meets_criteria[0].criterion.name == 'Saves the world'
+    assert retailer.meets_criteria[0].criterion.name['en'] == 'Saves the world'
     assert retailer.meets_criteria[0].criterion.type == 'retailer'
-    assert retailer.labels[0].name == 'BEPI'
+    assert retailer.labels[0].name['en'] == 'BEPI'
 
 
 def test_score_model(db):
-    resource = m.Resource(name='pork fat')
-    origin = m.Origin(name='austria')
+    resource = m.Resource(name={'en': 'pork fat'})
+    origin = m.Origin(name={'en': 'austria'})
     supplier = m.Supplier(name='huber-bauer')
     supply_from_country = m.Supply(resource=resource, origin=origin)
     supply_from_supplier = m.Supply(resource=resource, supplier=supplier)
-    hotspot = m.Hotspot(name='animal rights')
+    hotspot = m.Hotspot(name={'en': 'animal rights'})
     country_score = m.Score(
         supply=supply_from_country,
         hotspot=hotspot,
         score=3,
-        explanation='foo'
+        explanation={'en': 'foo'}
     )
     supplier_score = m.Score(
         supply=supply_from_supplier,
         hotspot=hotspot,
         score=3,
-        explanation='foo'
+        explanation={'en': 'foo'}
     )
 
     db.session.add(country_score, supplier_score)

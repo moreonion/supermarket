@@ -119,6 +119,8 @@ class GenericResource:
             attr = None
         elif isinstance(attr.type, m.JSONB) and keys:
             attr = attr[keys].astext
+        elif isinstance(attr.type, m.Translation) and getattr(self, 'language', None):
+            attr = attr[self.language].astext
         elif keys:  # not a perfect match after all
             attr = None
 
@@ -151,6 +153,7 @@ class GenericResource:
         #
         accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
         (attr, query) = self._field_to_attr(field, query)
+
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
         if op == 'like':
@@ -181,6 +184,7 @@ class GenericResource:
         for key, value in filter_fields.items(multi=True):
             (field, op) = key.split(':') if ':' in key else (key, 'eq')
             filter = self._find_filter(field)
+
             try:
                 query = filter(query, field, op, value)
             except ParamException as pe:
@@ -262,7 +266,7 @@ class GenericResource:
         }
         return pages
 
-    def _parse_include_params(self, query, include_fields, errors):
+    def _parse_include_params(self, include_fields, errors):
         # Go through `include_fields` (fields that should be nested) and retrieve their schema.
         #
         # :params str include_fields   The raw parameter value: a comma seperated list of fields
@@ -297,7 +301,8 @@ class GenericResource:
                 fields = ['all']
             # get attr of related field
             try:
-                attr = self._field_to_attr(relation, query)[0]  # no need to update the query
+                # query isn’t needed, using dummy query to get at attr
+                attr = self._field_to_attr(relation, self.model.query)[0]
             except ParamException as e:
                 for f in fields:
                     not_included.append({
@@ -335,13 +340,13 @@ class GenericResource:
         """Get an item of ‘type’ by ‘ID’."""
         r = self.model.query.get_or_404(id)
         errors = []
-        query = self.model.query
         args = request.args.copy()
         only = self._sanitize_only(args.pop('only', None))
         include = args.pop('include', '')
-        schema = self.schema(only=only)
+        self.language = args.pop('lang', None)
+        schema = self.schema(lang=self.language, only=only)
         if include:
-            schema.context['include'] = self._parse_include_params(query, include, errors)
+            schema.context['include'] = self._parse_include_params(include, errors)
 
         return {
             'item': schema.dump(r).data,
@@ -380,6 +385,7 @@ class GenericResource:
         """Get a paged list containing all items of type ‘type’.
 
         It's possible to amend the list with query parameters:
+        - lang: language for translated content (default 'en')
         - limit: maximum number of items per page (default 20)
         - page: which page to display (default 1)
         - only: comma seperated field names to return in the result (includes all fields if empty).
@@ -396,6 +402,7 @@ class GenericResource:
         limit = int(args.pop('limit', 20))
         sort = args.pop('sort', None)
         include = args.pop('include', '')
+        self.language = args.pop('lang', None)
         only = self._sanitize_only(args.pop('only', None))
         errors = []
 
@@ -404,9 +411,9 @@ class GenericResource:
         query = self._sort(query, sort, errors)
         query = self._filter(query, args, errors)
         page = query.paginate(page=page, per_page=limit)
-        schema = self.schema(many=True, only=only)
+        schema = self.schema(many=True, lang=self.language, only=only)
         if include:
-            schema.context['include'] = self._parse_include_params(query, include, errors)
+            schema.context['include'] = self._parse_include_params(include, errors)
 
         return {
             'items': schema.dump(page.items).data,
@@ -464,7 +471,7 @@ class LabelResource(GenericResource):
         query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
         return query
 
-    def _parse_include_params(self, query, include_fields, errors):
+    def _parse_include_params(self, include_fields, errors):
         # include hotspots, too
         include_raw = include_fields.split(',')
         hotspot_fields = []
@@ -497,7 +504,7 @@ class LabelResource(GenericResource):
             if not only:
                 only = None
 
-        included = super()._parse_include_params(query, ','.join(super_fields), errors)
+        included = super()._parse_include_params(','.join(super_fields), errors)
         if only is not None:
             included['hotspots'] = {'resource': resource, 'only': only}
 

@@ -43,12 +43,15 @@ https://supermarket.more-onion.at/api/v1
 #### Including/Excluding
 - `only`: comma seperated list of attributes to fetch
 - `include`: attribute(s) of related fields that should be included formatted as `<related name>.<field name>`, seperated by comma. 'all' includes all fields of the related item.
+- `lang`: ISO language code to filter translations by language (instead of a translation object, only the value for the given language will be returned)
 
 ###### Examples
 - https://supermarket.more-onion.at/api/v1/labels/1?include=products.name,meets_criterion.criterion.all
   → include product names and all criterion fields for a label item
 - https://supermarket.more-onion.at/api/v1/products/1?only=id,name
   → show only id and name of a product
+- https://supermarket.more-onion.at/api/v1/labels/1?lang=de
+  → return only the German translation of label name, description, etc.
 
 ## Collections
 > root url + resource
@@ -116,12 +119,15 @@ https://supermarket.more-onion.at/api/v1
 #### Including/Excluding
 - `only`: comma seperated list of attributes to fetch
 - `include`: attribute(s) of related fields that should be included formatted as `<related name>.<field name>`, seperated by comma. 'all' includes all fields of the related item.
+- `lang`: ISO language code to filter translations by language (instead of a translation object, only the value for the given language will be returned)
 
 ###### Examples
 - https://supermarket.more-onion.at/api/v1/labels?include=products.name,meets_criterion.criterion.all
   → include product names and all criterion fields for label items
 - https://supermarket.more-onion.at/api/v1/products?only=id,name
   → show only id and name of each product
+- https://supermarket.more-onion.at/api/v1/labels?lang=de
+  → return only the German translation of label names, descriptions, etc.
 
 #### Filtering
 - `<field name>:<op>`: filter by a value using the given operator (no operator defaults to "equal")
@@ -176,8 +182,7 @@ https://supermarket.more-onion.at/api/v1
 - `type`: what type of value to expect, e.g. "string", "integer",…
   - "related": Relationship to another resource, represented by the related resources’ identifier. The link to this resource’s documentation page (if there is one) is included in `doc`.
   - "nested": A related item that is included (nested) in the result. The nested fields are described in `fields`. By default, only fields that do not have their own endpoint are nested.
+  - "translation": Object containing language specific field values
 - `list`: whether to expect a single item or a list of items of `type`
 - `required`: whether the field is required (then it has to be included in POST and PUT requests)
 - `read-only`: whether the field is read-only (read-only fields will be ignored in POST, PUT and PATCH requests)
-
-
