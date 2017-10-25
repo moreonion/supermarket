@@ -3,6 +3,7 @@ import json
 import supermarket.api as api
 
 url_for = api.api.url_for
+auth_header = {'authorization': "Bearer notarealbearertokenofcourse"}
 
 
 @pytest.mark.usefixtures('client_class', 'db')
@@ -42,6 +43,7 @@ class TestProductApi:
                     }
                 }
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
@@ -57,6 +59,7 @@ class TestProductApi:
                 'name': {'en': 'Chocolate Ice Cream'},
                 'gtin': '11111111111111'
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
@@ -69,6 +72,7 @@ class TestProductApi:
         res = self.client.put(
             url_for(api.ResourceItem, type='products', id=2),
             data=json.dumps({'name': {'en': 'Vanilla Ice Cream'}}),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
@@ -80,6 +84,7 @@ class TestProductApi:
         res = self.client.patch(
             url_for(api.ResourceItem, type='products', id=2),
             data=json.dumps({'gtin': '11111111111111'}),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
@@ -110,7 +115,8 @@ class TestProductApi:
         assert res.json['items'][1]['details'] is None
 
     def test_delete(self):
-        res = self.client.delete(url_for(api.ResourceItem, type='products', id=2))
+        res = self.client.delete(url_for(api.ResourceItem, type='products', id=2),
+                                 headers=auth_header)
         assert res.status_code == 204
 
     def test_get_deleted(self):
@@ -118,7 +124,8 @@ class TestProductApi:
         assert res.status_code == 404
 
     def test_wrong_method(self):
-        res = self.client.put(url_for(api.ResourceList, type='products'))
+        res = self.client.put(url_for(api.ResourceList, type='products'),
+                              headers=auth_header)
         assert res.status_code == 405
 
 
@@ -131,6 +138,7 @@ class TestProductApiRelations:
                 'name': {'en': 'Organic cookies'},
                 'brand': {'name': 'Spar'}
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 1
@@ -149,6 +157,7 @@ class TestProductApiRelations:
                 'name': {'en': 'Vanillia Ice Cream'},
                 'brand': 1
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 2
@@ -166,6 +175,7 @@ class TestProductApiRelations:
                 'name': {'en': 'Fluffy Cake'},
                 'brand': {'id': 1}
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 3
@@ -188,6 +198,7 @@ class TestLabelApiRelations:
                     'score': '2'
                 }]
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.json['id'] == 1
@@ -221,6 +232,7 @@ class TestProductApiValidation:
                 'name': {'en': 'Organic cookies'},
                 'gtin': '99999999999999'
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
@@ -236,6 +248,7 @@ class TestProductApiValidation:
                 'foo': 'bar',
                 'gtin': 99999999999999
             }),
+            headers=auth_header,
             content_type='application/json')
         self.assert_validation_failed(res)
 
@@ -247,6 +260,7 @@ class TestProductApiValidation:
                 'foo': 'bar',
                 'gtin': 99999999999999
             }),
+            headers=auth_header,
             content_type='application/json')
         self.assert_validation_failed(res)
 
@@ -254,6 +268,7 @@ class TestProductApiValidation:
         res = self.client.patch(
             url_for(api.ResourceItem, type='products', id=1),
             data=json.dumps({'gtin': 99999999999999, 'foo': 'bar'}),
+            headers=auth_header,
             content_type='application/json')
         self.assert_validation_failed(res)
 
@@ -264,6 +279,7 @@ class TestProductApiValidation:
                 'name': {'en': 'Organic cookies'},
                 'brand': 1
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 400
         assert res.mimetype == 'application/json'
@@ -338,6 +354,7 @@ class TestLabelApiFilteringAndSorting:
                 'type': 'product',
                 'name': {'en': 'A'},
             }),
+            headers=auth_header,
             content_type='application/json'
         )
         assert res.status_code == 201
@@ -349,6 +366,7 @@ class TestLabelApiFilteringAndSorting:
                 'type': 'product',
                 'name': {'en': 'B'},
             }),
+            headers=auth_header,
             content_type='application/json'
         )
         assert res.status_code == 201
@@ -534,6 +552,7 @@ class TestLabelApiPagination:
                 'type': 'product',
                 'name': {'en': 'A'},
             }),
+            headers=auth_header,
             content_type='application/json'
         )
         assert res.status_code == 201
@@ -545,6 +564,7 @@ class TestLabelApiPagination:
                 'type': 'product',
                 'name': {'en': 'B'},
             }),
+            headers=auth_header,
             content_type='application/json'
         )
         assert res.status_code == 201

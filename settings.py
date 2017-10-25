@@ -3,6 +3,7 @@ class Common:
     ERROR_404_HELP = False
     AUTH0_DOMAIN = 'moreonion.eu.auth0.com'
     AUTH0_API_AUDIENCE = 'supermarket-api'
+    AUTH0_ENABLE = True
 
 
 class TestingConfig(Common):

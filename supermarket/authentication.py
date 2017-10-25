@@ -31,6 +31,10 @@ class Auth0(object):
     def enabled(self):
         return current_app.config['AUTH0_ENABLE']
 
+    @property
+    def testing(self):
+        return current_app.config['TESTING']
+
     def get_token_auth_header(self):
         """Obtains the access token from the Authorization Header."""
         auth = request.headers.get('Authorization', None)
@@ -53,8 +57,9 @@ class Auth0(object):
         """Determines if the access token is valid."""
         @wraps(f)
         def decorated(*args, **kwargs):
-            if self.enabled:
-                return f(*args, **kwargs)
+            if self.testing:
+                token = self.get_token_auth_header()
+            elif self.enabled:
                 token = self.get_token_auth_header()
                 # get public key
                 jsonurl = urllib.request.urlopen(
