@@ -3,6 +3,7 @@ import pytest
 import supermarket.api as api
 
 url_for = api.api.url_for
+auth_header = {'authorization': "Bearer notarealbearertokenofcourse"}
 
 
 class Util:
@@ -63,6 +64,7 @@ class TestLabels:
                                         "de": Util.lbl4_logo_de},
                                     "meets_criteria": [{"criterion": 1}],
                                     }),
+                               headers=auth_header,
                                content_type='application/json')
 
         assert res.status_code == 201
@@ -99,6 +101,7 @@ class TestLabels:
                                     "logo": {"de": Util.lbl4_logo_de},
                                     "meets_criteria": [{"criterion": 3}],
                                     }),
+                               headers=auth_header,
                                content_type='application/json')
 
         assert res.status_code == 201
@@ -116,6 +119,7 @@ class TestLabels:
                                        "de": Util.lbl5_description_de},
                                    "meets_criteria": [{"criterion": 1}],
                                    }),
+                              headers=auth_header,
                               content_type='application/json')
 
         assert res.status_code == 201
@@ -146,6 +150,7 @@ class TestLabels:
                                     {"name": {"en": Util.lbl6_name},
                                      "description": {"en": Util.lbl6_description},
                                      "meets_criteria": [{"criterion": 1}]}),
+                                headers=auth_header,
                                 content_type='application/json'
                                 )
 
@@ -163,7 +168,8 @@ class TestLabels:
 
     def test_delete_item(self):
         # Delete a whole item
-        res = self.client.delete(url_for(api.ResourceItem, type='labels', id=1))
+        res = self.client.delete(url_for(api.ResourceItem, type='labels', id=1),
+                                 headers=auth_header)
         assert res.status_code == 204
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
@@ -200,6 +206,7 @@ class TestResources:
         res = self.client.post(
             url_for(api.ResourceList, type='resources'),
             data=json.dumps({'name': {'en': 'Herbal Tea', 'de': 'Herber Tee'}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -218,6 +225,7 @@ class TestResources:
             data=json.dumps({
                 'name': {'en': 'I put that here',
                          'de': 'Ich leg\'s hier hin'}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -235,6 +243,7 @@ class TestResources:
             url_for(api.ResourceItem, type='resources', id=2),
             data=json.dumps({'name': {'en': 'That should fix it...',
                                       'de': 'Sollte wieder gehn.'}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -248,7 +257,8 @@ class TestResources:
         assert res.json['item']['name'] == 'Sollte wieder gehn.'
 
     def test_delete_item(self):
-        res = self.client.delete(url_for(api.ResourceItem, type='resources', id=3))
+        res = self.client.delete(url_for(api.ResourceItem, type='resources', id=3),
+                                 headers=auth_header)
         assert res.status_code == 204
 
         res = self.client.get(url_for(api.ResourceItem, type='resources', id=3))
@@ -313,6 +323,7 @@ class TestHotspots:
                              'description': {
                                  'en': 'A brandnew hotspot!',
                                  'de': 'Ein brennender hotspot!'}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -333,6 +344,7 @@ class TestHotspots:
                                       'de': 'Langsam mehrsprachig'},
                              'description': {'en': 'Good things take time',
                                              'de': 'Gut Ding braucht Weile'}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -353,6 +365,7 @@ class TestHotspots:
             url_for(api.ResourceItem, type='hotspots', id=3),
             data=json.dumps({'name': {'de': 'Immer noch deutsch :('},
                              'description': {'de': 'Ohje'}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -366,7 +379,8 @@ class TestHotspots:
         assert res.json['item']['description']['de'] == 'Ohje'
 
     def test_delete_item(self):
-        res = self.client.delete(url_for(api.ResourceItem, type='hotspots', id=3))
+        res = self.client.delete(url_for(api.ResourceItem, type='hotspots', id=3),
+                                 headers=auth_header)
         assert res.status_code == 204
 
         res = self.client.get(url_for(api.ResourceItem, type='hotspots', id=3))
@@ -423,6 +437,7 @@ class TestSupplies:
                                                  'de': 'Wurde gePOSTet.'},
                                  'score': 99
                              }]}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -445,6 +460,7 @@ class TestSupplies:
                                                  'de': 'Ich stell das kurz hier hin.'},
                                  'score': 999
                                  }]}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -462,13 +478,15 @@ class TestSupplies:
                     'hotspot': {'name': {'en': 'All PUT, no GET'}},
                     'explanation': {'en': 'Ok, patch will take care of it.'},
                     'score': 100}]}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
         assert res.json['scores'][0]['explanation']['en'] == 'Ok, patch will take care of it.'
 
     def test_delete_item(self):
-        res = self.client.delete(url_for(api.ResourceItem, type='supplies', id=1))
+        res = self.client.delete(url_for(api.ResourceItem, type='supplies', id=1),
+                                 headers=auth_header)
         assert res.status_code == 204
 
         res = self.client.get(url_for(api.ResourceItem, type='supplies', id=1))
@@ -563,6 +581,7 @@ class TestProducts:
                              'ingredients': [{'weight': 1,
                                               'name': {'en': 'POSTed Ingredient',
                                                        'de': 'Gepostete Ingredient'}}]}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -588,6 +607,7 @@ class TestProducts:
                              'ingredients': [{'weight': 100,
                                               'name': {'en': 'PUTted Ingredient',
                                                        'de': 'Geputtete Ingredient'}}]}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -609,6 +629,7 @@ class TestProducts:
                              'details': {'en': 'English details'},
                              'ingredients': [{'weight': 1000,
                                               'name': {'en': 'English Ingredient'}}]}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -624,7 +645,8 @@ class TestProducts:
         assert res.json['item']['ingredients'][0]['name'] == 'English Ingredient'
 
     def test_delete_item(self):
-        res = self.client.delete(url_for(api.ResourceItem, type='products', id=1))
+        res = self.client.delete(url_for(api.ResourceItem, type='products', id=1),
+                                 headers=auth_header)
         assert res.status_code == 204
 
         res = self.client.get(url_for(api.ResourceItem, type='products', id=1))
@@ -691,6 +713,7 @@ class TestOrigin:
             data=json.dumps({'name': {'en': 'POSTed Origin',
                                       'de': 'Gepostete Origin'},
                              'code': 'PO'}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -710,6 +733,7 @@ class TestOrigin:
             data=json.dumps({'name': {'en': 'PUTted Origin',
                                       'de': 'Geputtete Origin'},
                              'code': 'TO'}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -726,6 +750,7 @@ class TestOrigin:
         res = self.client.patch(
             url_for(api.ResourceItem, type='origins', id=3),
             data=json.dumps({'name': {'de': 'Vereinigtes Koenigreich'}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -739,7 +764,8 @@ class TestOrigin:
         assert res.json['item']['code'] == 'GB'
 
     def test_delete_item(self):
-        res = self.client.delete(url_for(api.ResourceItem, type='origins', id=1))
+        res = self.client.delete(url_for(api.ResourceItem, type='origins', id=1),
+                                 headers=auth_header)
         assert res.status_code == 204
 
         res = self.client.get(url_for(api.ResourceItem, type='origins', id=1))
@@ -821,6 +847,7 @@ class TestCriteria:
                                          'de': 'Gepostete Details'},
                              'category': {'name': {'en': 'POSTed Category',
                                                    'de': 'Gepostete Category'}}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -845,6 +872,7 @@ class TestCriteria:
                                          'de': 'Geputtete Details'},
                              'category': {'name': {'en': 'PUTted Category',
                                                    'de': 'Geputtete Category'}}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -865,6 +893,7 @@ class TestCriteria:
             data=json.dumps({'name': {'en': 'English only'},
                              'details': {'en': 'English details'},
                              'category': {'name': {'en': 'English Category'}}}),
+            headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
@@ -880,7 +909,8 @@ class TestCriteria:
         assert res.json['item']['category']['name'] == 'English Category'
 
     def test_delete_item(self):
-        res = self.client.delete(url_for(api.ResourceItem, type='criteria', id=1))
+        res = self.client.delete(url_for(api.ResourceItem, type='criteria', id=1),
+                                 headers=auth_header)
         assert res.status_code == 204
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria', id=1))

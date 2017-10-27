@@ -22,6 +22,7 @@ class TestFormerBugs:
                     'score': '2'
                 }]
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 400
         assert res.json['message'] == 'Validation error.'
@@ -293,6 +294,7 @@ class TestLabelApiTranslations:
         res = self.client.post(
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({"name": {"en": "A label", "de": "Ein Label"}}),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
         assert res.mimetype == 'application/json'
@@ -326,6 +328,7 @@ class TestLabelApiTranslations:
             data=json.dumps({
                 'name': {'at': 'A label'}
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 400
         assert res.mimetype == 'application/json'
@@ -338,6 +341,7 @@ class TestLabelApiTranslations:
             data=json.dumps({
                 'name': 'A label'
             }),
+            headers=auth_header,
             content_type='application/json')
         assert res.status_code == 400
         assert res.mimetype == 'application/json'
