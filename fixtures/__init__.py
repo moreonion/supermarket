@@ -1,3 +1,4 @@
+from sqlalchemy.orm.attributes import flag_modified
 from copy import deepcopy
 import csv
 import os.path
@@ -158,6 +159,26 @@ def import_example_data():
                     score=s,
                     explanation={lang: row[8]},
                 ))
+    db.session.commit()
+
+    # Criteria translations
+    with open(os.path.dirname(__file__) + '/csvs/criteria-translations.csv') as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader)        # Skip CSV header
+
+        for row in reader:
+            (criterion_name, criterion_question_de) = row[5], row[9]
+            criterion = Criterion.query.filter(
+                Criterion.name[lang].astext == criterion_name).first()
+
+            if criterion:
+                if 'de' not in criterion.details:
+                    criterion.details['de'] = {}
+                criterion.details['de']['question'] = criterion_question_de
+                flag_modified(criterion, 'details')
+            else:
+                print('Criterion "{}" not found.'.format(criterion_name))
+
     db.session.commit()
 
     # Criteria and Criteria-Hotspot mapping
