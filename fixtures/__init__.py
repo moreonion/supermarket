@@ -174,13 +174,11 @@ def import_example_data():
             if criterion:
                 if 'de' not in criterion.details:
                     criterion.details['de'] = {}
+                    criterion.details['de']['measures'] = {1: criterion_question_de}
+                else:
+                    criterion.details['de']['measures'] = {2: criterion_question_de}
 
-                # HACK: get the rating of the measure from the english version
-                # this only works because right now there is only *1* question
-                # for each criterion
-                rating = list(criterion.details[lang]['measures'].keys())[0]
-                criterion.details['de']['measures'] = {rating: criterion_question_de}
-                flag_modified(criterion, 'details')
+                flag_modified(criterion, 'details')  # Needed to update JSON types
             else:
                 print('Criterion "{}" not found.'.format(criterion_name))
 
