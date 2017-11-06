@@ -44,15 +44,23 @@ def import_example_data():
 
     # Labels and general scoring
     labels = {}
-    label_countries = [LabelCountry(code='*')]  # all labels are international for now
-    score_map = {
-        'red': 1,
-        'no evaluation*': 1,
-        'red/yellow': 1,
-        'red/yellow mix': 1,
-        'green/yellow': 2,
-        'yellow': 2,
-        'green': 3,
+    resources = {}
+    # score_map = {
+    #     'red': 1,
+    #     'no evaluation*': 1,
+    #     'red/yellow': 1,
+    #     'red/yellow mix': 1,
+    #     'green/yellow': 2,
+    #     'yellow': 2,
+    #     'green': 3,
+    # }
+    label_int = LabelCountry(code='*')
+    label_at = LabelCountry(code='AT')
+    label_de = LabelCountry(code='DE')
+    label_countries_map = {
+        'international': label_int,
+        'Austria': label_at,
+        'Germany': label_de
     }
     logo_map = {
         'GSCP': {lang: 'https://ucarecdn.com/3fcc6856-4df5-4c89-862d-8f749685b922/'},
@@ -82,34 +90,65 @@ def import_example_data():
         'DLG': {lang: 'https://ucarecdn.com/24d486ca-eb04-4c42-bd4d-99a2a4a7573c/'},
         'ohne GEN': {lang: 'https://ucarecdn.com/63907583-054a-4744-840c-a1a696b39e0a/'}
     }
-    with open(os.path.dirname(__file__) + '/csvs/Label-Info.csv') as csv_file:
-        ltype = 'retailer'
+    missing_logos = []
+    with open(os.path.dirname(__file__) + '/csvs/label-info.csv') as csv_file:
         reader = csv.reader(csv_file)
-        # Skip the header lines.
-        for i in range(4):
-            next(reader)
+        next(reader)  # Skip the header line.
         for row in reader:
-            if not row[1]:
-                if 'Product Certification' in row[0]:
-                    ltype = 'product'
-                continue
-            acronym, name, description = row[0], row[1], row[2]
-            credibility, environment, social = row[18], row[19], row[20]
+            name = row[0]
+            applies_to, bto, country = row[1], row[4], row[6]
+            description_en, description_de = row[7], row[8]
+            credibility, environment, social, animal_welfare = row[9], row[10], row[11], row[12]
+
+            ltype = None
+            if bto.strip() == 'BtoB':
+                ltype = 'retailer'
+            elif bto.strip() == 'BtoC':
+                ltype = 'product'
+
             l = Label(
                 type=ltype,
-                name={lang: name},
-                description={lang: description},
-                countries=label_countries,
+                name={'de': name},
+                description={'de': description_de},
                 details=dict(score=dict(
-                    credibility=score_map[credibility],
-                    environment=score_map[environment],
-                    social=score_map[social],
-                )),
-                logo=logo_map[acronym]
+                    credibility=int(credibility),
+                    environment=int(environment),
+                    social=int(social),
+                    animal_welfare=int(animal_welfare)
+                ))
             )
-            labels[acronym] = l
+
+            if name in logo_map:
+                l.logo = logo_map[name]
+            else:
+                missing_logos.append(name)
+
+            if description_en:
+                # add English description
+                description_dict = deepcopy(l.name)
+                description_dict['en'] = description_en
+                l.description = description_dict
+                # assume name is the same in English if we don’t know better
+                name_dict = deepcopy(l.name)
+                name_dict['en'] = name
+                if name == 'EU organic':
+                    name_dict['de'] = 'EU Biosiegel'
+                l.name = name_dict
+
+            if country:
+                for c in (c.strip() for c in country.split(';')):
+                    l.countries.append(label_countries_map[c])
+
+            if applies_to and applies_to != 'n.a.' and not applies_to.startswith('all'):
+                for r in (r.strip().capitalize() for r in applies_to.split(',')):
+                    if r not in resources:
+                        resources[r] = Resource(name={lang: r})
+                    l.resources.append(resources[r])
+
+            labels[name] = l
             db.session.add(l)
     db.session.commit()
+    print('Missing logos for: {}'.format(missing_logos))
 
     # Criteria and label scores
     criteria = {}
@@ -205,22 +244,6 @@ def import_example_data():
         db.session.add(Origin(code=code, name={lang: name}))
     db.session.commit()
 
-    # Resources and Resource label mapping
-    resources = {}
-    with open(os.path.dirname(__file__) + '/csvs/labels-resources.csv') as csv_file:
-        reader = csv.reader(csv_file)
-        next(reader)
-        next(reader)
-        for row in reader:
-            l, rs = row[0].strip(), row[1]
-            if rs == 'n.a.' or rs.startswith('all '):
-                continue
-            label = labels[l]
-            for r in (r.strip() for r in rs.split(',')):
-                if r not in resources:
-                    resources[r] = Resource(name={lang: r})
-                label.resources.append(resources[r])
-
     # Products - Brands - Retailers
     products = dict()
     retailers = dict()
@@ -273,7 +296,6 @@ def import_example_data():
                 weight += 1
 
     # Product labels
-    labels = {l.name[lang]: l for l in Label.query.all()}
     print(list(labels.keys()))
     with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
         next(csv_file)  # Skip header line.
@@ -287,11 +309,11 @@ def import_example_data():
             for label in row[5:]:
                 if label:
                     if label.startswith('EU Biosiegel'):
-                        label = 'EU Organic'
-                    label = label.replace('UTZ Certified', 'UTZ')
-                    label = label.replace('UTZ Kakao', 'UTZ Cacao')
+                        label = 'EU organic'
+                    if label.startswith('UTZ'):
+                        label = 'UTZ'
                     label = label.replace('FAIRTRADE', 'Fairtrade')
-                    label = label.replace('RSPO', 'Roundtable on Sustainable Palm Oil (RSPO)')
+                    label = label.replace('Roundtable on Sustainable Palm Oil (RSPO)', 'RSPO')
                     if label not in labels:
                         print("Unknown label '{}'".format(label))
                         continue
