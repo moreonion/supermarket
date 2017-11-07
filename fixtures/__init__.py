@@ -180,7 +180,7 @@ def import_example_data():
     criteria = {}
     with open(os.path.dirname(__file__) + '/csvs/criteria-labels.csv') as csv_file:
         reader = csv.reader(csv_file)
-        label_codes = next(reader)[13:32]  # ignore unknown, unscored labels for now
+        label_codes = next(reader)[11:]
         for row in reader:
             # if row[11]:  # exclude from scoring
             #     continue
@@ -204,24 +204,30 @@ def import_example_data():
                 criterion = Criterion(
                     name={lang: criterion_name},
                     category=subcategory,
-                    details={lang: {'question': row[6], 'measures': {}}}
+                    # use English text for German questions as there is no translation provided
+                    details={'en': {'question': row[6], 'measures': {}},
+                             'de': {'question': row[6], 'measures': {}}}
                 )
                 db.session.add(criterion)
                 criteria[row[4]] = criterion
             details = deepcopy(criterion.details)
-            details[lang]['measures'][int(row[9])] = row[8]
+            details['en']['measures'][int(row[10])] = row[8]  # English text
+            details['de']['measures'][int(row[10])] = row[9]  # German text
             criterion.details = details
             db.session.add(criterion)
 
-            for label_code, s in zip(label_codes, row[13:32]):
-                label = labels[label_code.strip()]
-                if not s or int(s) <= 0:
+            for label_code, s in zip(label_codes, row[11:]):
+                label_code = label_code.strip()
+                if not s or int(s) <= 0 or label_code not in labels:
                     continue
                 db.session.add(LabelMeetsCriterion(
-                    label=label,
+                    label=labels[label_code],
                     criterion=criterion,
                     score=s,
-                    explanation={lang: row[8]},
+                    explanation={
+                        'en': row[8],
+                        'de': row[9]
+                    }
                 ))
     db.session.commit()
 
