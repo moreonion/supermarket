@@ -90,20 +90,26 @@ def import_example_data():
         'DLG': {lang: 'https://ucarecdn.com/24d486ca-eb04-4c42-bd4d-99a2a4a7573c/'},
         'ohne GEN': {lang: 'https://ucarecdn.com/63907583-054a-4744-840c-a1a696b39e0a/'},
         'Alnatura': {lang: 'https://ucarecdn.com/9e6e8fa1-a2e3-41e9-a492-960658f2f442/'},
-        'AMA-Biozeichen (rot/weiß)': {lang: 'https://ucarecdn.com/f49cfe62-fc4f-4937-bf28-32a6642c0c16/'},
+        'AMA-Biozeichen (rot/weiß)': {
+            lang: 'https://ucarecdn.com/f49cfe62-fc4f-4937-bf28-32a6642c0c16/'},
         'AMA-Gütesiegel': {lang: 'https://ucarecdn.com/4e533b0b-980f-40d9-a9ab-641349cf66d1/'},
         'Bio Austria': {lang: 'https://ucarecdn.com/689fac65-bb49-4b56-82a7-af58badf1616/'},
         'Bio vom Berg': {lang: 'https://ucarecdn.com/bbd4f2aa-de10-40c5-b37e-f8a3c7ae8ba7/'},
         'Demeter': {lang: 'https://ucarecdn.com/83684e89-d085-4e43-a683-b950486d5f43/'},
         'ECHT B!O': {lang: 'https://ucarecdn.com/31bef53d-34df-48bf-85b9-52f06f029a45/'},
         'Ja Natürlich': {lang: 'https://ucarecdn.com/d2f791bb-255a-4106-8939-7b1e7e2b6f5e/'},
-        'Natürlich für uns (Zielpunkt)': {lang: 'https://ucarecdn.com/aad93ae5-cbf4-4199-82ef-25455acd5d26/'},
-        'Natur aktiv (Hofer)': {lang: 'https://ucarecdn.com/a2c47e54-29fd-4fc7-ba84-56f667c21132/'},
-        'Pro Planet, Obst, Gemüse, Eier und Wein': {lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
-        'Pro Planet weitere Produkte': {lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
+        'Natürlich für uns (Zielpunkt)': {
+            lang: 'https://ucarecdn.com/aad93ae5-cbf4-4199-82ef-25455acd5d26/'},
+        'Natur aktiv (Hofer)': {
+            lang: 'https://ucarecdn.com/a2c47e54-29fd-4fc7-ba84-56f667c21132/'},
+        'Pro Planet, Obst, Gemüse, Eier und Wein': {
+            lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
+        'Pro Planet weitere Produkte': {
+            lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
         'Spar Natur Pur': {lang: 'https://ucarecdn.com/5ea60468-9ad1-495a-bca4-1adc2a567c01/'},
         'Tierwohl verbessert, - gut und kontroliert': {lang: None},
-        'Zurück zum Ursprung': {lang: 'https://ucarecdn.com/28e89765-a1e3-4fa3-9da3-194fae43a1da/'},
+        'Zurück zum Ursprung': {
+            lang: 'https://ucarecdn.com/28e89765-a1e3-4fa3-9da3-194fae43a1da/'},
         'Blühendes Ö.': {lang: 'https://ucarecdn.com/b5fff13a-e94f-4eb6-9e39-26d687791304/'},
         'Ich bin Österreich': {lang: 'https://ucarecdn.com/3b99d4df-f783-46a5-b0c0-ca24f0500ff8/'},
         'Rapunzel': {lang: 'https://ucarecdn.com/d7a81ab1-e506-484d-965e-90fe07546d25/'},
@@ -167,7 +173,8 @@ def import_example_data():
             labels[name] = l
             db.session.add(l)
     db.session.commit()
-    print('Missing logos for: {}'.format(missing_logos))
+    if missing_logos:
+        print('Missing logos for: {}'.format(missing_logos))
 
     # Criteria and label scores
     criteria = {}
