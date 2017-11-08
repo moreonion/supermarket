@@ -172,12 +172,14 @@ def import_example_data():
 
             labels[name] = l
             db.session.add(l)
-    db.session.commit()
+    print("*** Imported labels ***\n'{}'\n".format("', '".join(list(labels.keys()))))
     if missing_logos:
-        print('Missing logos for: {}'.format(missing_logos))
+        print("Missing logos for:\n'{}'\n".format("', '".join(missing_logos)))
+    db.session.commit()
 
     # Criteria and label scores
     criteria = {}
+    unknown_labels = set()
     with open(os.path.dirname(__file__) + '/csvs/criteria-labels.csv') as csv_file:
         reader = csv.reader(csv_file)
         label_codes = next(reader)[11:]
@@ -218,7 +220,10 @@ def import_example_data():
 
             for label_code, s in zip(label_codes, row[11:]):
                 label_code = label_code.strip()
-                if not s or int(s) <= 0 or label_code not in labels:
+                if label_code not in labels:
+                    unknown_labels.add(label_code)
+                    continue
+                if not s or int(s) <= 0:
                     continue
                 db.session.add(LabelMeetsCriterion(
                     label=labels[label_code],
@@ -229,21 +234,28 @@ def import_example_data():
                         'de': row[9]
                     }
                 ))
+    if unknown_labels:
+        print("Couldn’t apply criteria scores to unknown labels:\n'{}'\n".format(
+            "', '".join(unknown_labels)))
     db.session.commit()
 
     # Criteria and Criteria-Hotspot mapping
+    unknown_criteria = set()
     with open(os.path.dirname(__file__) + '/csvs/hotspot-criteria.csv') as csv_file:
         reader = csv.DictReader(csv_file)
         hotspots = Hotspot.query.all()
         for row in reader:
             if not row['ID'] in criteria:
-                print("Unknown criterion: {}".format(row['ID']))
+                unknown_criteria.add(row['ID'])
                 continue
             c = criteria[row['ID']]
             for h in hotspots:
                 if row[h.name[lang]] and not CriterionImprovesHotspot.query.get((c.id, h.id)):
                     db.session.add(CriterionImprovesHotspot(criterion=c, hotspot=h))
             db.session.add(c)
+    if unknown_criteria:
+        print("Couldn’t map hotspots to unknown critera:\n'{}'\n".format(
+            "', '".join(unknown_criteria)))
     db.session.commit()
 
     # Origins
@@ -328,7 +340,6 @@ def import_example_data():
                 weight += 1
 
     # Product labels
-    print(list(labels.keys()))
     with open(os.path.dirname(__file__) + '/csvs/Data_2_Example_Labels.csv') as csv_file:
         next(csv_file)  # Skip header line.
         for row in csv.reader(csv_file):
@@ -347,7 +358,7 @@ def import_example_data():
                     label = label.replace('FAIRTRADE', 'Fairtrade')
                     label = label.replace('Roundtable on Sustainable Palm Oil (RSPO)', 'RSPO')
                     if label not in labels:
-                        print("Unknown label '{}'".format(label))
+                        print("Unknown product label '{}'".format(label))
                         continue
                     plabels.append(labels[label])
             p.labels = plabels
