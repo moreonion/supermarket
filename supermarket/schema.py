@@ -290,7 +290,7 @@ class CustomSchema(ma.ModelSchema):
             else:
                 query = model.query.get(data[key])
                 many = False
-            s = v['resource'].schema(many=many, only=v['only'])
+            s = v['resource'].schema(many=many, only=v['only'], lang=self.language)
             data[key] = s.dump(query).data
 
     @post_load
