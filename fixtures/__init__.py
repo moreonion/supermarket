@@ -150,7 +150,7 @@ def import_example_data():
 
             if description_en:
                 # add English description
-                description_dict = deepcopy(l.name)
+                description_dict = deepcopy(l.description)
                 description_dict['en'] = description_en
                 l.description = description_dict
                 # assume name is the same in English if we don’t know better
