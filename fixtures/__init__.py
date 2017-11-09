@@ -70,16 +70,16 @@ def import_example_data():
         'FSC': {lang: 'https://ucarecdn.com/8c12e2c7-c021-40a8-8cb1-d1446d8bd108/'},
         'SGF': {lang: 'https://ucarecdn.com/4fd8ed9b-c0e5-40fe-b0db-de05920352a9/'},
         'GRI': {lang: 'https://ucarecdn.com/5fc14fed-4472-42be-b4d2-230b1bdd396f/'},
-        'Rainforest Alliance':
-        {lang: 'https://ucarecdn.com/8111e8bb-2ce9-4d57-af34-272e20acb16c/'},
+        'Rainforest Alliance': {
+            lang: 'https://ucarecdn.com/8111e8bb-2ce9-4d57-af34-272e20acb16c/'},
         'FLA': {lang: 'https://ucarecdn.com/61b47438-2ca1-4975-aaa6-b7bd8e3f1853/'},
-        'Global Coffee Platform (4C)':
-        {lang: 'https://ucarecdn.com/e1511730-18e1-4343-abe8-86474733e43f/'},
+        'Global Coffee Platform (4C)': {
+            lang: 'https://ucarecdn.com/e1511730-18e1-4343-abe8-86474733e43f/'},
         'GLOBALG.A.P': {lang: 'https://ucarecdn.com/4ca37337-ac7f-4f5f-9bc5-a898e6129f74/'},
         'BEPI': {lang: 'https://ucarecdn.com/80ea63e2-2b2e-40b3-948d-5ff4d06c9a8b/'},
         'ETI': {lang: 'https://ucarecdn.com/67549bb3-cb42-43e3-b42f-f5172abaad2f/'},
-        'UTZ Cacao':
-        {lang: 'https://ucarecdn.com/f64d0875-3de2-4dff-a46e-ea0bc0d4bd31/'},  # same as UTZ
+        'UTZ Cacao': {
+            lang: 'https://ucarecdn.com/f64d0875-3de2-4dff-a46e-ea0bc0d4bd31/'},  # same as UTZ
         'UTZ': {lang: 'https://ucarecdn.com/f64d0875-3de2-4dff-a46e-ea0bc0d4bd31/'},
         'MSC': {lang: 'https://ucarecdn.com/4fb9ce37-9c0e-437b-a124-fb4da09da29f/'},
         'FFL': {lang: 'https://ucarecdn.com/394fdb30-bf12-4b49-b4ff-6de88eac25bf/'},
@@ -102,15 +102,19 @@ def import_example_data():
             lang: 'https://ucarecdn.com/aad93ae5-cbf4-4199-82ef-25455acd5d26/'},
         'Natur aktiv (Hofer)': {
             lang: 'https://ucarecdn.com/a2c47e54-29fd-4fc7-ba84-56f667c21132/'},
-        'Pro Planet, Obst, Gemüse, Eier und Wein': {
+        'Pro Planet Obst, Gemüse, Eier und Wein': {
             lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
-        'Pro Planet weitere Produkte': {
+        'Pro Planet – weitere Produkte': {
             lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
         'Spar Natur Pur': {lang: 'https://ucarecdn.com/5ea60468-9ad1-495a-bca4-1adc2a567c01/'},
-        'Tierwohl verbessert, - gut und kontroliert': {lang: None},
+        'Tierwohl verbessert': {lang: 'https://ucarecdn.com/5d6c22e2-85e6-4792-bb5f-a5b3acde3782'},
+        'Tierwohl kontrolliert': {
+            lang: 'https://ucarecdn.com/27292a9d-6ac6-4e32-840f-2e6b1a698832'},  # 2 ticks
+        #   lang: 'https://ucarecdn.com/d5811b3c-45bb-4adc-8e11-8126ed799416'},  # 3 ticks
         'Zurück zum Ursprung': {
             lang: 'https://ucarecdn.com/28e89765-a1e3-4fa3-9da3-194fae43a1da/'},
-        'Blühendes Ö.': {lang: 'https://ucarecdn.com/b5fff13a-e94f-4eb6-9e39-26d687791304/'},
+        'Blühendes Österreich': {
+            lang: 'https://ucarecdn.com/b5fff13a-e94f-4eb6-9e39-26d687791304/'},
         'Ich bin Österreich': {lang: 'https://ucarecdn.com/3b99d4df-f783-46a5-b0c0-ca24f0500ff8/'},
         'Rapunzel': {lang: 'https://ucarecdn.com/d7a81ab1-e506-484d-965e-90fe07546d25/'},
         'GEPA': {lang: 'https://ucarecdn.com/61f427d9-a3ed-4336-9d40-e07efe9c940e/'}
