@@ -1,4 +1,5 @@
 from copy import deepcopy
+from collections import defaultdict
 import csv
 import os.path
 import re
@@ -127,7 +128,7 @@ def import_example_data():
             name = row[0]
             applies_to, bto, country = row[1], row[4], row[6]
             description_en, description_de = row[7], row[8]
-            credibility, environment, social, animal_welfare = row[9], row[10], row[11], row[12]
+            # credibility, environment, social, animal_welfare = row[9], row[10], row[11], row[12]
 
             ltype = None
             if bto.strip() == 'BtoB':
@@ -139,12 +140,12 @@ def import_example_data():
                 type=ltype,
                 name={'de': name},
                 description={'de': description_de},
-                details=dict(score=dict(
-                    credibility=int(credibility),
-                    environment=int(environment),
-                    social=int(social),
-                    animal_welfare=int(animal_welfare)
-                ))
+                # details=dict(score=dict(
+                #     credibility=int(credibility),
+                #     environment=int(environment),
+                #     social=int(social),
+                #     animal_welfare=int(animal_welfare)
+                # ))
             )
 
             if name in logo_map:
@@ -183,6 +184,7 @@ def import_example_data():
 
     # Criteria and label scores
     criteria = {}
+    categories = []
     unknown_labels = set()
     with open(os.path.dirname(__file__) + '/csvs/criteria-labels.csv') as csv_file:
         reader = csv.reader(csv_file)
@@ -204,6 +206,7 @@ def import_example_data():
                     if category is None:
                         category = CriterionCategory(name={lang: category_name})
                         db.session.add(category)
+                        categories.append(category)
                     subcategory = CriterionCategory(
                         name={lang: subcategory_name}, category=category)
                     db.session.add(subcategory)
@@ -241,6 +244,51 @@ def import_example_data():
     if unknown_labels:
         print("Couldn’t apply criteria scores to unknown labels:\n'{}'\n".format(
             "', '".join(unknown_labels)))
+    db.session.commit()
+
+    # calculate label scoring
+    category_scores = {}
+    for category in categories:
+        max_score = 0
+        label_scores = defaultdict(lambda: 0)
+        # subcategory score
+        for subcategory in category.subcategories:
+            max_sub_score = 0
+            label_sub_scores = defaultdict(lambda: 0)
+            for criterion in subcategory.criteria:
+                # get maximum criterion score
+                points = criterion.details[lang]['measures'].keys()
+                max_sub_score += max(map(int, points))
+                # get criterion score per label
+                for lmc in LabelMeetsCriterion.query.filter_by(criterion_id=criterion.id).all():
+                    label_sub_scores[lmc.label] += int(lmc.score)
+            # calculate score for subcategory
+            for label, score in label_sub_scores.items():
+                label_scores[label] += round(100*score/max_sub_score)
+            # each subcategory has a max score of 100% for the overall score,
+            if 'Co-Labeling' not in subcategory.name['en']:  # co-labeling doesn’t count
+                max_score += 100
+        # calculate overall score
+        label_scores = {l: round(100*s/max_score) for l, s in label_scores.items()}
+        category_scores[category.name['en'].replace(' ', '_').lower()] = label_scores
+
+    # save score to label details
+    for label in labels.values():
+        score = {}
+        for category, ls in category_scores.items():
+            p = ls[label] if label in ls else 0
+            # map to color (1: red, 2: yellow, 3: green)
+            # TODO: move mapping to label guide (EvalCircle.vue), save percentages instead
+            if p < 33:
+                score[category] = 1
+            elif p < 55:
+                score[category] = 2
+            else:
+                score[category] = 3
+        details_dict = deepcopy(label.details) or {}
+        details_dict['score'] = score
+        label.details = details_dict
+        db.session.add(label)
     db.session.commit()
 
     # Criteria and Criteria-Hotspot mapping
