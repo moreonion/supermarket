@@ -108,10 +108,10 @@ def import_example_data():
         'Pro Planet – weitere Produkte': {
             lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
         'Spar Natur Pur': {lang: 'https://ucarecdn.com/5ea60468-9ad1-495a-bca4-1adc2a567c01/'},
-        'Tierwohl verbessert': {lang: 'https://ucarecdn.com/5d6c22e2-85e6-4792-bb5f-a5b3acde3782'},
+        'Tierwohl verbessert': {lang: 'https://ucarecdn.com/5d6c22e2-85e6-4792-bb5f-a5b3acde3782/'},
         'Tierwohl kontrolliert': {
-            lang: 'https://ucarecdn.com/27292a9d-6ac6-4e32-840f-2e6b1a698832'},  # 2 ticks
-        #   lang: 'https://ucarecdn.com/d5811b3c-45bb-4adc-8e11-8126ed799416'},  # 3 ticks
+            lang: 'https://ucarecdn.com/27292a9d-6ac6-4e32-840f-2e6b1a698832/'},  # 2 ticks
+        #   lang: 'https://ucarecdn.com/d5811b3c-45bb-4adc-8e11-8126ed799416/'},  # 3 ticks
         'Zurück zum Ursprung': {
             lang: 'https://ucarecdn.com/28e89765-a1e3-4fa3-9da3-194fae43a1da/'},
         'Blühendes Österreich': {
