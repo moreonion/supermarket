@@ -74,7 +74,7 @@ def import_example_data():
         'Rainforest Alliance': {
             lang: 'https://ucarecdn.com/8111e8bb-2ce9-4d57-af34-272e20acb16c/'},
         'FLA': {lang: 'https://ucarecdn.com/61b47438-2ca1-4975-aaa6-b7bd8e3f1853/'},
-        'Global Coffee Platform (4C)': {
+        'Global Coffee Platform': {
             lang: 'https://ucarecdn.com/e1511730-18e1-4343-abe8-86474733e43f/'},
         'GLOBALG.A.P': {lang: 'https://ucarecdn.com/4ca37337-ac7f-4f5f-9bc5-a898e6129f74/'},
         'BEPI': {lang: 'https://ucarecdn.com/80ea63e2-2b2e-40b3-948d-5ff4d06c9a8b/'},
@@ -98,17 +98,18 @@ def import_example_data():
         'Bio vom Berg': {lang: 'https://ucarecdn.com/bbd4f2aa-de10-40c5-b37e-f8a3c7ae8ba7/'},
         'Demeter': {lang: 'https://ucarecdn.com/83684e89-d085-4e43-a683-b950486d5f43/'},
         'ECHT B!O': {lang: 'https://ucarecdn.com/31bef53d-34df-48bf-85b9-52f06f029a45/'},
-        'Ja Natürlich': {lang: 'https://ucarecdn.com/d2f791bb-255a-4106-8939-7b1e7e2b6f5e/'},
-        'Natürlich für uns (Zielpunkt)': {
+        'Ja! Natürlich': {lang: 'https://ucarecdn.com/d2f791bb-255a-4106-8939-7b1e7e2b6f5e/'},
+        'Natürlich für uns': {
             lang: 'https://ucarecdn.com/aad93ae5-cbf4-4199-82ef-25455acd5d26/'},
-        'Natur aktiv (Hofer)': {
+        'Natur aktiv': {
             lang: 'https://ucarecdn.com/a2c47e54-29fd-4fc7-ba84-56f667c21132/'},
         'Pro Planet Obst, Gemüse, Eier und Wein': {
             lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
         'Pro Planet – weitere Produkte': {
             lang: 'https://ucarecdn.com/c7698312-4124-4a83-ba55-e05e6fc64e5f/'},
         'Spar Natur Pur': {lang: 'https://ucarecdn.com/5ea60468-9ad1-495a-bca4-1adc2a567c01/'},
-        'Tierwohl verbessert': {lang: 'https://ucarecdn.com/5d6c22e2-85e6-4792-bb5f-a5b3acde3782/'},
+        'Tierwohl verbessert': {
+            lang: 'https://ucarecdn.com/5d6c22e2-85e6-4792-bb5f-a5b3acde3782/'},
         'Tierwohl kontrolliert': {
             lang: 'https://ucarecdn.com/27292a9d-6ac6-4e32-840f-2e6b1a698832/'},  # 2 ticks
         #   lang: 'https://ucarecdn.com/d5811b3c-45bb-4adc-8e11-8126ed799416/'},  # 3 ticks
