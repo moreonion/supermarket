@@ -277,15 +277,7 @@ def import_example_data():
     for label in labels.values():
         score = {}
         for category, ls in category_scores.items():
-            p = ls[label] if label in ls else 0
-            # map to color (1: red, 2: yellow, 3: green)
-            # TODO: move mapping to label guide (EvalCircle.vue), save percentages instead
-            if p < 33:
-                score[category] = 1
-            elif p < 55:
-                score[category] = 2
-            else:
-                score[category] = 3
+            score[category] = ls[label] if label in ls else 0
         details_dict = deepcopy(label.details) or {}
         details_dict['score'] = score
         label.details = details_dict
