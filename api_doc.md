@@ -7,7 +7,7 @@
 
 ## Root URL
 
-https://supermarket.more-onion.at/api/v1
+https://api.supplychainge.org/api/v1/
 
 ## Resources
 > root url + resource + identifier
@@ -142,11 +142,14 @@ https://supermarket.more-onion.at/api/v1
 - 'in': equal to one of serveral options, seperated by comma
 - 'like': contains the value, case insensitive (can only be used for strings).
 
+##### Filtering translations
+When using filters with a translation object, the language to use for filtering needs to be appended to the fieldname, seperated by a dot.
+
 ###### Examples
 - https://supermarket.more-onion.at/api/v1/labels?countries=AT
   → show only labels that are used in Austria
-- https://supermarket.more-onion.at/api/v1/products?name:like=chocolate
-  → show only products that have "chocolate" in their name:
+- https://supermarket.more-onion.at/api/v1/products?name.en:like=chocolate
+  → show only products that have "chocolate" in their English name
 
 ## Documentation
 > root url + 'doc' + resource
