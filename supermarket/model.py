@@ -1,7 +1,7 @@
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import validates
-from marshmallow.exceptions import ValidationError
+from marshmallow import ValidationError
 
 
 db = SQLAlchemy()
@@ -14,7 +14,7 @@ class Translation(JSONB):
     @classmethod
     def validate_translation(cls, key, value):
         if not isinstance(value, dict):
-            raise ValidationError("No language specified.", key)
+            raise ValidationError('No language specified.', key)
         return value
 
 
