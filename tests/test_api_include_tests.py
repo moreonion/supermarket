@@ -156,21 +156,3 @@ class TestLabelQueryInclude:
 
         assert res.status_code == 200
         assert res.json['item']['hotspots'][0]['name']['en'] == 'Quality Assurance'
-
-    def test_include_criteria(self):
-        url = url_for(
-            api.ResourceItem, type='labels', id=1, include='meets_criteria.criterion.name')
-        res = self.client.get(url)
-
-        assert res.status_code == 200
-        assert (res.json['item']['meets_criteria'][0]['criterion']['name']['en'] ==
-                'The test improvement criterion')
-
-    def test_include_criteria_in_list(self):
-        url = url_for(
-            api.ResourceList, type='labels', include='meets_criteria.criterion.name')
-        res = self.client.get(url)
-
-        assert res.status_code == 200
-        assert (res.json['items'][0]['meets_criteria'][0]['criterion']['name']['en'] ==
-                'The test improvement criterion')

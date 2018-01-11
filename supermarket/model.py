@@ -56,6 +56,22 @@ retailers_labels = db.Table(
     db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True)
 )
 
+measures_labels = db.Table(
+    'measures_labels',
+    db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True),
+    db.Column('criterion_id', db.Integer, primary_key=True),
+    db.Column('score', db.Integer),
+    db.ForeignKeyConstraint(['criterion_id', 'score'], ['measures.criterion_id', 'measures.score'])
+)
+
+measures_retailers = db.Table(
+    'measures_retailers',
+    db.Column('retailer_id', db.Integer, db.ForeignKey('retailers.id'), primary_key=True),
+    db.Column('criterion_id', db.Integer, primary_key=True),
+    db.Column('score', db.Integer),
+    db.ForeignKeyConstraint(['criterion_id', 'score'], ['measures.criterion_id', 'measures.score'])
+)
+
 
 # main tables
 
@@ -107,13 +123,14 @@ class Criterion(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     type = db.Column(db.Enum('label', 'retailer', name='criterion_type'))
     name = db.Column(Translation)
-    details = db.Column(Translation)  # details holds question, measures
+    question = db.Column(Translation)
     improves_hotspots = db.relationship(
         'CriterionImprovesHotspot', backref=db.backref('criterion'))
     category_id = db.Column(db.ForeignKey('criterion_category.id'))
     # category – backref from CriterionCategory
+    # measures – backref from Measure
 
-    @validates('name', 'details')
+    @validates('name', 'question')
     def validate(self, key, value):
         if key == 'name' and len(value) > 128:
             raise ValidationError('Only 128 characters allowed.', key)
@@ -227,8 +244,10 @@ class Label(db.Model):
     description = db.Column(Translation)
     details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(Translation)
-    meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True,
-                                     cascade='all, delete-orphan')
+    meets_criteria = db.relationship(
+        'Measure', secondary=measures_labels,
+        lazy='subquery', backref=db.backref('labels', lazy=True)
+    )
     resources = db.relationship(
         'Resource', secondary=labels_resources,
         lazy='subquery', backref=db.backref('labels', lazy=True)
@@ -256,22 +275,23 @@ class LabelCountry(db.Model):
     # labels – backref from Label
 
 
-class LabelMeetsCriterion(db.Model):
+class Measure(db.Model):
 
-    """Maps labels to their criteria.
+    """Measures that can be inforced by a label or retailer to fullfill criteria.
 
-    Describes how well a label meets a certain criterion by assigning a score
-    and an explanation.
+    The score indicates how well the measure is fitting to fullfill its criterion.
+    A label or retailer can only inforce one measure of the same criterion.
 
     """
 
-    __tablename__ = 'labels_criteria'
-    label_id = db.Column(db.ForeignKey('labels.id'), primary_key=True)
+    __tablename__ = 'measures'
     criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
-    score = db.Column(db.SmallInteger)
+    score = db.Column(db.Integer(), primary_key=True)
     explanation = db.Column(Translation)
-    criterion = db.relationship('Criterion')
-    label = db.relationship('Label')
+    criterion = db.relationship('Criterion', lazy=True, backref=db.backref(
+        'measures', lazy=True, cascade='all, delete-orphan'))
+    # labels – backref from Label
+    # retailers – backref from Retailer
 
     @validates('explanation')
     def validate(self, key, value):
@@ -375,28 +395,14 @@ class Retailer(db.Model):
     name = db.Column(db.String(64))
     brands = db.relationship('Brand', backref='retailer', lazy=True)
     stores = db.relationship('Store', backref='retailer', lazy=True)
-    meets_criteria = db.relationship('RetailerMeetsCriterion', lazy=True)
+    meets_criteria = db.relationship(
+        'Measure', secondary=measures_retailers,
+        lazy='subquery', backref=db.backref('retailers', lazy=True)
+    )
     labels = db.relationship(
         'Label', secondary=retailers_labels,
         lazy='subquery', backref=db.backref('retailers', lazy=True)
     )
-
-
-class RetailerMeetsCriterion(db.Model):
-
-    """Maps retailer policies to their criteria.
-
-    Describes how well a policy meets a certain criterion by assigning a score
-    and an explanation.
-
-    """
-
-    __tablename__ = 'retailer_criteria'
-    retailer_id = db.Column(db.ForeignKey('retailers.id'), primary_key=True)
-    criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
-    satisfied = db.Column(db.Boolean)
-    explanation = db.Column(db.Text)
-    criterion = db.relationship('Criterion', lazy=True)
 
 
 class Score(db.Model):

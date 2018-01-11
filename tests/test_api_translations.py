@@ -62,7 +62,9 @@ class TestLabels:
                                     "logo": {
                                         "en": Util.lbl4_logo,
                                         "de": Util.lbl4_logo_de},
-                                    "meets_criteria": [{"criterion": 1}],
+                                    "meets_criteria": [{
+                                        "criterion_id": 1,
+                                        "score": 1}],
                                     }),
                                headers=auth_header,
                                content_type='application/json')
@@ -99,7 +101,9 @@ class TestLabels:
                                    {"name": {"de": Util.lbl4_name_de},
                                     "description": {"de": Util.lbl4_description_de},
                                     "logo": {"de": Util.lbl4_logo_de},
-                                    "meets_criteria": [{"criterion": 3}],
+                                    "meets_criteria": [{
+                                        "criterion_id": 2,
+                                        "score": 2}],
                                     }),
                                headers=auth_header,
                                content_type='application/json')
@@ -117,7 +121,9 @@ class TestLabels:
                                    "description": {
                                        "en": Util.lbl5_description,
                                        "de": Util.lbl5_description_de},
-                                   "meets_criteria": [{"criterion": 1}],
+                                   "meets_criteria": [{
+                                       "criterion_id": 3,
+                                       "score": 3}],
                                    }),
                               headers=auth_header,
                               content_type='application/json')
@@ -126,7 +132,7 @@ class TestLabels:
         assert res.json['name']['de'] == Util.lbl5_name_de
         assert res.json['description']['en'] == Util.lbl5_description
         assert res.json['description']['de'] == Util.lbl5_description_de
-        assert res.json['meets_criteria'][0]['criterion'] == 1
+        assert res.json['meets_criteria'][0]['criterion_id'] == 3
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
 
@@ -134,14 +140,14 @@ class TestLabels:
         assert res.json['item']['name']['de'] == Util.lbl5_name_de
         assert res.json['item']['description']['en'] == Util.lbl5_description
         assert res.json['item']['description']['de'] == Util.lbl5_description_de
-        assert res.json['item']['meets_criteria'][0]['criterion'] == 1
+        assert res.json['item']['meets_criteria'][0]['criterion_id'] == 3
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1, lang='de'))
 
         assert res.status_code == 200
         assert res.json['item']['name'] == Util.lbl5_name_de
         assert res.json['item']['description'] == Util.lbl5_description_de
-        assert res.json['item']['meets_criteria'][0]['criterion'] == 1
+        assert res.json['item']['meets_criteria'][0]['criterion_id'] == 3
 
     def test_patch_item(self):
         # Update the German only label's data by adding English values
@@ -149,7 +155,10 @@ class TestLabels:
                                 data=json.dumps(
                                     {"name": {"en": Util.lbl6_name},
                                      "description": {"en": Util.lbl6_description},
-                                     "meets_criteria": [{"criterion": 1}]}),
+                                     "meets_criteria": [{
+                                         "criterion_id": 1,
+                                         "score": 2}]
+                                     }),
                                 headers=auth_header,
                                 content_type='application/json'
                                 )
@@ -157,14 +166,14 @@ class TestLabels:
         assert res.status_code == 201
         assert res.json['name']['en'] == Util.lbl6_name
         assert res.json['description']['en'] == Util.lbl6_description
-        assert res.json['meets_criteria'][0]['criterion'] == 1
+        assert res.json['meets_criteria'][0]['criterion_id'] == 1
 
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=3))
 
         assert res.status_code == 200
         assert res.json['item']['name']['en'] == Util.lbl6_name
         assert res.json['item']['description']['en'] == Util.lbl6_description
-        assert res.json['item']['meets_criteria'][0]['criterion'] == 1
+        assert res.json['item']['meets_criteria'][0]['criterion_id'] == 1
 
     def test_delete_item(self):
         # Delete a whole item
@@ -779,39 +788,39 @@ class TestCriteria:
 
         assert res.status_code == 200
         assert res.json['items'][0]['name']['en'] == 'Multilingual Criterion'
-        assert res.json['items'][0]['details']['en'] == 'Multilingual details'
+        assert res.json['items'][0]['question']['en'] == 'Multilingual question?'
         assert res.json['items'][0]['category']['name']['en'] == 'Multilingual Criterion Category'
         assert res.json['items'][1]['name']['en'] == 'English Criterion'
-        assert res.json['items'][1]['details']['en'] == 'English details'
+        assert res.json['items'][1]['question']['en'] == 'English question?'
         assert res.json['items'][1]['category']['name']['en'] == 'English Criterion Category'
         assert res.json['items'][2]['name']['de'] == 'Deutsches Criterion'
-        assert res.json['items'][2]['details']['de'] == 'Deutsche Details'
+        assert res.json['items'][2]['question']['de'] == 'Deutsche Frage?'
         assert res.json['items'][2]['category']['name']['de'] == 'Deutsche Criterion Category'
 
         res = self.client.get(url_for(api.ResourceList, type='criteria', lang='de'))
 
         assert res.status_code == 200
         assert res.json['items'][0]['name'] == 'Mehrsprachiges Criterion'
-        assert res.json['items'][0]['details'] == 'Mehrsprachige Details'
+        assert res.json['items'][0]['question'] == 'Mehrsprachige Frage?'
         assert res.json['items'][0]['category']['name'] == 'Mehrsprachige Criterion Category'
         assert res.json['items'][1]['name'] == 'English Criterion'
-        assert res.json['items'][1]['details'] == 'English details'
+        assert res.json['items'][1]['question'] == 'English question?'
         assert res.json['items'][1]['category']['name'] == 'English Criterion Category'
         assert res.json['items'][2]['name'] == 'Deutsches Criterion'
-        assert res.json['items'][2]['details'] == 'Deutsche Details'
+        assert res.json['items'][2]['question'] == 'Deutsche Frage?'
         assert res.json['items'][2]['category']['name'] == 'Deutsche Criterion Category'
 
         res = self.client.get(url_for(api.ResourceList, type='criteria', lang='it'))
 
         assert res.status_code == 200
         assert res.json['items'][0]['name'] == 'Multilingual Criterion'
-        assert res.json['items'][0]['details'] == 'Multilingual details'
+        assert res.json['items'][0]['question'] == 'Multilingual question?'
         assert res.json['items'][0]['category']['name'] == 'Multilingual Criterion Category'
         assert res.json['items'][1]['name'] == 'English Criterion'
-        assert res.json['items'][1]['details'] == 'English details'
+        assert res.json['items'][1]['question'] == 'English question?'
         assert res.json['items'][1]['category']['name'] == 'English Criterion Category'
         assert res.json['items'][2]['name'] == 'Deutsches Criterion'
-        assert res.json['items'][2]['details'] == 'Deutsche Details'
+        assert res.json['items'][2]['question'] == 'Deutsche Frage?'
         assert res.json['items'][2]['category']['name'] == 'Deutsche Criterion Category'
 
     def test_get_item(self):
@@ -819,7 +828,7 @@ class TestCriteria:
 
         assert res.status_code == 200
         assert res.json['item']['name']['en'] == 'Multilingual Criterion'
-        assert res.json['item']['details']['en'] == 'Multilingual details'
+        assert res.json['item']['question']['en'] == 'Multilingual question?'
         assert res.json['item']['category']['name']['en'] == 'Multilingual Criterion Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
@@ -827,7 +836,7 @@ class TestCriteria:
 
         assert res.status_code == 200
         assert res.json['item']['name'] == 'Mehrsprachiges Criterion'
-        assert res.json['item']['details'] == 'Mehrsprachige Details'
+        assert res.json['item']['question'] == 'Mehrsprachige Frage?'
         assert res.json['item']['category']['name'] == 'Mehrsprachige Criterion Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
@@ -835,7 +844,7 @@ class TestCriteria:
 
         assert res.status_code == 200
         assert res.json['item']['name'] == 'Multilingual Criterion'
-        assert res.json['item']['details'] == 'Multilingual details'
+        assert res.json['item']['question'] == 'Multilingual question?'
         assert res.json['item']['category']['name'] == 'Multilingual Criterion Category'
 
     def test_post_to_list(self):
@@ -843,8 +852,8 @@ class TestCriteria:
             url_for(api.ResourceList, type='criteria'),
             data=json.dumps({'name': {'en': 'POSTed Criterion',
                                       'de': 'Gepostetes Criterion'},
-                             'details': {'en': 'POSTed details',
-                                         'de': 'Gepostete Details'},
+                             'question': {'en': 'POSTed question',
+                                          'de': 'Gepostete Frage'},
                              'category': {'name': {'en': 'POSTed Category',
                                                    'de': 'Gepostete Category'}}}),
             headers=auth_header,
@@ -852,7 +861,7 @@ class TestCriteria:
 
         assert res.status_code == 201
         assert res.json['name']['en'] == 'POSTed Criterion'
-        assert res.json['details']['en'] == 'POSTed details'
+        assert res.json['question']['en'] == 'POSTed question'
         assert res.json['category']['name']['en'] == 'POSTed Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
@@ -860,7 +869,7 @@ class TestCriteria:
 
         assert res.status_code == 200
         assert res.json['item']['name'] == 'Gepostetes Criterion'
-        assert res.json['item']['details'] == 'Gepostete Details'
+        assert res.json['item']['question'] == 'Gepostete Frage'
         assert res.json['item']['category']['name'] == 'Gepostete Category'
 
     def test_put_item(self):
@@ -868,8 +877,8 @@ class TestCriteria:
             url_for(api.ResourceItem, type='criteria', id=2),
             data=json.dumps({'name': {'en': 'PUTted Criterion',
                                       'de': 'Geputtetes Criterion'},
-                             'details': {'en': 'PUTted details',
-                                         'de': 'Geputtete Details'},
+                             'question': {'en': 'PUTted question',
+                                          'de': 'Geputtete Frage'},
                              'category': {'name': {'en': 'PUTted Category',
                                                    'de': 'Geputtete Category'}}}),
             headers=auth_header,
@@ -877,35 +886,35 @@ class TestCriteria:
 
         assert res.status_code == 201
         assert res.json['name']['en'] == 'PUTted Criterion'
-        assert res.json['details']['en'] == 'PUTted details'
+        assert res.json['question']['en'] == 'PUTted question'
         assert res.json['category']['name']['en'] == 'PUTted Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
                                       id=2, lang='de'))
         assert res.status_code == 200
         assert res.json['item']['name'] == 'Geputtetes Criterion'
-        assert res.json['item']['details'] == 'Geputtete Details'
+        assert res.json['item']['question'] == 'Geputtete Frage'
         assert res.json['item']['category']['name'] == 'Geputtete Category'
 
     def test_patch_item(self):
         res = self.client.patch(
             url_for(api.ResourceItem, type='criteria', id=3),
             data=json.dumps({'name': {'en': 'English only'},
-                             'details': {'en': 'English details'},
+                             'question': {'en': 'English question'},
                              'category': {'name': {'en': 'English Category'}}}),
             headers=auth_header,
             content_type='application/json')
 
         assert res.status_code == 201
         assert res.json['name']['en'] == 'English only'
-        assert res.json['details']['en'] == 'English details'
+        assert res.json['question']['en'] == 'English question'
         assert res.json['category']['name']['en'] == 'English Category'
 
         res = self.client.get(url_for(api.ResourceItem, type='criteria',
                                       id=3, lang='de'))
         assert res.status_code == 200
         assert res.json['item']['name'] == 'English only'
-        assert res.json['item']['details'] == 'English details'
+        assert res.json['item']['question'] == 'English question'
         assert res.json['item']['category']['name'] == 'English Category'
 
     def test_delete_item(self):
@@ -935,15 +944,6 @@ class TestLabelGuideUseCases:
         assert res.json['items'][2]['name']['de'] == Util.lbl3_name
         assert res.json['items'][2]['description']['de'] == Util.lbl3_description
 
-        assert res.json['items'][0]['meets_criteria'][0]['explanation']['en'] == (
-            Util.crit1_explanation)
-        assert res.json['items'][0]['meets_criteria'][0]['explanation']['de'] == (
-            Util.crit1_explanation_de)
-        assert res.json['items'][1]['meets_criteria'][0]['explanation']['en'] == (
-            Util.crit2_explanation)
-        assert res.json['items'][2]['meets_criteria'][0]['explanation']['de'] == (
-            Util.crit3_explanation)
-
         # Test German (data without German translation should revert to English)
         res = self.client.get(url_for(api.ResourceList, type='labels', lang='de'))
 
@@ -955,11 +955,6 @@ class TestLabelGuideUseCases:
         assert res.json['items'][1]['description'] == Util.lbl2_description
         assert res.json['items'][2]['name'] == Util.lbl3_name
         assert res.json['items'][2]['description'] == Util.lbl3_description
-
-        assert res.json['items'][0]['meets_criteria'][0]['explanation'] == (
-            Util.crit1_explanation_de)
-        assert res.json['items'][1]['meets_criteria'][0]['explanation'] == Util.crit2_explanation
-        assert res.json['items'][2]['meets_criteria'][0]['explanation'] == Util.crit3_explanation
 
         # Test Italian (no data, should revert to default)
         res = self.client.get(url_for(api.ResourceList, type='labels', lang='it'))
@@ -973,10 +968,6 @@ class TestLabelGuideUseCases:
         assert res.json['items'][2]['name'] == Util.lbl3_name
         assert res.json['items'][2]['description'] == Util.lbl3_description
 
-        assert res.json['items'][0]['meets_criteria'][0]['explanation'] == Util.crit1_explanation
-        assert res.json['items'][1]['meets_criteria'][0]['explanation'] == Util.crit2_explanation
-        assert res.json['items'][2]['meets_criteria'][0]['explanation'] == Util.crit3_explanation
-
     def test_get_single_item(self):
         # Test default
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1))
@@ -986,9 +977,6 @@ class TestLabelGuideUseCases:
         assert res.json['item']['name']['de'] == Util.lbl1_name_de
         assert res.json['item']['description']['en'] == Util.lbl1_description
         assert res.json['item']['description']['de'] == Util.lbl1_description_de
-        assert res.json['item']['meets_criteria'][0]['explanation']['en'] == Util.crit1_explanation
-        assert res.json['item']['meets_criteria'][0]['explanation']['de'] == (
-            Util.crit1_explanation_de)
 
         # Test German
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1, lang='de'))
@@ -996,7 +984,6 @@ class TestLabelGuideUseCases:
         assert res.status_code == 200
         assert res.json['item']['name'] == Util.lbl1_name_de
         assert res.json['item']['description'] == Util.lbl1_description_de
-        assert res.json['item']['meets_criteria'][0]['explanation'] == Util.crit1_explanation_de
 
         # Test Italian (no data, should revert to English)
         res = self.client.get(url_for(api.ResourceItem, type='labels', id=1, lang='it'))
@@ -1004,4 +991,3 @@ class TestLabelGuideUseCases:
         assert res.status_code == 200
         assert res.json['item']['name'] == Util.lbl1_name
         assert res.json['item']['description'] == Util.lbl1_description
-        assert res.json['item']['meets_criteria'][0]['explanation'] == Util.crit1_explanation

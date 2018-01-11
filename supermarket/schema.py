@@ -370,10 +370,11 @@ class Category(CustomSchema):
 
 
 class Criterion(CustomSchema):
-    # id, name, type (label, retailer), code, details (JSONB)
-    # refs: improves_hotspots
+    # id, name, type (label, retailer), code, question
+    # refs: improves_hotspots, measures
     category = Nested('CriterionCategory', only=('id', 'name', 'category'))
     improves_hotspots = Nested('CriterionImprovesHotspot', exclude=['criterion'], many=True)
+    measures = Nested('Measure', exclude=['criterion'], many=True)
 
     links = Hyperlinks({
         'self': ma.URLFor('api.resourceitem', type='criteria', id='<id>', _external=True),
@@ -454,7 +455,6 @@ class Ingredient(CustomSchema):
 class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
-    meets_criteria = Nested('LabelMeetsCriterion', exclude=['label'], many=True)
     hotspots = ma.Method('get_hotspots', dump_only=True)
 
     links = Hyperlinks({
@@ -487,10 +487,14 @@ class Label(CustomSchema):
 
     @property
     def schema_description(self):
-        """Replace method field in schema description."""
+        """Replace method field in schema description, add related doc."""
         doc = super().schema_description
         doc['fields']['hotspots']['type'] = 'related'
         doc['fields']['hotspots']['list'] = True
+        doc['fields']['hotspots']['doc'] = url_for(
+            'api.resourcedoc', type='hotspots', _external=True)
+        doc['fields']['meets_criteria']['doc'] = url_for(
+            'api.resourcedoc', type='criteria', _external=True)
         return doc
 
     @post_dump
@@ -508,21 +512,23 @@ class Label(CustomSchema):
         model = m.Label
 
 
-class LabelMeetsCriterion(CustomSchema):
-    # primary key: label_id + criterion_id
-    # score, explanation
-    # refs: criterion, label
+class Measure(CustomSchema):
+    # primary key: criterion_id + score
+    # explanation
+    # refs: criterion, labels, retailers
 
     @property
     def schema_description(self):
         """Add related doc to schema description."""
         doc = super().schema_description
-        doc['fields']['criterion']['doc'] = url_for(
-            'api.resourcedoc', type='criteria', _external=True)
+        doc['fields']['labels']['doc'] = url_for(
+            'api.resourcedoc', type='labels', _external=True)
+        doc['fields']['retailers']['doc'] = url_for(
+            'api.resourcedoc', type='retailers', _external=True)
         return doc
 
     class Meta(CustomSchema.Meta):
-        model = m.LabelMeetsCriterion
+        model = m.Measure
 
 
 class Origin(CustomSchema):
@@ -625,7 +631,6 @@ class Resource(CustomSchema):
 class Retailer(CustomSchema):
     # id, name
     # refs: meets_criteria, brands, stores, labels
-    meets_criteria = Nested('RetailerMeetsCriterion', exclude=['retailer'], many=True)
 
     links = Hyperlinks({
         'self': ma.URLFor('api.resourceitem', type='retailers', id='<id>', _external=True),
@@ -646,25 +651,16 @@ class Retailer(CustomSchema):
         }
     })
 
-    class Meta(CustomSchema.Meta):
-        model = m.Retailer
-
-
-class RetailerMeetsCriterion(CustomSchema):
-    # primary key: retailer_id + criterion_id
-    # satisfied, explanation
-    # refs: criterion
-
     @property
     def schema_description(self):
         """Add related doc to schema description."""
         doc = super().schema_description
-        doc['fields']['criterion']['doc'] = url_for(
+        doc['fields']['meets_criteria']['doc'] = url_for(
             'api.resourcedoc', type='criteria', _external=True)
         return doc
 
     class Meta(CustomSchema.Meta):
-        model = m.RetailerMeetsCriterion
+        model = m.Retailer
 
 
 class Score(CustomSchema):

@@ -11,13 +11,13 @@ def test_label_model(db):
         countries=[m.LabelCountry(code='GB'), m.LabelCountry(code='AT')]
     )
 
-    criterion_1_assoc = m.LabelMeetsCriterion(score=1, explanation={'en': 'Nope.'})
-    criterion_1_assoc.criterion = m.Criterion(name={'en': 'Saves the world'})
-    label.meets_criteria.append(criterion_1_assoc)
+    measure_1_assoc = m.Measure(score=1, explanation={'en': 'Nope.'})
+    measure_1_assoc.criterion = m.Criterion(name={'en': 'Saves the world'})
+    label.meets_criteria.append(measure_1_assoc)
 
-    criterion_2_assoc = m.LabelMeetsCriterion(score=2, explanation={'en': 'At least a few of us…'})
-    criterion_2_assoc.criterion = m.Criterion(name={'en': 'Makes us all happy'})
-    label.meets_criteria.append(criterion_2_assoc)
+    measure_2_assoc = m.Measure(score=2, explanation={'en': 'At least a few of us…'})
+    measure_2_assoc.criterion = m.Criterion(name={'en': 'Makes us all happy'})
+    label.meets_criteria.append(measure_2_assoc)
 
     resource_1 = m.Resource(name={'en': 'cocoa'})
     resource_2 = m.Resource(name={'en': 'palm oil'})
@@ -74,6 +74,18 @@ def test_label_model_duplicate_name(db):
 
     db.session.add(label)
     db.session.add(label2)
+
+    with raises(IntegrityError):
+        db.session.commit()
+
+
+def test_label_model_meets_duplicate_criteria(db):
+    label = m.Label(name={'en': 'A cool label'})
+    criterion = m.Criterion(name={'en': 'Saves the world'})
+
+    label.meets_criteria.append(m.Measure(score=1, criterion=criterion))
+    label.meets_criteria.append(m.Measure(score=2, criterion=criterion))
+    db.session.add(label)
 
     with raises(IntegrityError):
         db.session.commit()

@@ -74,12 +74,12 @@ def example_data_criteria(request, app, db):
         print('\nSetting up criteria example data for {} {}'.format(id(db), db))
         c1 = m.Criterion(name={'en': 'Multilingual Criterion',
                                'de': 'Mehrsprachiges Criterion'},
-                         details={'en': 'Multilingual details',
-                                  'de': 'Mehrsprachige Details'})
+                         question={'en': 'Multilingual question?',
+                                   'de': 'Mehrsprachige Frage?'})
         c2 = m.Criterion(name={'en': 'English Criterion'},
-                         details={'en': 'English details'})
+                         question={'en': 'English question?'})
         c3 = m.Criterion(name={'de': 'Deutsches Criterion'},
-                         details={'de': 'Deutsche Details'})
+                         question={'de': 'Deutsche Frage?'})
 
         cc1 = m.CriterionCategory(name={'en': 'Multilingual Criterion Category',
                                         'de': 'Mehrsprachige Criterion Category'})
@@ -189,23 +189,23 @@ def example_data_label_guide(request, app, db):
         crit2 = m.Criterion(name={'en': 'Understandable'})
         crit3 = m.Criterion(name={'en': 'Ignorant'})
 
-        l1_m_c1 = m.LabelMeetsCriterion(
-            label=l1,
+        l1_m_c1 = m.Measure(
+            labels=[l1],
             criterion=crit1,
             explanation={"en": "The label is both English and German.",
                          "de": "Das Label ist sowohl Deutsch, als auch Englisch."},
             score=100
         )
-        l2_m_c2 = m.LabelMeetsCriterion(
-            label=l2,
+        l2_m_c2 = m.Measure(
+            labels=[l2],
             criterion=crit2,
             explanation={
                 "en": "The label is at least in English, so a lot of people will understand it."
             },
             score=50
         )
-        l3_m_c3 = m.LabelMeetsCriterion(
-            label=l3,
+        l3_m_c3 = m.Measure(
+            labels=[l3],
             criterion=crit3,
             explanation={
                 "de": "Alles nur Deutsch."
@@ -277,11 +277,11 @@ def example_data_labels(request, app, db):
             resources=[r1, r2],
             countries=[lbl_country],
         )
-        lbl_criterion = m.LabelMeetsCriterion(
-            label=lbl,
+        lbl_criterion = m.Measure(
+            labels=[lbl],
             criterion=crit,
             score=100,
-            explanation={'en': 'Does the label improve testing for all of us?'}
+            explanation={'en': 'The label improves testing for all of us.'}
         )
 
         db.session.add(lbl)
