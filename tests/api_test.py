@@ -23,7 +23,6 @@ class TestFormerBugs:
             }),
             headers=auth_header,
             content_type='application/json')
-        print(res.json)
         assert res.status_code == 400
         assert res.json['message'] == 'Validation error.'
         assert res.json['errors'][0]['field'] == 'resources'
