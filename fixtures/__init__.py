@@ -240,44 +240,6 @@ def import_example_data():
             "', '".join(unknown_labels)))
     db.session.commit()
 
-    # calculate label scoring
-    category_scores = {}
-    for category in categories:
-        max_score = 0
-        label_scores = defaultdict(lambda: 0)
-        # subcategory score
-        for subcategory in category.subcategories:
-            max_sub_score = 0
-            label_sub_scores = defaultdict(lambda: 0)
-            for criterion in subcategory.criteria:
-                # get maximum criterion score
-                points = [m.score for m in criterion.measures]
-                max_sub_score += max(points)
-                # get criterion score per label
-                for m in criterion.measures:
-                    for l in m.labels:
-                        label_sub_scores[l] += int(m.score)
-            # calculate score for subcategory
-            for label, score in label_sub_scores.items():
-                label_scores[label] += round(100*score/max_sub_score)
-            # each subcategory has a max score of 100% for the overall score,
-            if 'Co-Labeling' not in subcategory.name['en']:  # co-labeling doesn’t count
-                max_score += 100
-        # calculate overall score
-        label_scores = {l: round(100*s/max_score) for l, s in label_scores.items()}
-        category_scores[category.name['en'].replace(' ', '_').lower()] = label_scores
-
-    # save score to label details
-    for label in labels.values():
-        score = {}
-        for category, ls in category_scores.items():
-            score[category] = ls[label] if label in ls else 0
-        details_dict = deepcopy(label.details) or {}
-        details_dict['score'] = score
-        label.details = details_dict
-        db.session.add(label)
-    db.session.commit()
-
     # Criteria and Criteria-Hotspot mapping
     unknown_criteria = set()
     with open(os.path.dirname(__file__) + '/csvs/hotspot-criteria.csv') as csv_file:

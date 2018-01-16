@@ -136,6 +136,15 @@ class Criterion(db.Model):
             raise ValidationError('Only 128 characters allowed.', key)
         return Translation.validate_translation(key, value)
 
+    def get_max_score(self):
+        return max([m.score for m in self.measures])
+
+    def get_label_score(self, label):
+        for m in self.measures:
+            if label in m.labels:
+                return m.score
+        return 0
+
 
 class CriterionCategory(db.Model):
 
@@ -161,6 +170,25 @@ class CriterionCategory(db.Model):
         if key == 'name' and len(value) > 128:
             raise ValidationError('Only 128 characters allowed.', key)
         return Translation.validate_translation(key, value)
+
+    def get_max_score(self):
+        score = 0
+        # for criteria add all max points
+        for c in self.criteria:
+            score += c.get_max_score()
+        # for subcategories add 100% each
+        for sc in self.subcategories:
+            if 'Co-Labeling' not in sc.name['en']:  # co-labeling doesn’t count
+                score += 100
+        return score
+
+    def get_label_score(self, label):
+        label_score = 0
+        for c in self.criteria:
+            label_score += c.get_label_score(label)
+        for sc in self.subcategories:
+            label_score += sc.get_label_score(label)
+        return round(100*label_score/self.get_max_score())
 
 
 class CriterionImprovesHotspot(db.Model):
@@ -242,7 +270,6 @@ class Label(db.Model):
     name = db.Column(Translation, nullable=False, unique=True)
     type = db.Column(db.Enum('product', 'retailer', name='label_type'))
     description = db.Column(Translation)
-    details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(Translation)
     meets_criteria = db.relationship(
         'Measure', secondary=measures_labels,

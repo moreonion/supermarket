@@ -456,6 +456,7 @@ class Label(CustomSchema):
     # id, name, type (product, retailer), description, details (JSONB), logo
     # refs: meets_criteria, resources, products, retailers
     hotspots = ma.Method('get_hotspots', dump_only=True)
+    details = ma.Method('get_scores', dump_only=True)
 
     links = Hyperlinks({
         'self': ma.URLFor('api.resourceitem', type='labels', id='<id>', _external=True),
@@ -484,6 +485,14 @@ class Label(CustomSchema):
         except AttributeError:
             pass
         return [h.id for h in hotspots]
+
+    def get_scores(self, l):
+        score = {}
+        main_categories = m.CriterionCategory.query.filter(
+            ~m.CriterionCategory.criteria.any()).all()
+        for c in main_categories:
+            score[c.name['en'].replace(' ', '_').lower()] = c.get_label_score(l)
+        return {'score': score}
 
     @property
     def schema_description(self):
