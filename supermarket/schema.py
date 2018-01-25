@@ -475,10 +475,14 @@ class Label(CustomSchema):
     })
 
     def get_hotspots(self, m):
+        """Get hotspots via associated criteria."""
         hotspots = set()
-        for mc in m.meets_criteria:
-            for ih in mc.criterion.improves_hotspots:
-                hotspots.add(ih.hotspot)
+        try:
+            for mc in m.meets_criteria:
+                for ih in mc.criterion.improves_hotspots:
+                    hotspots.add(ih.hotspot)
+        except AttributeError:
+            pass
         return [h.id for h in hotspots]
 
     @property
