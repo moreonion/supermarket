@@ -211,6 +211,8 @@ def import_example_data():
                         categories.append(category)
                     subcategory = CriterionCategory(
                         name={lang: subcategory_name}, category=category)
+                    if 'co-labeling' in subcategory_name.lower():
+                        subcategory.is_co_labeling = True
                     db.session.add(subcategory)
                 criterion = Criterion(
                     name={lang: criterion_name},

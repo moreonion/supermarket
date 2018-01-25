@@ -159,6 +159,7 @@ class CriterionCategory(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(Translation)
     parent_id = db.Column(db.ForeignKey('criterion_category.id'))
+    is_co_labeling = db.Column(db.Boolean, default=False)
     subcategories = db.relationship(
         'CriterionCategory', backref=db.backref('category', remote_side=[id]))
     criteria = db.relationship(
@@ -178,8 +179,9 @@ class CriterionCategory(db.Model):
             score += c.get_max_score()
         # for subcategories add 100% each
         for sc in self.subcategories:
-            if 'Co-Labeling' not in sc.name['en']:  # co-labeling doesn’t count
+            if not sc.is_co_labeling:  # co-labeling doesn’t count
                 score += 100
+
         return score
 
     def get_label_score(self, label):
