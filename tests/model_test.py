@@ -35,15 +35,12 @@ def test_category_model(db):
 
 
 def test_criterion_model(db):
-    criterion = m.Criterion(name={'en': 'Saves the world'})
-    criterion.details = {
-        'en': {
-            'question': 'Does the certificate/label save the world?',
-            'response_options': '0 - no, 1 - partly, 2 - totally!',
-            'explanation': '2 applies only if it really saves the world.',
-            'possible_scores': [-1, 0, 1, 2]  # -1 means not applicable
-        }
-    }
+    criterion = m.Criterion(
+        name={'en': 'Saves the world'},
+        type='label',
+        question={'en': 'Does the certificate/label save the world?'},
+        measures=[m.Measure(score=1, explanation={'en': 'That’s why!'})]
+    )
 
     hotspot_assoc = m.CriterionImprovesHotspot(weight=2, explanation={'en': 'Obvious.'})
     hotspot_assoc.hotspot = m.Hotspot(name={'en': 'Saving the world'})
@@ -53,7 +50,10 @@ def test_criterion_model(db):
     db.session.commit()
 
     assert criterion.id > 0
-    assert criterion.details['en']['possible_scores'][0] == -1
+    assert criterion.question['en'] == 'Does the certificate/label save the world?'
+    assert len(criterion.measures) == 1
+    assert criterion.measures[0].score == 1
+    assert criterion.measures[0].explanation['en'] == 'That’s why!'
     assert len(criterion.improves_hotspots) == 1
     assert criterion.improves_hotspots[0].weight == 2
     assert criterion.improves_hotspots[0].explanation['en'] == 'Obvious.'
@@ -192,12 +192,11 @@ def test_retailer_model(db):
     m.Brand(name='Clever', retailer=retailer)
     m.Label(name={'en': 'BEPI'}, type='retailer', retailers=[retailer])
 
-    criterion_1_assoc = m.RetailerMeetsCriterion(satisfied=False, explanation='Nope.')
+    criterion_1_assoc = m.Measure(score=0, explanation={'en': 'Nope.'})
     criterion_1_assoc.criterion = m.Criterion(name={'en': 'Saves the world'}, type='retailer')
     retailer.meets_criteria.append(criterion_1_assoc)
 
-    criterion_2_assoc = m.RetailerMeetsCriterion(
-        satisfied=True, explanation='At least a few of us...')
+    criterion_2_assoc = m.Measure(score=1, explanation={'en': 'At least a few of us...'})
     criterion_2_assoc.criterion = m.Criterion(name={'en': 'Makes us all happy'}, type='retailer')
     retailer.meets_criteria.append(criterion_2_assoc)
 
@@ -210,8 +209,8 @@ def test_retailer_model(db):
     assert len(retailer.meets_criteria) == 2
     assert len(retailer.labels) == 1
     assert retailer.name == 'Rewe'
-    assert retailer.meets_criteria[0].satisfied is False
-    assert retailer.meets_criteria[0].explanation == 'Nope.'
+    assert retailer.meets_criteria[0].score == 0
+    assert retailer.meets_criteria[0].explanation['en'] == 'Nope.'
     assert retailer.meets_criteria[0].criterion.name['en'] == 'Saves the world'
     assert retailer.meets_criteria[0].criterion.type == 'retailer'
     assert retailer.labels[0].name['en'] == 'BEPI'

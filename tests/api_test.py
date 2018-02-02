@@ -17,16 +17,16 @@ class TestFormerBugs:
             url_for(api.ResourceList, type='labels'),
             data=json.dumps({
                 'name': {'en': 'A label'},
-                'meets_criteria': [{
-                    'criterion': {'name': 'A criterion'},
-                    'score': '2'
+                'resources': [{
+                    'name': 'A resource'
                 }]
             }),
             headers=auth_header,
             content_type='application/json')
         assert res.status_code == 400
         assert res.json['message'] == 'Validation error.'
-        assert res.json['errors'][0]['messages']['0']['criterion'][0] == 'No language specified.'
+        assert res.json['errors'][0]['field'] == 'resources'
+        assert res.json['errors'][0]['messages']['0'][0] == 'No language specified.'
 
 
 @pytest.mark.usefixtures('client_class', 'db')
@@ -186,31 +186,28 @@ class TestProductApiRelations:
             url_for(api.ResourceItem, type='brands', id=res.json['brand']))
         assert 3 in related_brand.json['item']['products']
 
-
-@pytest.mark.usefixtures('client_class', 'db')
-class TestLabelApiRelations:
     def test_post_nested_relation(self):
         res = self.client.post(
-            url_for(api.ResourceList, type='labels'),
+            url_for(api.ResourceList, type='products'),
             data=json.dumps({
-                'name': {'en': 'A label'},
-                'meets_criteria': [{
-                    'criterion': {'name': {'en': 'A criterion'}},
-                    'score': '2'
+                'name': {'en': 'Chocolate Cream'},
+                'ingredients': [{
+                    'resource': {'name': {'en': 'Cocoa'}},
+                    'weight': '1'
                 }]
             }),
             headers=auth_header,
             content_type='application/json')
         assert res.status_code == 201
-        assert res.json['id'] == 1
-        assert res.json['name']['en'] == 'A label'
-        assert res.json['meets_criteria'][0]['criterion'] == 1
-        assert res.json['meets_criteria'][0]['score'] == 2
+        assert res.json['id'] == 4
+        assert res.json['name']['en'] == 'Chocolate Cream'
+        assert res.json['ingredients'][0]['resource'] == 1
+        assert res.json['ingredients'][0]['weight'] == 1
 
-        related_criterion = self.client.get(
-            url_for(api.ResourceItem, type='criteria',
-                    id=res.json['meets_criteria'][0]['criterion']))
-        assert related_criterion.json['item']['name']['en'] == 'A criterion'
+        related_resource = self.client.get(
+            url_for(api.ResourceItem, type='resources',
+                    id=res.json['ingredients'][0]['resource']))
+        assert related_resource.json['item']['name']['en'] == 'Cocoa'
 
 
 @pytest.mark.usefixtures('client_class', 'db')

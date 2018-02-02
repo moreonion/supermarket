@@ -16,7 +16,7 @@ from supermarket.model import (
     Ingredient,
     Label,
     LabelCountry,
-    LabelMeetsCriterion,
+    Measure,
     Origin,
     Product,
     Resource,
@@ -27,6 +27,7 @@ criteria_code_pattern = re.compile('^\d\.\d\.\d$')
 
 
 def import_example_data():
+    db.reflect()
     db.drop_all()
     db.create_all()
     lang = 'en'  # assuming everything is English for now
@@ -210,20 +211,21 @@ def import_example_data():
                         categories.append(category)
                     subcategory = CriterionCategory(
                         name={lang: subcategory_name}, category=category)
+                    if 'co-labeling' in subcategory_name.lower():
+                        subcategory.is_co_labeling = True
                     db.session.add(subcategory)
                 criterion = Criterion(
                     name={lang: criterion_name},
                     category=subcategory,
-                    # use English text for German questions as there is no translation provided
-                    details={'en': {'question': row[6], 'measures': {}},
-                             'de': {'question': row[6], 'measures': {}}}
+                    question={lang: {'question': row[6]}}
                 )
                 db.session.add(criterion)
                 criteria[row[4]] = criterion
-            details = deepcopy(criterion.details)
-            details['en']['measures'][int(row[10])] = row[8]  # English text
-            details['de']['measures'][int(row[10])] = row[9]  # German text
-            criterion.details = details
+            measure = Measure(
+                score=int(row[10]),
+                explanation={'en': row[8], 'de': row[9]}
+            )
+            criterion.measures.append(measure)
             db.session.add(criterion)
 
             for label_code, s in zip(label_codes, row[11:]):
@@ -231,57 +233,13 @@ def import_example_data():
                 if label_code not in labels:
                     unknown_labels.add(label_code)
                     continue
-                if not s or int(s) <= 0:
+                if not s or int(s) != measure.score:
                     continue
-                db.session.add(LabelMeetsCriterion(
-                    label=labels[label_code],
-                    criterion=criterion,
-                    score=s,
-                    explanation={
-                        'en': row[8],
-                        'de': row[9]
-                    }
-                ))
+                measure.labels.append(labels[label_code])
+
     if unknown_labels:
         print("Couldn’t apply criteria scores to unknown labels:\n'{}'\n".format(
             "', '".join(unknown_labels)))
-    db.session.commit()
-
-    # calculate label scoring
-    category_scores = {}
-    for category in categories:
-        max_score = 0
-        label_scores = defaultdict(lambda: 0)
-        # subcategory score
-        for subcategory in category.subcategories:
-            max_sub_score = 0
-            label_sub_scores = defaultdict(lambda: 0)
-            for criterion in subcategory.criteria:
-                # get maximum criterion score
-                points = criterion.details[lang]['measures'].keys()
-                max_sub_score += max(map(int, points))
-                # get criterion score per label
-                for lmc in LabelMeetsCriterion.query.filter_by(criterion_id=criterion.id).all():
-                    label_sub_scores[lmc.label] += int(lmc.score)
-            # calculate score for subcategory
-            for label, score in label_sub_scores.items():
-                label_scores[label] += round(100*score/max_sub_score)
-            # each subcategory has a max score of 100% for the overall score,
-            if 'Co-Labeling' not in subcategory.name['en']:  # co-labeling doesn’t count
-                max_score += 100
-        # calculate overall score
-        label_scores = {l: round(100*s/max_score) for l, s in label_scores.items()}
-        category_scores[category.name['en'].replace(' ', '_').lower()] = label_scores
-
-    # save score to label details
-    for label in labels.values():
-        score = {}
-        for category, ls in category_scores.items():
-            score[category] = ls[label] if label in ls else 0
-        details_dict = deepcopy(label.details) or {}
-        details_dict['score'] = score
-        label.details = details_dict
-        db.session.add(label)
     db.session.commit()
 
     # Criteria and Criteria-Hotspot mapping
