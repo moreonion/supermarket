@@ -326,6 +326,8 @@ class GenericResource:
                         })
                 if not only:
                     continue
+            else:
+                only = None
             # everything seems fine, add field to `ìncluded`
             included[relation.rpartition('.')[2]] = {'resource': resource, 'only': only}
 
