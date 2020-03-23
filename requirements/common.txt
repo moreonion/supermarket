@@ -17,4 +17,4 @@ pycrypto==2.6.1
 python-jose==1.4.0
 six==1.10.0
 SQLAlchemy==1.1.11
-Werkzeug==0.14.1
+Werkzeug==0.15.3
