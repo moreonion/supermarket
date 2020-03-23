@@ -7,7 +7,7 @@ Flask-SQLAlchemy==2.2
 future==0.16.0
 itsdangerous==0.24
 Jinja2==2.10
-MarkupSafe==1.0
+MarkupSafe==1.1.1
 marshmallow==2.16.0
 marshmallow-sqlalchemy==0.13.1
 moflask==0.1
