@@ -1,0 +1,11 @@
+language: python
+python:
+  - "3.5"
+services:
+  - postgresql
+install:
+  - pip install -r requirements/dev.txt
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+script:
+  - FLASK_ENV=Travis pytest

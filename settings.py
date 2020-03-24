@@ -12,6 +12,12 @@ class TestingConfig(Common):
     SQLALCHEMY_DATABASE_URI = 'postgresql:///supermarket_test'
 
 
+class TravisConfig(Common):
+    TESTING = True
+    SECRET_KEY = b'Testing secret key'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:@localhost/travis_ci_test'
+
+
 class DevelopmentConfig(Common):
     DEBUG = True
     AUTH0_ENABLE = False
