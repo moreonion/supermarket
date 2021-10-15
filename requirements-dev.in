@@ -1,0 +1,11 @@
+-r requirements.in
+black
+isort
+pip-tools
+pre-commit
+pydocstyle[toml]>=6
+pylint
+pytest
+pytest-cov
+pytest-flask
+safety
