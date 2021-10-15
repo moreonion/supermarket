@@ -5,6 +5,7 @@ pip-tools
 pre-commit
 pydocstyle[toml]>=6
 pylint
+pylint-flask-sqlalchemy
 pytest
 pytest-cov
 pytest-flask

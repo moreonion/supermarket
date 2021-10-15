@@ -9,6 +9,9 @@ combine_as_imports = true
 [tool.pydocstyle]
 convention = "google"
 
+[tool.pylint.master]
+load-plugins = "pylint_flask_sqlalchemy"
+
 [tool.pylint.messages_control]
 disable = "C0330, C0326"
 
