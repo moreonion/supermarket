@@ -1,8 +1,7 @@
+from marshmallow.exceptions import ValidationError
 from moflask.flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import validates
-from marshmallow.exceptions import ValidationError
-
 
 db = SQLAlchemy()
 
@@ -21,43 +20,44 @@ class Translation(JSONB):
 # helper tables
 
 brands_stores = db.Table(
-    'brands_stores',
-    db.Column('brand_id', db.Integer, db.ForeignKey('brands.id'), primary_key=True),
-    db.Column('store_id', db.Integer, db.ForeignKey('stores.id'), primary_key=True)
+    "brands_stores",
+    db.Column("brand_id", db.Integer, db.ForeignKey("brands.id"), primary_key=True),
+    db.Column("store_id", db.Integer, db.ForeignKey("stores.id"), primary_key=True),
 )
 
 labels_resources = db.Table(
-    'labels_resources',
-    db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True),
-    db.Column('resource_id', db.Integer, db.ForeignKey('resources.id'), primary_key=True)
+    "labels_resources",
+    db.Column("label_id", db.Integer, db.ForeignKey("labels.id"), primary_key=True),
+    db.Column("resource_id", db.Integer, db.ForeignKey("resources.id"), primary_key=True),
 )
 
 labels_countries = db.Table(
-    'labels_countries',
-    db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True),
-    db.Column('country_code', db.String, db.ForeignKey('label_countries.code'), primary_key=True)
+    "labels_countries",
+    db.Column("label_id", db.Integer, db.ForeignKey("labels.id"), primary_key=True),
+    db.Column("country_code", db.String, db.ForeignKey("label_countries.code"), primary_key=True),
 )
 
 products_labels = db.Table(
-    'products_labels',
-    db.Column('product_id', db.Integer, db.ForeignKey('products.id'), primary_key=True),
-    db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True)
+    "products_labels",
+    db.Column("product_id", db.Integer, db.ForeignKey("products.id"), primary_key=True),
+    db.Column("label_id", db.Integer, db.ForeignKey("labels.id"), primary_key=True),
 )
 
 products_stores = db.Table(
-    'products_stores',
-    db.Column('product_id', db.Integer, db.ForeignKey('products.id'), primary_key=True),
-    db.Column('store_id', db.Integer, db.ForeignKey('stores.id'), primary_key=True)
+    "products_stores",
+    db.Column("product_id", db.Integer, db.ForeignKey("products.id"), primary_key=True),
+    db.Column("store_id", db.Integer, db.ForeignKey("stores.id"), primary_key=True),
 )
 
 retailers_labels = db.Table(
-    'retailers_labels',
-    db.Column('retailer_id', db.Integer, db.ForeignKey('retailers.id'), primary_key=True),
-    db.Column('label_id', db.Integer, db.ForeignKey('labels.id'), primary_key=True)
+    "retailers_labels",
+    db.Column("retailer_id", db.Integer, db.ForeignKey("retailers.id"), primary_key=True),
+    db.Column("label_id", db.Integer, db.ForeignKey("labels.id"), primary_key=True),
 )
 
 
 # main tables
+
 
 class Brand(db.Model):
 
@@ -68,14 +68,13 @@ class Brand(db.Model):
 
     """
 
-    __tablename__ = 'brands'
+    __tablename__ = "brands"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
-    retailer_id = db.Column(db.ForeignKey('retailers.id'))
-    products = db.relationship('Product', backref='brand', lazy=True)
+    retailer_id = db.Column(db.ForeignKey("retailers.id"))
+    products = db.relationship("Product", backref="brand", lazy=True)
     stores = db.relationship(
-        'Store', secondary=brands_stores,
-        lazy='subquery', backref=db.backref('brands', lazy=True)
+        "Store", secondary=brands_stores, lazy="subquery", backref=db.backref("brands", lazy=True)
     )
     # retailer – backref from Retailer
 
@@ -88,10 +87,10 @@ class Category(db.Model):
 
     """
 
-    __tablename__ = 'categories'
+    __tablename__ = "categories"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
-    products = db.relationship('Product', backref='category', lazy=True)
+    products = db.relationship("Product", backref="category", lazy=True)
 
 
 class Criterion(db.Model):
@@ -103,20 +102,19 @@ class Criterion(db.Model):
 
     """
 
-    __tablename__ = 'criteria'
+    __tablename__ = "criteria"
     id = db.Column(db.Integer(), primary_key=True)
-    type = db.Column(db.Enum('label', 'retailer', name='criterion_type'))
+    type = db.Column(db.Enum("label", "retailer", name="criterion_type"))
     name = db.Column(Translation)
     details = db.Column(Translation)  # details holds question, measures
-    improves_hotspots = db.relationship(
-        'CriterionImprovesHotspot', backref=db.backref('criterion'))
-    category_id = db.Column(db.ForeignKey('criterion_category.id'))
+    improves_hotspots = db.relationship("CriterionImprovesHotspot", backref=db.backref("criterion"))
+    category_id = db.Column(db.ForeignKey("criterion_category.id"))
     # category – backref from CriterionCategory
 
-    @validates('name', 'details')
+    @validates("name", "details")
     def validate(self, key, value):
-        if key == 'name' and len(value) > 128:
-            raise ValidationError('Only 128 characters allowed.', key)
+        if key == "name" and len(value) > 128:
+            raise ValidationError("Only 128 characters allowed.", key)
         return Translation.validate_translation(key, value)
 
 
@@ -129,20 +127,20 @@ class CriterionCategory(db.Model):
 
     """
 
-    __tablename__ = 'criterion_category'
+    __tablename__ = "criterion_category"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(Translation)
-    parent_id = db.Column(db.ForeignKey('criterion_category.id'))
+    parent_id = db.Column(db.ForeignKey("criterion_category.id"))
     subcategories = db.relationship(
-        'CriterionCategory', backref=db.backref('category', remote_side=[id]))
-    criteria = db.relationship(
-        'Criterion', backref=db.backref('category'))
+        "CriterionCategory", backref=db.backref("category", remote_side=[id])
+    )
+    criteria = db.relationship("Criterion", backref=db.backref("category"))
     # category – backref from CriterionCategory
 
-    @validates('name')
+    @validates("name")
     def validate(self, key, value):
-        if key == 'name' and len(value) > 128:
-            raise ValidationError('Only 128 characters allowed.', key)
+        if key == "name" and len(value) > 128:
+            raise ValidationError("Only 128 characters allowed.", key)
         return Translation.validate_translation(key, value)
 
 
@@ -154,15 +152,15 @@ class CriterionImprovesHotspot(db.Model):
 
     """
 
-    __tablename__ = 'criteria_hotspots'
-    criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
-    hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
+    __tablename__ = "criteria_hotspots"
+    criterion_id = db.Column(db.ForeignKey("criteria.id"), primary_key=True)
+    hotspot_id = db.Column(db.ForeignKey("hotspots.id"), primary_key=True)
     weight = db.Column(db.SmallInteger)
     explanation = db.Column(Translation)
-    hotspot = db.relationship('Hotspot', lazy=True)
+    hotspot = db.relationship("Hotspot", lazy=True)
     # criterion – backref from Criterion
 
-    @validates('explanation')
+    @validates("explanation")
     def validate(self, key, value):
         return Translation.validate_translation(key, value)
 
@@ -171,13 +169,13 @@ class Hotspot(db.Model):
 
     """A hotspot or issue is an area of concern (e.g. Climate Risk)."""
 
-    __tablename__ = 'hotspots'
+    __tablename__ = "hotspots"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(Translation)
     description = db.Column(Translation)
     # scores – backref from Score
 
-    @validates('name', 'description')
+    @validates("name", "description")
     def validate(self, key, value):
         return Translation.validate_translation(key, value)
 
@@ -191,21 +189,24 @@ class Ingredient(db.Model):
 
     """
 
-    __tablename__ = 'ingredients'
-    product_id = db.Column(db.ForeignKey('products.id'), primary_key=True)
+    __tablename__ = "ingredients"
+    product_id = db.Column(db.ForeignKey("products.id"), primary_key=True)
     weight = db.Column(db.Integer(), primary_key=True)
-    resource_id = db.Column(db.ForeignKey('resources.id'), nullable=True)
-    origin_id = db.Column(db.ForeignKey('origins.id'), nullable=True)
-    supplier_id = db.Column(db.ForeignKey('suppliers.id'), nullable=True)
-    product = db.relationship('Product', lazy=True, backref=db.backref(
-        'ingredients', lazy=True, cascade='all, delete-orphan'))
-    resource = db.relationship('Resource', lazy=True, backref=db.backref('ingredients', lazy=True))
-    origin = db.relationship('Origin', lazy=True, backref=db.backref('ingredients', lazy=True))
-    supplier = db.relationship('Supplier', lazy=True, backref=db.backref('ingredients', lazy=True))
+    resource_id = db.Column(db.ForeignKey("resources.id"), nullable=True)
+    origin_id = db.Column(db.ForeignKey("origins.id"), nullable=True)
+    supplier_id = db.Column(db.ForeignKey("suppliers.id"), nullable=True)
+    product = db.relationship(
+        "Product",
+        lazy=True,
+        backref=db.backref("ingredients", lazy=True, cascade="all, delete-orphan"),
+    )
+    resource = db.relationship("Resource", lazy=True, backref=db.backref("ingredients", lazy=True))
+    origin = db.relationship("Origin", lazy=True, backref=db.backref("ingredients", lazy=True))
+    supplier = db.relationship("Supplier", lazy=True, backref=db.backref("ingredients", lazy=True))
     name = db.Column(Translation)
     percentage = db.Column(db.SmallInteger)
 
-    @validates('name')
+    @validates("name")
     def validate(self, key, value):
         return Translation.validate_translation(key, value)
 
@@ -220,30 +221,33 @@ class Label(db.Model):
 
     """
 
-    __tablename__ = 'labels'
+    __tablename__ = "labels"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(Translation, nullable=False, unique=True)
-    type = db.Column(db.Enum('product', 'retailer', name='label_type'))
+    type = db.Column(db.Enum("product", "retailer", name="label_type"))
     description = db.Column(Translation)
     details = db.Column(JSONB)  # Holds overall score
     logo = db.Column(Translation)
-    meets_criteria = db.relationship('LabelMeetsCriterion', lazy=True,
-                                     cascade='all, delete-orphan')
+    meets_criteria = db.relationship("LabelMeetsCriterion", lazy=True, cascade="all, delete-orphan")
     resources = db.relationship(
-        'Resource', secondary=labels_resources,
-        lazy='subquery', backref=db.backref('labels', lazy=True)
+        "Resource",
+        secondary=labels_resources,
+        lazy="subquery",
+        backref=db.backref("labels", lazy=True),
     )
     countries = db.relationship(
-        'LabelCountry', secondary=labels_countries,
-        lazy='subquery', backref=db.backref('labels', lazy=True)
+        "LabelCountry",
+        secondary=labels_countries,
+        lazy="subquery",
+        backref=db.backref("labels", lazy=True),
     )
     # products – backref from Product
     # retailers – backref from Retailer
 
-    @validates('name', 'logo')
+    @validates("name", "logo")
     def validate(self, key, value):
-        if key == 'logo' and len(value) > 256:
-            raise ValidationError('Only 256 characters allowed.', key)
+        if key == "logo" and len(value) > 256:
+            raise ValidationError("Only 256 characters allowed.", key)
         return Translation.validate_translation(key, value)
 
 
@@ -251,7 +255,7 @@ class LabelCountry(db.Model):
 
     """Country where a label is in use, represented by its 2 letter ISO code."""
 
-    __tablename__ = 'label_countries'
+    __tablename__ = "label_countries"
     code = db.Column(db.String(2), primary_key=True)
     # labels – backref from Label
 
@@ -265,15 +269,15 @@ class LabelMeetsCriterion(db.Model):
 
     """
 
-    __tablename__ = 'labels_criteria'
-    label_id = db.Column(db.ForeignKey('labels.id'), primary_key=True)
-    criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
+    __tablename__ = "labels_criteria"
+    label_id = db.Column(db.ForeignKey("labels.id"), primary_key=True)
+    criterion_id = db.Column(db.ForeignKey("criteria.id"), primary_key=True)
     score = db.Column(db.SmallInteger)
     explanation = db.Column(Translation)
-    criterion = db.relationship('Criterion')
-    label = db.relationship('Label')
+    criterion = db.relationship("Criterion")
+    label = db.relationship("Label")
 
-    @validates('explanation')
+    @validates("explanation")
     def validate(self, key, value):
         return Translation.validate_translation(key, value)
 
@@ -282,17 +286,17 @@ class Origin(db.Model):
 
     """The origin of a resource (a country or a FAO Major Fishing Area)."""
 
-    __tablename__ = 'origins'
+    __tablename__ = "origins"
     id = db.Column(db.Integer(), primary_key=True)
     code = db.Column(db.String(2))
     name = db.Column(Translation)
     # ingredients – backref from Ingredient
     # supplies – backref from Supply
 
-    @validates('name')
+    @validates("name")
     def validate(self, key, value):
-        if key == 'name' and len(value) > 64:
-            raise ValidationError('Only 64 characters allowed.', key)
+        if key == "name" and len(value) > 64:
+            raise ValidationError("Only 64 characters allowed.", key)
         return Translation.validate_translation(key, value)
 
 
@@ -300,10 +304,10 @@ class Producer(db.Model):
 
     """A producer producing certain products."""
 
-    __tablename__ = 'producers'
+    __tablename__ = "producers"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
-    products = db.relationship('Product', backref='producer', lazy=True)
+    products = db.relationship("Product", backref="producer", lazy=True)
 
 
 class Product(db.Model):
@@ -316,28 +320,32 @@ class Product(db.Model):
 
     """
 
-    __tablename__ = 'products'
+    __tablename__ = "products"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(Translation)
     details = db.Column(Translation)  # holds image url, weight, price, currency
-    gtin = db.Column(db.String(14))   # Global Trade Item Number
-    brand_id = db.Column(db.ForeignKey('brands.id'))
-    category_id = db.Column(db.ForeignKey('categories.id'))
-    producer_id = db.Column(db.ForeignKey('producers.id'))
+    gtin = db.Column(db.String(14))  # Global Trade Item Number
+    brand_id = db.Column(db.ForeignKey("brands.id"))
+    category_id = db.Column(db.ForeignKey("categories.id"))
+    producer_id = db.Column(db.ForeignKey("producers.id"))
     labels = db.relationship(
-        'Label', secondary=products_labels,
-        lazy='subquery', backref=db.backref('products', lazy=True)
+        "Label",
+        secondary=products_labels,
+        lazy="subquery",
+        backref=db.backref("products", lazy=True),
     )
     stores = db.relationship(
-        'Store', secondary=products_stores,
-        lazy='subquery', backref=db.backref('products', lazy=True)
+        "Store",
+        secondary=products_stores,
+        lazy="subquery",
+        backref=db.backref("products", lazy=True),
     )
     # brand – backref from Brand
     # category – backref from Category
     # ingredients – backref from Ingredient
     # producer – backref from Producer
 
-    @validates('name', 'details')
+    @validates("name", "details")
     def validate(self, key, value):
         return Translation.validate_translation(key, value)
 
@@ -346,17 +354,17 @@ class Resource(db.Model):
 
     """A resource (“Rohstoff”), independent of its origin or use in products."""
 
-    __tablename__ = 'resources'
+    __tablename__ = "resources"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(Translation)
     # ingredients – backref from Ingredient
     # labels – backref from Label
     # supplies – backref from Supply
 
-    @validates('name')
+    @validates("name")
     def validate(self, key, value):
-        if key == 'name' and len(value) > 64:
-            raise ValidationError('Only 64 characters allowed.', key)
+        if key == "name" and len(value) > 64:
+            raise ValidationError("Only 64 characters allowed.", key)
         return Translation.validate_translation(key, value)
 
 
@@ -370,15 +378,17 @@ class Retailer(db.Model):
 
     """
 
-    __tablename__ = 'retailers'
+    __tablename__ = "retailers"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
-    brands = db.relationship('Brand', backref='retailer', lazy=True)
-    stores = db.relationship('Store', backref='retailer', lazy=True)
-    meets_criteria = db.relationship('RetailerMeetsCriterion', lazy=True)
+    brands = db.relationship("Brand", backref="retailer", lazy=True)
+    stores = db.relationship("Store", backref="retailer", lazy=True)
+    meets_criteria = db.relationship("RetailerMeetsCriterion", lazy=True)
     labels = db.relationship(
-        'Label', secondary=retailers_labels,
-        lazy='subquery', backref=db.backref('retailers', lazy=True)
+        "Label",
+        secondary=retailers_labels,
+        lazy="subquery",
+        backref=db.backref("retailers", lazy=True),
     )
 
 
@@ -391,29 +401,29 @@ class RetailerMeetsCriterion(db.Model):
 
     """
 
-    __tablename__ = 'retailer_criteria'
-    retailer_id = db.Column(db.ForeignKey('retailers.id'), primary_key=True)
-    criterion_id = db.Column(db.ForeignKey('criteria.id'), primary_key=True)
+    __tablename__ = "retailer_criteria"
+    retailer_id = db.Column(db.ForeignKey("retailers.id"), primary_key=True)
+    criterion_id = db.Column(db.ForeignKey("criteria.id"), primary_key=True)
     satisfied = db.Column(db.Boolean)
     explanation = db.Column(db.Text)
-    criterion = db.relationship('Criterion', lazy=True)
+    criterion = db.relationship("Criterion", lazy=True)
 
 
 class Score(db.Model):
 
     """Maps the influence that a supply has on a hotspot area."""
 
-    __tablename__ = 'scores'
-    hotspot_id = db.Column(db.ForeignKey('hotspots.id'), primary_key=True)
-    supply_id = db.Column(db.ForeignKey('supplies.id'), primary_key=True)
+    __tablename__ = "scores"
+    hotspot_id = db.Column(db.ForeignKey("hotspots.id"), primary_key=True)
+    supply_id = db.Column(db.ForeignKey("supplies.id"), primary_key=True)
     score = db.Column(db.SmallInteger, nullable=False)
     explanation = db.Column(Translation)
-    hotspot = db.relationship(
-        'Hotspot', lazy=True, backref=db.backref('scores', lazy=True))
+    hotspot = db.relationship("Hotspot", lazy=True, backref=db.backref("scores", lazy=True))
     supply = db.relationship(
-        'Supply', lazy=True, backref=db.backref('scores', lazy=True, cascade='all, delete-orphan'))
+        "Supply", lazy=True, backref=db.backref("scores", lazy=True, cascade="all, delete-orphan")
+    )
 
-    @validates('explanation')
+    @validates("explanation")
     def validate(self, key, value):
         return Translation.validate_translation(key, value)
 
@@ -422,9 +432,9 @@ class Store(db.Model):
 
     """A store belonging to a certain retailer."""
 
-    __tablename__ = 'stores'
+    __tablename__ = "stores"
     id = db.Column(db.Integer(), primary_key=True)
-    retailer_id = db.Column(db.ForeignKey('retailers.id'))
+    retailer_id = db.Column(db.ForeignKey("retailers.id"))
     name = db.Column(db.String(64))
     # brands – backref from Brand
     # products – backref from Product
@@ -435,7 +445,7 @@ class Supplier(db.Model):
 
     """A supplier of a resource."""
 
-    __tablename__ = 'suppliers'
+    __tablename__ = "suppliers"
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64))
     # ingredients – backref from Ingredient
@@ -446,15 +456,12 @@ class Supply(db.Model):
 
     """A resource coming from an origin or supplier."""
 
-    __tablename__ = 'supplies'
+    __tablename__ = "supplies"
     id = db.Column(db.Integer(), primary_key=True)
-    resource_id = db.Column(db.ForeignKey('resources.id'))
-    origin_id = db.Column(db.ForeignKey('origins.id'), nullable=True)
-    supplier_id = db.Column(db.ForeignKey('suppliers.id'), nullable=True)
-    resource = db.relationship(
-        'Resource', lazy=True, backref=db.backref('supplies', lazy=True))
-    origin = db.relationship(
-        'Origin', lazy=True, backref=db.backref('supplies', lazy=True))
-    supplier = db.relationship(
-        'Supplier', lazy=True, backref=db.backref('supplies', lazy=True))
+    resource_id = db.Column(db.ForeignKey("resources.id"))
+    origin_id = db.Column(db.ForeignKey("origins.id"), nullable=True)
+    supplier_id = db.Column(db.ForeignKey("suppliers.id"), nullable=True)
+    resource = db.relationship("Resource", lazy=True, backref=db.backref("supplies", lazy=True))
+    origin = db.relationship("Origin", lazy=True, backref=db.backref("supplies", lazy=True))
+    supplier = db.relationship("Supplier", lazy=True, backref=db.backref("supplies", lazy=True))
     # scores – backref from Score

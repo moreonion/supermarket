@@ -1,22 +1,23 @@
-import re
 import operator
+import re
 
 from flask import Blueprint, request
 from flask_restful import Api, Resource as BaseResource
-from werkzeug.exceptions import HTTPException
-from werkzeug.datastructures import MultiDict
 from sqlalchemy.inspection import inspect
-from supermarket.authentication import Auth0
+from werkzeug.datastructures import MultiDict
+from werkzeug.exceptions import HTTPException
 
 import supermarket.model as m
 import supermarket.schema as s
+from supermarket.authentication import Auth0
 
-app = Blueprint('api', __name__)
+app = Blueprint("api", __name__)
 api = Api(app)
 auth0 = Auth0()
 
 
 # Custom errors
+
 
 class ValidationFailed(HTTPException):
 
@@ -33,12 +34,12 @@ class ValidationFailed(HTTPException):
     code = 400
     data = {}
 
-    def __init__(self, errors, description='Validation error.'):
+    def __init__(self, errors, description="Validation error."):
         super().__init__()
-        self.data['message'] = description
-        self.data['errors'] = []
+        self.data["message"] = description
+        self.data["errors"] = []
         for f, msg in errors.items():
-            self.data['errors'].append({'field': f, 'messages': msg})
+            self.data["errors"].append({"field": f, "messages": msg})
 
 
 class ParamException(Exception):
@@ -64,11 +65,12 @@ class FilterOperatorException(ParamException):
     """
 
     def __init__(self, op, accepted, *args, **kwargs):
-        self.message = 'Unknown operator `{}`, try one of `{}`.'.format(op, ', '.join(accepted))
+        self.message = "Unknown operator `{}`, try one of `{}`.".format(op, ", ".join(accepted))
         super(ParamException).__init__(*args, **kwargs)
 
 
 # Resources
+
 
 class GenericResource:
 
@@ -97,7 +99,7 @@ class GenericResource:
         #
         model = self.model
         schema = self.schema()
-        keys = field.strip().split('.')
+        keys = field.strip().split(".")
         field = keys.pop(0)
 
         if field in schema.nested_fields:
@@ -115,18 +117,17 @@ class GenericResource:
             field = keys.pop(0) if keys else inspect(model).primary_key[0].name
 
         attr = getattr(model, field, None)
-        if not hasattr(attr, 'type'):  # not a proper column
+        if not hasattr(attr, "type"):  # not a proper column
             attr = None
         elif isinstance(attr.type, m.JSONB) and keys:
             attr = attr[keys].astext
-        elif isinstance(attr.type, m.Translation) and getattr(self, 'language', None):
+        elif isinstance(attr.type, m.Translation) and getattr(self, "language", None):
             attr = attr[self.language].astext
         elif keys:  # not a perfect match after all
             attr = None
 
         if attr is None:
-            raise ParamException(
-                'Unknown field `{}` for `{}`.'.format(field, model.__tablename__))
+            raise ParamException("Unknown field `{}` for `{}`.".format(field, model.__tablename__))
 
         return (attr, query)
 
@@ -151,19 +152,22 @@ class GenericResource:
         #                       accepts ‘lt’, ‘le’, ‘eq’, ‘ne’, ‘ge’, ‘gt’, ‘in’, ‘like’.
         # :param str value      Value to filter by.
         #
-        accepted_operators = ['lt', 'le', 'eq', 'ne', 'ge', 'gt', 'in', 'like']
+        accepted_operators = ["lt", "le", "eq", "ne", "ge", "gt", "in", "like"]
         (attr, query) = self._field_to_attr(field, query)
 
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
-        if op == 'like':
+        if op == "like":
             if not (isinstance(attr.type, m.db.String) or isinstance(attr.type, m.db.Text)):
-                raise ParamException('Can’t compare {type} to string.'.format(
-                    type=attr.type.__class__.__name__.lower()))
-            value = '%{}%'.format(value)
+                raise ParamException(
+                    "Can’t compare {type} to string.".format(
+                        type=attr.type.__class__.__name__.lower()
+                    )
+                )
+            value = "%{}%".format(value)
             query = query.filter(attr.ilike(value))
-        elif op == 'in':
-            values = [v.strip() for v in value.split(',')]
+        elif op == "in":
+            values = [v.strip() for v in value.split(",")]
             query = query.filter(attr.in_(values))
         else:
             op = getattr(operator, op)
@@ -182,21 +186,15 @@ class GenericResource:
         #
         not_filtered = []
         for key, value in filter_fields.items(multi=True):
-            (field, op) = key.split(':') if ':' in key else (key, 'eq')
+            (field, op) = key.split(":") if ":" in key else (key, "eq")
             filter = self._find_filter(field)
 
             try:
                 query = filter(query, field, op, value)
             except ParamException as pe:
-                not_filtered.append({
-                    'param': key,
-                    'message': str(pe.message)
-                })
+                not_filtered.append({"param": key, "message": str(pe.message)})
         if not_filtered:
-            errors.append({
-                'errors': not_filtered,
-                'message': 'Some parameters have been ignored.'
-            })
+            errors.append({"errors": not_filtered, "message": "Some parameters have been ignored."})
         return query
 
     def _sort(self, query, sort_fields, errors):
@@ -213,24 +211,20 @@ class GenericResource:
             return query
         fields = []
         not_sorted = []
-        for value in sort_fields.split(','):
-            field = value.split('-')[-1]
-            order = 'desc' if value[0] == '-' else 'asc'
+        for value in sort_fields.split(","):
+            field = value.split("-")[-1]
+            order = "desc" if value[0] == "-" else "asc"
             try:
                 (attr, query) = self._field_to_attr(field, query)
-                if order == 'desc':
+                if order == "desc":
                     attr = attr.desc()
                 fields.append(attr)
             except ParamException as pe:
-                not_sorted.append({
-                    'value': value,
-                    'message': pe.message
-                })
+                not_sorted.append({"value": value, "message": pe.message})
         if not_sorted:
-            errors.append({
-                'errors': not_sorted,
-                'message': 'Some values have been ignored for sorting.'
-            })
+            errors.append(
+                {"errors": not_sorted, "message": "Some values have been ignored for sorting."}
+            )
         return query.order_by(*fields)
 
     def _sanitize_only(self, only_fields):
@@ -238,7 +232,7 @@ class GenericResource:
         if not only_fields:
             return only_fields
         sanitized = []
-        for field in only_fields.split(','):
+        for field in only_fields.split(","):
             field = field.strip()
             if field in self.schema().fields:
                 sanitized.append(field)
@@ -246,23 +240,26 @@ class GenericResource:
 
     def _pagination_info(self, page):
         # Get information from a :class:`~flask_sqlalchemy.Pagination` for later use as JSON.
-        prev_url = re.sub(
-            'page=\d+', 'page={}'.format(page.prev_num), request.url) if page.has_prev else False
+        prev_url = (
+            re.sub("page=\d+", "page={}".format(page.prev_num), request.url)
+            if page.has_prev
+            else False
+        )
         next_url = False
         if page.has_next:
-            if 'page=' in request.url:
-                next_url = re.sub('page=\d+', 'page={}'.format(page.next_num), request.url)
+            if "page=" in request.url:
+                next_url = re.sub("page=\d+", "page={}".format(page.next_num), request.url)
             elif request.args:
-                next_url = '{}&page={}'.format(request.url, page.next_num)
+                next_url = "{}&page={}".format(request.url, page.next_num)
             else:
-                next_url = '{}?page={}'.format(request.url, page.next_num)
+                next_url = "{}?page={}".format(request.url, page.next_num)
         pages = {
-            'total': page.pages,
-            'current': page.page,
-            'next': page.next_num or False,
-            'prev': page.prev_num or False,
-            'next_url': next_url,
-            'prev_url': prev_url
+            "total": page.pages,
+            "current": page.page,
+            "next": page.next_num or False,
+            "prev": page.prev_num or False,
+            "next_url": next_url,
+            "prev_url": prev_url,
         }
         return pages
 
@@ -273,69 +270,69 @@ class GenericResource:
         #                              to nest, in the form <field>.<attr> or <field>.all
         # :returns   A dictionary containing the schema and fields.
         #
-        include_raw = include_fields.split(',')
+        include_raw = include_fields.split(",")
         include = MultiDict()
         included = {}
         not_included = []
 
         # check valid format and collect fields in MultiDict
-        for i in [i.strip().rsplit('.', maxsplit=1) for i in include_raw]:
+        for i in [i.strip().rsplit(".", maxsplit=1) for i in include_raw]:
             if len(i) == 2:
                 include.add(*i)
             else:
-                not_included.append({
-                    'value': '.'.join(i),
-                    'message': 'Invalid format.'
-                })
+                not_included.append({"value": ".".join(i), "message": "Invalid format."})
 
         # loop through fields
         for relation, fields in include.lists():
             # check for superfluous fields
-            if 'all' in fields:
-                fields.remove('all')
+            if "all" in fields:
+                fields.remove("all")
                 for f in fields:
-                    not_included.append({
-                        'value': '.'.join([relation, f]),
-                        'message': 'Ignored because `{}.all` makes it obsolete.'.format(relation)
-                    })
-                fields = ['all']
+                    not_included.append(
+                        {
+                            "value": ".".join([relation, f]),
+                            "message": "Ignored because `{}.all` makes it obsolete.".format(
+                                relation
+                            ),
+                        }
+                    )
+                fields = ["all"]
             # get attr of related field
             try:
                 # query isn’t needed, using dummy query to get at attr
                 attr = self._field_to_attr(relation, self.model.query)[0]
             except ParamException as e:
                 for f in fields:
-                    not_included.append({
-                        'value': '.'.join([relation, f]),
-                        'message': e.message
-                    })
+                    not_included.append({"value": ".".join([relation, f]), "message": e.message})
                 continue
             # find the matching resource
             resource = next(filter(lambda v: v.model.__table__ == attr.table, resources.values()))
             # make sure all fields in `only` are valid and only ‘all’ becomes an empty list.
             only = []
-            if fields != ['all']:
+            if fields != ["all"]:
                 for f in fields:
                     if f in resource.schema().fields:
                         only.append(f)
                     else:
-                        not_included.append({
-                            'value': '.'.join([relation, f]),
-                            'message': 'Unknown field `{}` for `{}`.'.format(
-                                f, resource.model.__tablename__)
-                        })
+                        not_included.append(
+                            {
+                                "value": ".".join([relation, f]),
+                                "message": "Unknown field `{}` for `{}`.".format(
+                                    f, resource.model.__tablename__
+                                ),
+                            }
+                        )
                 if not only:
                     continue
             else:
                 only = None
             # everything seems fine, add field to `ìncluded`
-            included[relation.rpartition('.')[2]] = {'resource': resource, 'only': only}
+            included[relation.rpartition(".")[2]] = {"resource": resource, "only": only}
 
         if not_included:
-            errors.append({
-                'errors': not_included,
-                'message': 'Some values have been not been included.'
-            })
+            errors.append(
+                {"errors": not_included, "message": "Some values have been not been included."}
+            )
         return included
 
     def get_item(self, id):
@@ -343,23 +340,21 @@ class GenericResource:
         r = self.model.query.get_or_404(id)
         errors = []
         args = request.args.copy()
-        only = self._sanitize_only(args.pop('only', None))
-        include = args.pop('include', '')
-        self.language = args.pop('lang', None)
+        only = self._sanitize_only(args.pop("only", None))
+        include = args.pop("include", "")
+        self.language = args.pop("lang", None)
         schema = self.schema(lang=self.language, only=only)
         if include:
-            schema.context['include'] = self._parse_include_params(include, errors)
+            schema.context["include"] = self._parse_include_params(include, errors)
 
-        return {
-            'item': schema.dump(r).data,
-            'errors': errors
-        }, 200
+        return {"item": schema.dump(r).data, "errors": errors}, 200
 
     def patch_item(self, id):
         """Update an existing item with new data."""
         r = self.model.query.get_or_404(id)
-        data = self.schema().load(request.get_json(), partial=True,
-                                  session=m.db.session, instance=r)
+        data = self.schema().load(
+            request.get_json(), partial=True, session=m.db.session, instance=r
+        )
         if data.errors:
             raise ValidationFailed(data.errors)
         m.db.session.commit()
@@ -381,7 +376,7 @@ class GenericResource:
         r = self.model.query.get_or_404(id)
         m.db.session.delete(r)
         m.db.session.commit()
-        return '', 204
+        return "", 204
 
     def get_list(self):
         """Get a paged list containing all items of type ‘type’.
@@ -400,12 +395,12 @@ class GenericResource:
         """
         # get arguments from query parameters
         args = request.args.copy()
-        page = int(args.pop('page', 1))
-        limit = int(args.pop('limit', 20))
-        sort = args.pop('sort', None)
-        include = args.pop('include', '')
-        self.language = args.pop('lang', None)
-        only = self._sanitize_only(args.pop('only', None))
+        page = int(args.pop("page", 1))
+        limit = int(args.pop("limit", 20))
+        sort = args.pop("sort", None)
+        include = args.pop("include", "")
+        self.language = args.pop("lang", None)
+        only = self._sanitize_only(args.pop("only", None))
         errors = []
 
         # get data from model
@@ -415,12 +410,12 @@ class GenericResource:
         page = query.paginate(page=page, per_page=limit)
         schema = self.schema(many=True, lang=self.language, only=only)
         if include:
-            schema.context['include'] = self._parse_include_params(include, errors)
+            schema.context["include"] = self._parse_include_params(include, errors)
 
         return {
-            'items': schema.dump(page.items).data,
-            'pages': self._pagination_info(page),
-            'errors': errors
+            "items": schema.dump(page.items).data,
+            "pages": self._pagination_info(page),
+            "errors": errors,
         }, 200
 
     def post_to_list(self):
@@ -443,104 +438,110 @@ class LabelResource(GenericResource):
     """Has additional label specifc filters and include options."""
 
     def _find_filter(self, field):
-        if field == 'hotspots':
+        if field == "hotspots":
             filter = self._hotspot_filter
-        elif field == 'countries':
+        elif field == "countries":
             filter = self._country_filter
         else:
             filter = super()._find_filter(field)
         return filter
 
     def _hotspot_filter(self, query, field, op, value):
-        accepted_operators = ['eq', 'in']
+        accepted_operators = ["eq", "in"]
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
-        hotspots = [v.strip() for v in value.split(',')]
-        query = query.filter(self.model.id.in_(
-            m.db.session.query(m.LabelMeetsCriterion.label_id)
-            .join(m.LabelMeetsCriterion.criterion)
-            .join(m.Criterion.improves_hotspots)
-            .filter(m.CriterionImprovesHotspot.hotspot_id.in_(hotspots))
-        ))
+        hotspots = [v.strip() for v in value.split(",")]
+        query = query.filter(
+            self.model.id.in_(
+                m.db.session.query(m.LabelMeetsCriterion.label_id)
+                .join(m.LabelMeetsCriterion.criterion)
+                .join(m.Criterion.improves_hotspots)
+                .filter(m.CriterionImprovesHotspot.hotspot_id.in_(hotspots))
+            )
+        )
         return query
 
     def _country_filter(self, query, field, op, value):
-        accepted_operators = ['eq', 'in']
+        accepted_operators = ["eq", "in"]
         if op not in accepted_operators:
             raise FilterOperatorException(op, accepted_operators)
-        countries = [v.strip() for v in value.split(',')]
-        countries.append('*')  # include international labels
+        countries = [v.strip() for v in value.split(",")]
+        countries.append("*")  # include international labels
         query = query.join(self.model.countries).filter(m.LabelCountry.code.in_(countries))
         return query
 
     def _parse_include_params(self, include_fields, errors):
         # include hotspots, too
-        include_raw = include_fields.split(',')
+        include_raw = include_fields.split(",")
         hotspot_fields = []
         super_fields = []
         not_included = []
         for raw in include_raw:
-            if raw.startswith('hotspots.') and len(raw.split('.')) == 2:
-                hotspot_fields.append(raw.rpartition('.')[2])
+            if raw.startswith("hotspots.") and len(raw.split(".")) == 2:
+                hotspot_fields.append(raw.rpartition(".")[2])
             else:
                 super_fields.append(raw)
 
-        resource = resources['hotspots']
+        resource = resources["hotspots"]
         only = []
-        if 'all' in hotspot_fields:
-            hotspot_fields.remove('all')
+        if "all" in hotspot_fields:
+            hotspot_fields.remove("all")
             for f in hotspot_fields:
-                not_included.append({
-                    'value': '.'.join(['hotspots', f]),
-                    'message': 'Ignored because `hotspots.all` makes it obsolete.'
-                })
+                not_included.append(
+                    {
+                        "value": ".".join(["hotspots", f]),
+                        "message": "Ignored because `hotspots.all` makes it obsolete.",
+                    }
+                )
         else:
             for f in hotspot_fields:
                 if f in resource.schema().fields:
                     only.append(f)
                 else:
-                    not_included.append({
-                        'value': '.'.join(['hotspots', f]),
-                        'message': 'Unknown field `{}` for `hotspots`.'.format(f)
-                    })
+                    not_included.append(
+                        {
+                            "value": ".".join(["hotspots", f]),
+                            "message": "Unknown field `{}` for `hotspots`.".format(f),
+                        }
+                    )
             if not only:
                 only = None
 
-        included = super()._parse_include_params(','.join(super_fields), errors)
+        included = super()._parse_include_params(",".join(super_fields), errors)
         if only is not None:
-            included['hotspots'] = {'resource': resource, 'only': only}
+            included["hotspots"] = {"resource": resource, "only": only}
 
         if not_included:
-            include_error = next((e for e in errors if e.message ==
-                                  'Some values have been not been included.'), None)
+            include_error = next(
+                (e for e in errors if e.message == "Some values have been not been included."), None
+            )
             if include_error:
                 include_error.errors.update(not_included)
             else:
-                errors.append({
-                    'errors': not_included,
-                    'message': 'Some values have been not been included.'
-                })
+                errors.append(
+                    {"errors": not_included, "message": "Some values have been not been included."}
+                )
         return included
 
 
 resources = {
-    'brands': GenericResource(m.Brand, s.Brand),
-    'categories': GenericResource(m.Category, s.Category),
-    'criteria': GenericResource(m.Criterion, s.Criterion),
-    'hotspots': GenericResource(m.Hotspot, s.Hotspot),
-    'labels': LabelResource(m.Label, s.Label),
-    'origins': GenericResource(m.Origin, s.Origin),
-    'producers': GenericResource(m.Producer, s.Producer),
-    'products': GenericResource(m.Product, s.Product),
-    'resources': GenericResource(m.Resource, s.Resource),
-    'retailers': GenericResource(m.Retailer, s.Retailer),
-    'stores': GenericResource(m.Store, s.Store),
-    'suppliers': GenericResource(m.Supplier, s.Supplier),
-    'supplies': GenericResource(m.Supply, s.Supply)
+    "brands": GenericResource(m.Brand, s.Brand),
+    "categories": GenericResource(m.Category, s.Category),
+    "criteria": GenericResource(m.Criterion, s.Criterion),
+    "hotspots": GenericResource(m.Hotspot, s.Hotspot),
+    "labels": LabelResource(m.Label, s.Label),
+    "origins": GenericResource(m.Origin, s.Origin),
+    "producers": GenericResource(m.Producer, s.Producer),
+    "products": GenericResource(m.Product, s.Product),
+    "resources": GenericResource(m.Resource, s.Resource),
+    "retailers": GenericResource(m.Retailer, s.Retailer),
+    "stores": GenericResource(m.Store, s.Store),
+    "suppliers": GenericResource(m.Supplier, s.Supplier),
+    "supplies": GenericResource(m.Supply, s.Supply),
 }
 
 
-@api.resource('/<any({}):type>/<int:id>'.format(', '.join(resources)))
+@api.resource("/<any({}):type>/<int:id>".format(", ".join(resources)))
 class ResourceItem(BaseResource):
 
     """A resource item of type ‘type’, identified by its ID."""
@@ -561,7 +562,7 @@ class ResourceItem(BaseResource):
         return resources[type].delete_item(id)
 
 
-@api.resource('/<any({}):type>'.format(', '.join(resources)))
+@api.resource("/<any({}):type>".format(", ".join(resources)))
 class ResourceList(BaseResource):
 
     """A list of resources of type ‘type’."""
@@ -574,7 +575,7 @@ class ResourceList(BaseResource):
         return resources[type].post_to_list()
 
 
-@api.resource('/doc/<any({}):type>'.format(', '.join(resources)))
+@api.resource("/doc/<any({}):type>".format(", ".join(resources)))
 class ResourceDoc(BaseResource):
 
     """API documentation for resources of type ‘type’."""
@@ -583,7 +584,7 @@ class ResourceDoc(BaseResource):
         return resources[type].get_doc()
 
 
-@api.resource('/'.format(', '.join(resources)))
+@api.resource("/".format(", ".join(resources)))
 class RootDoc(BaseResource):
 
     """API overview of all resources to help getting started."""
@@ -591,10 +592,10 @@ class RootDoc(BaseResource):
     def get(self):
         doc = {}
         for name, resource in resources.items():
-            links = resource.schema().fields['links'].schema
+            links = resource.schema().fields["links"].schema
             doc[name] = {
-                'list': links['list']._serialize(None, None, None),
-                'doc': links['doc']._serialize(None, None, None),
-                'description': resource.model.__doc__.strip().replace('\n', '').replace('   ', '')
+                "list": links["list"]._serialize(None, None, None),
+                "doc": links["doc"]._serialize(None, None, None),
+                "description": resource.model.__doc__.strip().replace("\n", "").replace("   ", ""),
             }
         return doc, 200

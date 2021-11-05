@@ -1,5 +1,11 @@
-env/
-__pycache__/
-.cache/
+*.swp
+.venv
+__pycache__
+.DS_Store
+.cache
+.coverage
+.eggs
+coverage.xml
+.pytest_cache/
 .vagrant
 vagrant/*.retry

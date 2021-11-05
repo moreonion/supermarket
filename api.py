@@ -1,3 +1,3 @@
 from supermarket import App
 
-app = App('supermarket')
+app = App("supermarket")
