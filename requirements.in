@@ -9,3 +9,5 @@ moflask
 pip-tools
 pycountry
 python-jose
+# sqlalchemy 1.4 is not compatible with the psycopg2 version provided by Debian 10
+sqlalchemy<1.4
