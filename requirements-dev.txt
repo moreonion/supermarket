@@ -10,7 +10,7 @@ astroid==2.8.2
     # via pylint
 attrs==21.2.0
     # via pytest
-backports.entry-points-selectable==1.1.0
+backports-entry-points-selectable==1.1.0
     # via virtualenv
 black==21.9b0
     # via -r requirements-dev.in
@@ -59,14 +59,6 @@ identify==2.3.0
     # via pre-commit
 idna==3.3
     # via requests
-importlib-metadata==4.8.2
-    # via
-    #   click
-    #   pep517
-    #   pluggy
-    #   pre-commit
-    #   pytest
-    #   virtualenv
 iniconfig==1.1.1
     # via pytest
 isort==5.9.3
@@ -79,8 +71,10 @@ jinja2==3.0.2
     # via flask
 lazy-object-proxy==1.6.0
     # via astroid
-markupsafe==2.0.1
-    # via jinja2
+markupsafe==2.1.2
+    # via
+    #   jinja2
+    #   werkzeug
 marshmallow==2.21.0
     # via
     #   -r requirements.in
@@ -187,21 +181,13 @@ tomli==1.2.1
     #   black
     #   coverage
     #   pep517
-typed-ast==1.4.3
-    # via
-    #   astroid
-    #   black
 typing-extensions==3.10.0.2
-    # via
-    #   astroid
-    #   black
-    #   importlib-metadata
-    #   pylint
+    # via black
 urllib3==1.26.7
     # via requests
 virtualenv==20.8.1
     # via pre-commit
-werkzeug==2.0.2
+werkzeug==2.2.3
     # via
     #   flask
     #   pytest-flask
@@ -209,10 +195,6 @@ wheel==0.37.0
     # via pip-tools
 wrapt==1.12.1
     # via astroid
-zipp==3.6.0
-    # via
-    #   importlib-metadata
-    #   pep517
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
